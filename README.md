@@ -48,9 +48,18 @@ pnpm run build
 #### Develop
 
 ```bash
-# Will run the development server for all the app & packages with the supported `dev` script.
+# Option 1: Docker (Recommended)
+cp .env.docker .env
+npm run docker:dev
+
+# Option 2: Local Development
 pnpm run dev
 ```
+
+Both options will start:
+- API service on http://localhost:3000
+- Web app on http://localhost:5173
+- Database (SQLite for local, PostgreSQL for Docker)
 
 #### test
 
@@ -86,6 +95,26 @@ pnpm format
 # Will run both linting and formatting checks.
 pnpm run check
 ```
+
+#### Docker Commands
+
+```bash
+# Docker development
+npm run docker:dev          # Start development containers
+npm run docker:dev:stop     # Stop development containers
+npm run docker:dev:logs     # View development logs
+
+# Docker production
+npm run docker:build        # Build production images
+npm run deploy              # Deploy to production
+npm run deploy:rollback     # Rollback deployment
+npm run deploy:logs         # View production logs
+npm run deploy:health       # Health check
+```
+
+## Docker Deployment
+
+For complete Docker deployment instructions, including production setup, SSL configuration, and monitoring, see [README-Docker.md](./README-Docker.md).
 
 ### Remote Caching
 

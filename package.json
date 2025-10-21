@@ -1,26 +1,38 @@
 {
-  "name": "dashboard-app",
-  "version": "0.0.0",
-  "private": true,
-  "description": "A modern dashboard application with user management and admin features",
-  "author": "",
-  "license": "UNLICENSED",
-  "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "test": "turbo run test",
-    "test:e2e": "turbo run test:e2e",
-    "lint": "turbo run lint",
-    "check": "turbo run check",
-    "format": "biome format --write \"**/*.{ts,tsx,js,jsx,json,css,md}\""
-  },
-  "devDependencies": {
-    "@repo/biome-config": "workspace:*",
-    "@repo/typescript-config": "workspace:*",
-    "turbo": "^2.5.8"
-  },
-  "packageManager": "pnpm@8.15.5",
-  "engines": {
-    "node": ">=18"
-  }
+	"name": "dashboard-app",
+	"version": "0.0.0",
+	"private": true,
+	"description": "A modern dashboard application with user management and admin features",
+	"author": "",
+	"license": "UNLICENSED",
+	"scripts": {
+		"dev": "turbo run dev",
+		"build": "turbo run build",
+		"test": "turbo run test",
+		"test:e2e": "turbo run test:e2e",
+		"lint": "turbo run lint",
+		"check": "turbo run check",
+		"format": "biome format --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+		"docker:build": "./build-docker.sh",
+		"docker:build:push": "./build-docker.sh --push",
+		"docker:dev": "docker-compose up -d",
+		"docker:dev:stop": "docker-compose down",
+		"docker:dev:logs": "docker-compose logs -f",
+		"docker:prod": "docker-compose -f docker-compose.prod.yml up -d",
+		"docker:prod:stop": "docker-compose -f docker-compose.prod.yml down",
+		"docker:prod:logs": "docker-compose -f docker-compose.prod.yml logs -f",
+		"deploy": "./deploy.sh deploy",
+		"deploy:rollback": "./deploy.sh rollback",
+		"deploy:logs": "./deploy.sh logs",
+		"deploy:health": "./deploy.sh health"
+	},
+	"devDependencies": {
+		"@repo/biome-config": "workspace:*",
+		"@repo/typescript-config": "workspace:*",
+		"turbo": "^2.5.8"
+	},
+	"packageManager": "pnpm@8.15.5",
+	"engines": {
+		"node": ">=18"
+	}
 }

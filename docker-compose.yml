@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # API Service
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: base  # Use base stage for development with hot reload
+    container_name: dashboard-api-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_TYPE=sqlite
+      - DATABASE_DATABASE=./data.sqlite
+      - JWT_SECRET=dev-jwt-secret-change-in-production
+      - JWT_EXPIRES_IN=7d
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages:/app/packages
+      - ./package.json:/app/package.json
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
+      - api_node_modules:/app/node_modules
+      - api_data:/app/apps/api/data
+    working_dir: /app
+    command: sh -c "npm install -g pnpm && pnpm install && cd apps/api && pnpm run start:debug"
+    depends_on:
+      - db
+    networks:
+      - dashboard-network
+    restart: unless-stopped
+
+  # Web Service
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: base  # Use base stage for development with hot reload
+    container_name: dashboard-web-dev
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:3000
+    volumes:
+      - ./apps/web:/app/apps/web
+      - ./packages:/app/packages
+      - ./package.json:/app/package.json
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
+      - web_node_modules:/app/node_modules
+    working_dir: /app
+    command: sh -c "npm install -g pnpm && pnpm install && cd apps/web && pnpm run dev"
+    depends_on:
+      - api
+    networks:
+      - dashboard-network
+    restart: unless-stopped
+
+  # Database (SQLite for development, PostgreSQL for production)
+  db:
+    image: postgres:15-alpine
+    container_name: dashboard-db-dev
+    environment:
+      - POSTGRES_DB=dashboard
+      - POSTGRES_USER=dashboard
+      - POSTGRES_PASSWORD=dashboard123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - dashboard-network
+    restart: unless-stopped
+    profiles:
+      - postgres  # Only start with --profile postgres
+
+  # Redis (optional, for caching/sessions)
+  redis:
+    image: redis:7-alpine
+    container_name: dashboard-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - dashboard-network
+    restart: unless-stopped
+    profiles:
+      - redis  # Only start with --profile redis
+
+volumes:
+  api_node_modules:
+  api_data:
+  web_node_modules:
+  postgres_data:
+  redis_data:
+
+networks:
+  dashboard-network:
+    driver: bridge

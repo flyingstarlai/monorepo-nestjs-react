@@ -17,7 +17,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "lint": "biome lint .",
     "format": "biome format .",
-    "check": "biome check ."
+    "check": "biome check .",
+    "db:reset": "ts-node scripts/reset-database.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
