@@ -20,12 +20,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useRecentActivities } from '../../features/activities';
 import { useAuth } from '../../features/auth';
 
-export const Route = createFileRoute('/_dashboard/dashboard')({
-  component: DashboardComponent,
-});
-
-export { DashboardComponent };
-
 function DashboardComponent() {
   const { user } = useAuth();
   const { data: activitiesData, isLoading, error, refetch } = useRecentActivities({ limit: 5 });
@@ -317,3 +311,9 @@ function DashboardComponent() {
     </div>
   );
 }
+
+export const Route = createFileRoute('/_dashboard/dashboard')({
+  component: DashboardComponent,
+});
+
+export { DashboardComponent };
