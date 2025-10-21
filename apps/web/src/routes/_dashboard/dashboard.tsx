@@ -1,24 +1,24 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import {
   Activity,
+  AlertCircle,
   ArrowRight,
   Clock,
   Lock,
+  RefreshCw,
   Settings,
   Shield,
   Star,
   TrendingUp,
   UserCheck,
-  RefreshCw,
-  AlertCircle,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '../../features/auth';
 import { useRecentActivities } from '../../features/activities';
+import { useAuth } from '../../features/auth';
 
 export const Route = createFileRoute('/_dashboard/dashboard')({
   component: DashboardComponent,
@@ -68,9 +68,15 @@ function DashboardComponent() {
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffMins < 1) {
+      return 'Just now';
+    }
+    if (diffMins < 60) {
+      return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+    }
+    if (diffHours < 24) {
+      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    }
     return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
   };
 
@@ -253,8 +259,8 @@ function DashboardComponent() {
         <CardContent>
           {isLoading ? (
             <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
+              {['skeleton-one', 'skeleton-two', 'skeleton-three'].map((key) => (
+                <div key={key} className="flex items-center gap-3">
                   <Skeleton className="h-10 w-10 rounded-full" />
                   <div className="flex-1 min-w-0 space-y-2">
                     <Skeleton className="h-4 w-3/4" />
@@ -280,13 +286,18 @@ function DashboardComponent() {
                 const Icon = getActivityIcon(activity.type);
                 const iconColor = getActivityIconColor(activity.type);
                 return (
-                  <div key={activity.id} className="flex items-center gap-3 pb-3 border-b last:border-b-0">
+                  <div
+                    key={activity.id}
+                    className="flex items-center gap-3 pb-3 border-b last:border-b-0"
+                  >
                     <div className={`p-2 rounded-full flex-shrink-0 ${iconColor}`}>
                       <Icon className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground">{formatRelativeTime(activity.createdAt)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatRelativeTime(activity.createdAt)}
+                      </p>
                     </div>
                   </div>
                 );
@@ -295,9 +306,7 @@ function DashboardComponent() {
           ) : (
             <div className="flex flex-col items-center gap-3 py-6">
               <Clock className="h-8 w-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground text-center">
-                No recent activities
-              </p>
+              <p className="text-sm text-muted-foreground text-center">No recent activities</p>
               <p className="text-xs text-muted-foreground text-center">
                 Your activities will appear here as you use the app
               </p>

@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Activity, ActivityType } from './entities/activity.entity';
 import { ActivitiesService } from './activities.service';
+import { Activity, ActivityType } from './entities/activity.entity';
 
 describe('ActivitiesService', () => {
   let service: ActivitiesService;
@@ -51,7 +51,7 @@ describe('ActivitiesService', () => {
         'user-id',
         ActivityType.LOGIN_SUCCESS,
         'Successfully logged in',
-        {},
+        {}
       );
 
       expect(repository.create).toHaveBeenCalledWith({
@@ -81,7 +81,9 @@ describe('ActivitiesService', () => {
       const result = await service.findByOwner('user-id');
 
       expect(repository.createQueryBuilder).toHaveBeenCalledWith('activity');
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith('activity.ownerId = :ownerId', { ownerId: 'user-id' });
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith('activity.ownerId = :ownerId', {
+        ownerId: 'user-id',
+      });
       expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith('activity.createdAt', 'DESC');
       expect(mockQueryBuilder.limit).toHaveBeenCalledWith(21);
       expect(result).toEqual({
@@ -114,7 +116,7 @@ describe('ActivitiesService', () => {
 
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
         '(activity.createdAt < :cursor OR (activity.createdAt = :cursor AND activity.id < :cursorId))',
-        { cursor: cursorDate.toISOString(), cursorId: cursorDate.toISOString() },
+        { cursor: cursorDate.toISOString(), cursorId: cursorDate.toISOString() }
       );
       expect(mockQueryBuilder.limit).toHaveBeenCalledWith(6);
     });

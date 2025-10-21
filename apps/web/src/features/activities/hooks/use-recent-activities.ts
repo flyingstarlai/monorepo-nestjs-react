@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getActivities, type ActivityDto } from '../api/activities.api';
+import { type ActivityDto, getActivities } from '../api/activities.api';
 
 export function useRecentActivities({ limit = 10 }: { limit?: number } = {}) {
   return useQuery({

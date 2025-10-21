@@ -1,15 +1,15 @@
 import {
   Controller,
+  DefaultValuePipe,
   Get,
+  ParseIntPipe,
   Query,
   Request,
   UseGuards,
-  ParseIntPipe,
-  DefaultValuePipe,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ActivitiesService } from './activities.service';
-import { ActivitiesQueryDto, ActivitiesResponseDto } from './dto/activity.dto';
+import { ActivitiesResponseDto } from './dto/activity.dto';
 
 @Controller('activities')
 @UseGuards(JwtAuthGuard)
@@ -20,8 +20,8 @@ export class ActivitiesController {
   async findAll(
     @Request() req,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
-    @Query('cursor') cursor?: string,
+    @Query('cursor') cursor?: string
   ): Promise<ActivitiesResponseDto> {
-    return this.activitiesService.findByOwner(req.user.id, { limit, cursor });
+    return await this.activitiesService.findByOwner(req.user.id, { limit, cursor });
   }
 }

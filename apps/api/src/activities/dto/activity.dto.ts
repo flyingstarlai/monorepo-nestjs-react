@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { ActivityType } from '../entities/activity.entity';
 
 export class ActivityDto {

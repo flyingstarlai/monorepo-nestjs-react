@@ -2,5 +2,17 @@
   "extends": ["@repo/biome-config/biome.json"],
   "files": {
     "includes": ["**/*", "!data.sqlite"]
+  },
+  "javascript": {
+    "globals": [
+      "jest",
+      "describe",
+      "it",
+      "expect",
+      "beforeEach",
+      "afterEach",
+      "beforeAll",
+      "afterAll"
+    ]
   }
 }

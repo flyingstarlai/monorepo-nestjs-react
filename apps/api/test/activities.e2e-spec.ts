@@ -1,12 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
+import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import * as request from 'supertest';
 import { Repository } from 'typeorm';
+import { Activity, ActivityType } from '../src/activities/entities/activity.entity';
+import { AppModule } from '../src/app.module';
 import { User } from '../src/users/entities/user.entity';
-import { Activity } from '../src/activities/entities/activity.entity';
-import { ActivityType } from '../src/activities/entities/activity.entity';
 
 describe('Activities (e2e)', () => {
   let app: INestApplication;
@@ -36,9 +35,7 @@ describe('Activities (e2e)', () => {
 
   describe('/activities (GET)', () => {
     it('should return 401 for unauthenticated requests', () => {
-      return request(app.getHttpServer())
-        .get('/activities')
-        .expect(401);
+      return request(app.getHttpServer()).get('/activities').expect(401);
     });
 
     it('should return activities for authenticated user after login', async () => {

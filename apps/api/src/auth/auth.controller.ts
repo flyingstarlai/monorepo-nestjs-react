@@ -8,8 +8,8 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { ActivityType } from '../activities/entities/activity.entity';
 import { ActivitiesService } from '../activities/activities.service';
+import { ActivityType } from '../activities/entities/activity.entity';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -45,7 +45,7 @@ export class AuthController {
     await this.activitiesService.record(
       user.id,
       ActivityType.LOGIN_SUCCESS,
-      'Successfully logged in',
+      'Successfully logged in'
     );
 
     return this.authService.login(user);
@@ -104,7 +104,7 @@ export class AuthController {
       await this.activitiesService.record(
         user.id,
         ActivityType.PASSWORD_CHANGED,
-        'Password changed successfully',
+        'Password changed successfully'
       );
 
       return { message: 'Password changed successfully' };

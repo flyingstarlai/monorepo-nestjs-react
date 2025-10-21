@@ -17,8 +17,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ActivityType } from '../activities/entities/activity.entity';
 import { ActivitiesService } from '../activities/activities.service';
+import { ActivityType } from '../activities/entities/activity.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
@@ -30,7 +30,7 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly activitiesService: ActivitiesService,
+    private readonly activitiesService: ActivitiesService
   ) {}
 
   @Post()
@@ -104,7 +104,7 @@ export class UsersController {
     await this.activitiesService.record(
       req.user.id,
       ActivityType.AVATAR_UPDATED,
-      'Avatar updated successfully',
+      'Avatar updated successfully'
     );
 
     return {
@@ -128,7 +128,7 @@ export class UsersController {
     await this.activitiesService.record(
       req.user.id,
       ActivityType.PROFILE_UPDATED,
-      'Profile updated successfully',
+      'Profile updated successfully'
     );
 
     return {

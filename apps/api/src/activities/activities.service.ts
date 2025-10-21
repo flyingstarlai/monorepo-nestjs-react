@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ActivitiesResponseDto, ActivityDto } from './dto/activity.dto';
 import { Activity, ActivityType } from './entities/activity.entity';
-import { ActivityDto, ActivitiesResponseDto } from './dto/activity.dto';
 
 @Injectable()
 export class ActivitiesService {
   constructor(
     @InjectRepository(Activity)
-    private readonly activityRepository: Repository<Activity>,
+    private readonly activityRepository: Repository<Activity>
   ) {}
 
   async record(
     ownerId: string,
     type: ActivityType,
     message: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, any>
   ): Promise<Activity> {
     const activity = this.activityRepository.create({
       ownerId,
@@ -23,12 +23,12 @@ export class ActivitiesService {
       message,
       metadata,
     });
-    return this.activityRepository.save(activity);
+    return await this.activityRepository.save(activity);
   }
 
   async findByOwner(
     ownerId: string,
-    options: { limit?: number; cursor?: string } = {},
+    options: { limit?: number; cursor?: string } = {}
   ): Promise<ActivitiesResponseDto> {
     const limit = Math.min(options.limit ?? 20, 100);
     const queryBuilder = this.activityRepository
@@ -41,7 +41,7 @@ export class ActivitiesService {
     if (options.cursor) {
       queryBuilder.andWhere(
         '(activity.createdAt < :cursor OR (activity.createdAt = :cursor AND activity.id < :cursorId))',
-        { cursor: options.cursor, cursorId: options.cursor },
+        { cursor: options.cursor, cursorId: options.cursor }
       );
     }
 

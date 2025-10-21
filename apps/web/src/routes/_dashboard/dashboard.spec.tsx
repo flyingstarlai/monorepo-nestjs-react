@@ -1,10 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { vi } from 'vitest';
-import { DashboardComponent } from './dashboard';
 import * as activitiesHooks from '../../features/activities';
 import * as authHooks from '../../features/auth';
+import { DashboardComponent } from './dashboard';
 
 // Mock the route component
 vi.mock('@tanstack/react-router', () => ({
@@ -60,10 +60,8 @@ const renderWithProviders = (ui: React.ReactElement) => {
   const queryClient = createTestQueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        {ui}
-      </BrowserRouter>
-    </QueryClientProvider>,
+      <BrowserRouter>{ui}</BrowserRouter>
+    </QueryClientProvider>
   );
 };
 
@@ -120,7 +118,7 @@ describe('DashboardComponent', () => {
 
     expect(screen.getByText('No recent activities')).toBeInTheDocument();
     expect(
-      screen.getByText('Your activities will appear here as you use the app'),
+      screen.getByText('Your activities will appear here as you use the app')
     ).toBeInTheDocument();
   });
 

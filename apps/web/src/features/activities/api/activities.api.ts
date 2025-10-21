@@ -1,6 +1,10 @@
 import { tokenStorage } from '../../auth/api/auth.api';
 
-export type ActivityType = 'login_success' | 'profile_updated' | 'password_changed' | 'avatar_updated';
+export type ActivityType =
+  | 'login_success'
+  | 'profile_updated'
+  | 'password_changed'
+  | 'avatar_updated';
 
 export interface ActivityDto {
   id: string;
@@ -23,8 +27,12 @@ export async function getActivities(params?: { limit?: number; cursor?: string }
   }
 
   const searchParams = new URLSearchParams();
-  if (params?.limit) searchParams.set('limit', params.limit.toString());
-  if (params?.cursor) searchParams.set('cursor', params.cursor);
+  if (params?.limit) {
+    searchParams.set('limit', params.limit.toString());
+  }
+  if (params?.cursor) {
+    searchParams.set('cursor', params.cursor);
+  }
 
   const response = await fetch(`${API_BASE_URL}/activities?${searchParams.toString()}`, {
     headers: {

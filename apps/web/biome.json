@@ -1,7 +1,7 @@
 {
   "extends": ["@repo/biome-config/biome.json"],
   "files": {
-    "includes": ["**/*", "!src/routeTree.gen.ts"]
+    "includes": ["**/*", "!src/routeTree.gen.ts", "!dist"]
   },
   "overrides": [
     {
