@@ -1,8 +1,8 @@
 {
-  "name": "my-turborepo",
+  "name": "dashboard-app",
   "version": "0.0.0",
   "private": true,
-  "description": "",
+  "description": "A modern dashboard application with user management and admin features",
   "author": "",
   "license": "UNLICENSED",
   "scripts": {

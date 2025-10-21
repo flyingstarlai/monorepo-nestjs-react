@@ -1,32 +1,24 @@
-# Turborepo starter
+# Dashboard Application
 
-This is a community-maintained example. If you experience a problem, please submit a pull request with a fix. GitHub Issues will be closed.
-
-## Using this example
-
-Run the following command:
-
-```bash
-npx create-turbo@latest -e with-nestjs
-```
+A modern dashboard application with user management, authentication, and admin features built with NestJS backend and React frontend.
 
 ## What's inside?
 
-This Turborepo includes the following packages & apps:
+This monorepo includes the following packages & apps:
 
 ### Apps and Packages
 
 ```shell
 .
 ├── apps
-│   ├── api                       # NestJS app (https://nestjs.com).
-│   └── web                       # Next.js app (https://nextjs.org).
+│   ├── api                       # NestJS backend API with authentication and user management
+│   └── web                       # React frontend with TanStack Router and Tailwind CSS
 └── packages
-    ├── @repo/api                 # Shared `NestJS` resources.
-    ├── @repo/eslint-config       # `eslint` configurations (includes `prettier`)
-    ├── @repo/jest-config         # `jest` configurations
-    ├── @repo/typescript-config   # `tsconfig.json`s used throughout the monorepo
-    └── @repo/ui                  # Shareable stub React component library.
+    ├── @repo/api                 # Shared API types and utilities
+    ├── @repo/eslint-config       # ESLint configurations (includes Prettier)
+    ├── @repo/jest-config         # Jest configurations
+    ├── @repo/typescript-config   # TypeScript configurations used throughout the monorepo
+    └── @repo/ui                  # Shared React UI components
 ```
 
 Each package and application are mostly written in [TypeScript](https://www.typescriptlang.org/).
