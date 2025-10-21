@@ -1,5 +1,5 @@
-import type { User } from "../../auth/types";
 import { tokenStorage } from "../../auth/api";
+import type { User } from "../../auth/types";
 
 const API_BASE_URL = "http://localhost:3000";
 

@@ -26,6 +26,10 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { id }, relations: ['role'] });
   }
 
+  async findById(id: string): Promise<User | null> {
+    return this.findOne(id);
+  }
+
   async findByUsername(username: string): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { username },
@@ -40,6 +44,10 @@ export class UsersService {
 
   async remove(id: string): Promise<void> {
     await this.usersRepository.delete(id);
+  }
+
+  async removeAllUsers(): Promise<void> {
+    await this.usersRepository.clear();
   }
 
   async updateAvatar(id: string, avatarData: string): Promise<User> {

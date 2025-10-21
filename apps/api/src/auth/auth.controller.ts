@@ -6,6 +6,7 @@ import {
   Get,
   UseGuards,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
@@ -16,6 +17,11 @@ import { RolesGuard } from './roles.guard';
 export class LoginDto {
   username: string;
   password: string;
+}
+
+export class ChangePasswordDto {
+  currentPassword: string;
+  newPassword: string;
 }
 
 @Controller('auth')
@@ -50,6 +56,119 @@ export class AuthController {
     return { message: 'Admin content' };
   }
 
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(
+    @Request() req,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    try {
+      const user = await this.usersService.findById(req.user.id);
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      // Verify current password
+      const isCurrentPasswordValid = await this.authService.comparePasswords(
+        changePasswordDto.currentPassword,
+        user.password,
+      );
+
+      if (!isCurrentPasswordValid) {
+        throw new UnauthorizedException('Current password is incorrect');
+      }
+
+      // Check if new password is different from current
+      const isSamePassword = await this.authService.comparePasswords(
+        changePasswordDto.newPassword,
+        user.password,
+      );
+
+      if (isSamePassword) {
+        throw new BadRequestException(
+          'New password must be different from current password',
+        );
+      }
+
+      // Hash new password and update user
+      const hashedNewPassword = await this.authService.hashPassword(
+        changePasswordDto.newPassword,
+      );
+
+      await this.usersService.update(user.id, {
+        password: hashedNewPassword,
+      });
+
+      return { message: 'Password changed successfully' };
+    } catch (error) {
+      if (
+        error instanceof UnauthorizedException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Failed to change password');
+    }
+  }
+
+  @Post('reset')
+  async resetUsers() {
+    try {
+      // Clear all existing users
+      await this.usersService.removeAllUsers();
+      console.log('🗑️ All existing users cleared');
+
+      // Seed roles (handle existing roles)
+      let adminRole = await this.usersService.findRoleByName('Admin');
+      if (!adminRole) {
+        adminRole = await this.usersService.createRole({
+          name: 'Admin',
+          description: 'Administrator with full access',
+        });
+      }
+
+      let userRole = await this.usersService.findRoleByName('User');
+      if (!userRole) {
+        userRole = await this.usersService.createRole({
+          name: 'User',
+          description: 'Regular user with limited access',
+        });
+      }
+
+      // Create admin user with new password
+      const adminPassword = await this.authService.hashPassword('nimda');
+      const adminUser = await this.usersService.create({
+        username: 'admin',
+        name: 'Admin User',
+        password: adminPassword,
+        role: adminRole,
+        isActive: true,
+      });
+
+      // Create regular user with new password
+      const userPassword = await this.authService.hashPassword('user123');
+      const regularUser = await this.usersService.create({
+        username: 'user',
+        name: 'Regular User',
+        password: userPassword,
+        role: userRole,
+        isActive: true,
+      });
+
+      return {
+        message: 'Users reset successfully with new credentials',
+        credentials: [
+          { username: 'admin', password: 'nimda', role: 'Admin' },
+          { username: 'user', password: 'user123', role: 'User' },
+        ],
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
   @Post('seed')
   async seedUsers() {
     try {
@@ -65,7 +184,7 @@ export class AuthController {
       });
 
       // Create admin user
-      const adminPassword = await this.authService.hashPassword('admin');
+      const adminPassword = await this.authService.hashPassword('nimda');
       const adminUser = await this.usersService.create({
         username: 'admin',
         name: 'Admin User',
@@ -75,7 +194,7 @@ export class AuthController {
       });
 
       // Create regular user
-      const userPassword = await this.authService.hashPassword('user');
+      const userPassword = await this.authService.hashPassword('user123');
       const regularUser = await this.usersService.create({
         username: 'user',
         name: 'Regular User',

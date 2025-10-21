@@ -1,10 +1,8 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "@tanstack/react-router";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
-
 import {
 	Card,
 	CardContent,
@@ -20,8 +18,9 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import { useAuth } from "../hooks";
-import { loginSchema, type LoginFormData } from "../schema";
+import { type LoginFormData, loginSchema } from "../schema";
 
 export function LoginForm() {
 	const [error, setError] = useState("");

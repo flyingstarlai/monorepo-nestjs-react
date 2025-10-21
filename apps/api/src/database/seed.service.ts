@@ -26,7 +26,7 @@ export class SeedService implements OnModuleInit {
     if (!existingAdmin) {
       const adminRole = await this.usersService.findRoleByName(RoleType.ADMIN);
       if (adminRole) {
-        const hashedPassword = await this.authService.hashPassword('admin');
+        const hashedPassword = await this.authService.hashPassword('nimda');
         await this.usersService.create({
           username: adminUsername,
           name: 'Admin User',

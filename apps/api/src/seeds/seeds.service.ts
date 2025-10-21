@@ -28,7 +28,7 @@ export class SeedsService implements OnModuleInit {
     if (!adminExists) {
       const adminRole = await this.usersService.findRoleByName('Admin');
       if (adminRole) {
-        const hashedPassword = await this.authService.hashPassword('admin');
+        const hashedPassword = await this.authService.hashPassword('nimda');
         await this.usersService.create({
           username: 'admin',
           name: 'Admin User',
@@ -45,7 +45,7 @@ export class SeedsService implements OnModuleInit {
     if (!userExists) {
       const userRole = await this.usersService.findRoleByName('User');
       if (userRole) {
-        const hashedPassword = await this.authService.hashPassword('user');
+        const hashedPassword = await this.authService.hashPassword('user123');
         await this.usersService.create({
           username: 'user',
           name: 'Regular User',
