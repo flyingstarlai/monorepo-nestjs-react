@@ -1,7 +1,7 @@
-import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { DataSource, DataSourceOptions } from 'typeorm';
-import { User } from '../users/entities/user.entity';
+import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { DataSource, type DataSourceOptions } from 'typeorm';
 import { Role } from '../users/entities/role.entity';
+import { User } from '../users/entities/user.entity';
 
 export const databaseConfig: TypeOrmModuleOptions = {
   type: 'sqlite',

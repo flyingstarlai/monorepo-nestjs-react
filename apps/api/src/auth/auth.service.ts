@@ -1,14 +1,14 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service';
-import { User } from '../users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
+import type { User } from '../users/entities/user.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService,
+    private jwtService: JwtService
   ) {}
 
   async validateUser(username: string, password: string): Promise<User | null> {
@@ -30,7 +30,7 @@ export class AuthService {
     };
 
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: await this.jwtService.signAsync(payload),
       user: {
         id: user.id,
         username: user.username,
@@ -42,13 +42,10 @@ export class AuthService {
   }
 
   async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, 10);
+    return await bcrypt.hash(password, 10);
   }
 
-  async comparePasswords(
-    plainPassword: string,
-    hashedPassword: string,
-  ): Promise<boolean> {
-    return bcrypt.compare(plainPassword, hashedPassword);
+  async comparePasswords(plainPassword: string, hashedPassword: string): Promise<boolean> {
+    return await bcrypt.compare(plainPassword, hashedPassword);
   }
 }

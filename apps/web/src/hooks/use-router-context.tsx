@@ -1,9 +1,9 @@
-import { useAuth } from "../features/auth";
+import { useAuth } from '../features/auth';
 
 export function useRouterContext() {
-	const auth = useAuth();
+  const auth = useAuth();
 
-	return {
-		auth,
-	};
+  return {
+    auth,
+  };
 }

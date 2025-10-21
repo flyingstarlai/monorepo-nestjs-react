@@ -28,9 +28,8 @@ Each package and application are mostly written in [TypeScript](https://www.type
 This `Turborepo` has some additional tools already set for you:
 
 - [TypeScript](https://www.typescriptlang.org/) for static type-safety
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-- [Jest](https://prettier.io) & [Playwright](https://playwright.dev/) for testing
+- [Biome](https://biomejs.dev/) for code linting and formatting
+- [Jest](https://jestjs.io/) & [Vitest](https://vitest.dev/) for testing
 
 ### Commands
 
@@ -69,16 +68,23 @@ pnpm run test:e2e
 
 ```bash
 # Will lint all the app & packages with the supported `lint` script.
-# See `@repo/eslint-config` to customize the behavior.
+# See `@repo/biome-config` to customize the behavior.
 pnpm run lint
 ```
 
 #### Format
 
 ```bash
-# Will format all the supported `.ts,.js,json,.tsx,.jsx` files.
-# See `@repo/eslint-config/prettier-base.js` to customize the behavior.
+# Will format all the supported files using Biome.
+# See `@repo/biome-config` to customize the behavior.
 pnpm format
+```
+
+#### Check
+
+```bash
+# Will run both linting and formatting checks.
+pnpm run check
 ```
 
 ### Remote Caching

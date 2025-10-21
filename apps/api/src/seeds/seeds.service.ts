@@ -1,19 +1,18 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
-import { AuthService } from '../auth/auth.service';
+import { Injectable, type OnModuleInit } from '@nestjs/common';
+import type { AuthService } from '../auth/auth.service';
+import type { UsersService } from '../users/users.service';
 
 @Injectable()
 export class SeedsService implements OnModuleInit {
   constructor(
     private usersService: UsersService,
-    private authService: AuthService,
+    private authService: AuthService
   ) {}
 
   async onModuleInit() {
     // Add a delay to ensure database is fully synchronized
-    setTimeout(async () => {
-      await this.seed();
-    }, 2000);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await this.seed();
   }
 
   async seed() {

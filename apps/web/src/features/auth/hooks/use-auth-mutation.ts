@@ -1,37 +1,37 @@
-import { useMutation } from "@tanstack/react-query";
-import { authApi } from "../api";
-import type { User } from "../types";
-import { useAuth } from "./auth.context";
+import { useMutation } from '@tanstack/react-query';
+import { authApi } from '../api';
+import type { User } from '../types';
+import { useAuth } from './auth.context';
 
 export function useLogoutMutation() {
-	const { logout } = useAuth();
+  const { logout } = useAuth();
 
-	return useMutation({
-		mutationFn: async () => {
-			logout();
-		},
-	});
+  return useMutation({
+    mutationFn: () => {
+      logout();
+    },
+  });
 }
 
 export function useAvatarUploadMutation() {
-	const { updateUser } = useAuth();
+  const { updateUser } = useAuth();
 
-	return useMutation({
-		mutationFn: (file: File) => authApi.uploadAvatar(file),
-		onSuccess: (updatedUser: User) => {
-			updateUser(updatedUser);
-		},
-	});
+  return useMutation({
+    mutationFn: (file: File) => authApi.uploadAvatar(file),
+    onSuccess: (updatedUser: User) => {
+      updateUser(updatedUser);
+    },
+  });
 }
 
 export function useProfileUpdateMutation() {
-	const { updateUser } = useAuth();
+  const { updateUser } = useAuth();
 
-	return useMutation({
-		mutationFn: (profileData: { name?: string; username?: string }) =>
-			authApi.updateProfile(profileData),
-		onSuccess: (updatedUser: User) => {
-			updateUser(updatedUser);
-		},
-	});
+  return useMutation({
+    mutationFn: (profileData: { name?: string; username?: string }) =>
+      authApi.updateProfile(profileData),
+    onSuccess: (updatedUser: User) => {
+      updateUser(updatedUser);
+    },
+  });
 }

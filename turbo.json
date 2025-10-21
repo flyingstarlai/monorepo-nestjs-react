@@ -10,7 +10,15 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
-    "lint": {},
+    "lint": {
+      "outputs": []
+    },
+    "format": {
+      "outputs": []
+    },
+    "check": {
+      "outputs": []
+    },
     "test": {},
     "test:e2e": {}
   }

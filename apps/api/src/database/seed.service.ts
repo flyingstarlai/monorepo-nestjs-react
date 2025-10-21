@@ -1,13 +1,13 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
-import { AuthService } from '../auth/auth.service';
+import { Injectable, type OnModuleInit } from '@nestjs/common';
+import type { AuthService } from '../auth/auth.service';
 import { RoleType } from '../users/entities/role.entity';
+import type { UsersService } from '../users/users.service';
 
 @Injectable()
 export class SeedService implements OnModuleInit {
   constructor(
     private usersService: UsersService,
-    private authService: AuthService,
+    private authService: AuthService
   ) {}
 
   async onModuleInit() {

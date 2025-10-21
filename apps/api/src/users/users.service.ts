@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import type { Repository } from 'typeorm';
 import { Role } from './entities/role.entity';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -10,28 +10,28 @@ export class UsersService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     @InjectRepository(Role)
-    private rolesRepository: Repository<Role>,
+    private rolesRepository: Repository<Role>
   ) {}
 
   async create(userData: Partial<User>): Promise<User> {
     const user = this.usersRepository.create(userData);
-    return this.usersRepository.save(user);
+    return await this.usersRepository.save(user);
   }
 
   async findAll(): Promise<User[]> {
-    return this.usersRepository.find({ relations: ['role'] });
+    return await this.usersRepository.find({ relations: ['role'] });
   }
 
   async findOne(id: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id }, relations: ['role'] });
+    return await this.usersRepository.findOne({ where: { id }, relations: ['role'] });
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.findOne(id);
+    return await this.findOne(id);
   }
 
   async findByUsername(username: string): Promise<User | null> {
-    return this.usersRepository.findOne({
+    return await this.usersRepository.findOne({
       where: { username },
       relations: ['role'],
     });
@@ -61,7 +61,7 @@ export class UsersService {
 
   async updateProfile(
     id: string,
-    profileData: { name?: string; username?: string },
+    profileData: { name?: string; username?: string }
   ): Promise<User> {
     await this.usersRepository.update(id, profileData);
     const updatedUser = await this.findOne(id);
@@ -73,15 +73,15 @@ export class UsersService {
 
   async createRole(roleData: Partial<Role>): Promise<Role> {
     const role = this.rolesRepository.create(roleData);
-    return this.rolesRepository.save(role);
+    return await this.rolesRepository.save(role);
   }
 
   async findRoleByName(name: string): Promise<Role | null> {
-    return this.rolesRepository.findOne({ where: { name } });
+    return await this.rolesRepository.findOne({ where: { name } });
   }
 
   async findAllRoles(): Promise<Role[]> {
-    return this.rolesRepository.find();
+    return await this.rolesRepository.find();
   }
 
   async setActive(userId: string, isActive: boolean): Promise<User | null> {
@@ -100,7 +100,9 @@ export class UsersService {
 
   async countActiveAdmins(): Promise<number> {
     const adminRole = await this.findRoleByName('Admin');
-    if (!adminRole) return 0;
+    if (!adminRole) {
+      return 0;
+    }
 
     return this.usersRepository.count({
       where: {
@@ -147,7 +149,7 @@ export class UsersService {
 
   private async hashPassword(password: string): Promise<string> {
     const bcrypt = require('bcrypt');
-    return bcrypt.hash(password, 10);
+    return await bcrypt.hash(password, 10);
   }
 
   async seedRoles(): Promise<void> {

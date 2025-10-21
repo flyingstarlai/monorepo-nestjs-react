@@ -31,6 +31,19 @@ pnpm test
 
 This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
 
+## Environment Variables
+
+This project uses Vite environment variables. Copy `.env.example` to `.env` and configure:
+
+```bash
+cp .env.example .env
+```
+
+### Available Variables
+
+- `VITE_API_BASE_URL`: Base URL for API calls (default: `http://localhost:3000`)
+- `VITE_ENABLE_DEVTOOLS`: Enable/disable TanStack devtools (default: `true`)
+
 ## Linting & Formatting
 
 This project uses [Biome](https://biomejs.dev/) for linting and formatting. The following scripts are available:

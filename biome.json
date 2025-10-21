@@ -1,0 +1,12 @@
+{
+  "extends": ["@repo/biome-config/biome.json"],
+  "files": {
+    "excludes": [
+      "apps/**",
+      "packages/**",
+      "dist/**",
+      "node_modules/**"
+    ]
+  }
+}
+}

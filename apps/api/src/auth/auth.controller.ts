@@ -1,15 +1,15 @@
 import {
-  Controller,
-  Post,
-  Body,
-  UnauthorizedException,
-  Get,
-  UseGuards,
-  Request,
   BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  Request,
+  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
+import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { Roles } from './roles.decorator';
 import { RolesGuard } from './roles.guard';
@@ -28,15 +28,12 @@ export class ChangePasswordDto {
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly usersService: UsersService,
+    private readonly usersService: UsersService
   ) {}
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    const user = await this.authService.validateUser(
-      loginDto.username,
-      loginDto.password,
-    );
+    const user = await this.authService.validateUser(loginDto.username, loginDto.password);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -58,10 +55,7 @@ export class AuthController {
 
   @Post('change-password')
   @UseGuards(JwtAuthGuard)
-  async changePassword(
-    @Request() req,
-    @Body() changePasswordDto: ChangePasswordDto,
-  ) {
+  async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
     try {
       const user = await this.usersService.findById(req.user.id);
       if (!user) {
@@ -71,7 +65,7 @@ export class AuthController {
       // Verify current password
       const isCurrentPasswordValid = await this.authService.comparePasswords(
         changePasswordDto.currentPassword,
-        user.password,
+        user.password
       );
 
       if (!isCurrentPasswordValid) {
@@ -81,19 +75,15 @@ export class AuthController {
       // Check if new password is different from current
       const isSamePassword = await this.authService.comparePasswords(
         changePasswordDto.newPassword,
-        user.password,
+        user.password
       );
 
       if (isSamePassword) {
-        throw new BadRequestException(
-          'New password must be different from current password',
-        );
+        throw new BadRequestException('New password must be different from current password');
       }
 
       // Hash new password and update user
-      const hashedNewPassword = await this.authService.hashPassword(
-        changePasswordDto.newPassword,
-      );
+      const hashedNewPassword = await this.authService.hashPassword(changePasswordDto.newPassword);
 
       await this.usersService.update(user.id, {
         password: hashedNewPassword,
@@ -101,10 +91,7 @@ export class AuthController {
 
       return { message: 'Password changed successfully' };
     } catch (error) {
-      if (
-        error instanceof UnauthorizedException ||
-        error instanceof BadRequestException
-      ) {
+      if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
         throw error;
       }
       throw new BadRequestException('Failed to change password');
@@ -137,7 +124,7 @@ export class AuthController {
 
       // Create admin user with new password
       const adminPassword = await this.authService.hashPassword('nimda');
-      const adminUser = await this.usersService.create({
+      const _adminUser = await this.usersService.create({
         username: 'admin',
         name: 'Admin User',
         password: adminPassword,
@@ -147,7 +134,7 @@ export class AuthController {
 
       // Create regular user with new password
       const userPassword = await this.authService.hashPassword('user123');
-      const regularUser = await this.usersService.create({
+      const _regularUser = await this.usersService.create({
         username: 'user',
         name: 'Regular User',
         password: userPassword,
