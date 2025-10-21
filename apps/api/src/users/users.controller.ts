@@ -17,6 +17,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ActivityType } from '../activities/entities/activity.entity';
+import { ActivitiesService } from '../activities/activities.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
@@ -26,7 +28,10 @@ import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly activitiesService: ActivitiesService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -94,6 +99,14 @@ export class UsersController {
     const avatarData = `data:${mimeType};base64,${base64}`;
 
     const updatedUser = await this.usersService.updateAvatar(req.user.id, avatarData);
+
+    // Record avatar update activity
+    await this.activitiesService.record(
+      req.user.id,
+      ActivityType.AVATAR_UPDATED,
+      'Avatar updated successfully',
+    );
+
     return {
       id: updatedUser.id,
       username: updatedUser.username,
@@ -110,6 +123,13 @@ export class UsersController {
     @Body() updateProfileDto: { name?: string; username?: string }
   ) {
     const updatedUser = await this.usersService.updateProfile(req.user.id, updateProfileDto);
+
+    // Record profile update activity
+    await this.activitiesService.record(
+      req.user.id,
+      ActivityType.PROFILE_UPDATED,
+      'Profile updated successfully',
+    );
 
     return {
       id: updatedUser.id,

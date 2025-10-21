@@ -11,6 +11,42 @@ pnpm run dev
 
 By default, your server will run at [localhost:3000](http://localhost:3000). You can use your favorite API platform like [Insomnia](https://insomnia.rest/) or [Postman](https://www.postman.com/) to test your APIs
 
+## API Endpoints
+
+### Authentication
+- `POST /auth/login` - User login (records login activity)
+- `POST /auth/change-password` - Change password (records password change activity)
+- `GET /auth/profile` - Get current user profile
+
+### Users
+- `PUT /users/profile` - Update user profile (records profile update activity)
+- `PUT /users/avatar` - Update user avatar (records avatar update activity)
+- `GET /users` - List all users (Admin only)
+- `PATCH /users/:id/status` - Update user status (Admin only)
+- `PATCH /users/:id/role` - Update user role (Admin only)
+
+### Activities
+- `GET /activities` - Get current user's recent activities
+  - Query parameters:
+    - `limit` (optional, default: 20) - Number of activities to return
+    - `cursor` (optional) - Pagination cursor for fetching older activities
+  - Requires JWT authentication
+  - Returns activities in reverse chronological order (newest first)
+
+## Database Schema
+
+### Activity Table
+The `activities` table stores user activity events with the following schema:
+- `id` (UUID, primary key) - Unique activity identifier
+- `ownerId` (string, foreign key) - ID of the user this activity belongs to
+- `type` (enum) - Activity type: `login_success`, `profile_updated`, `password_changed`, `avatar_updated`
+- `message` (string) - Human-readable activity message
+- `metadata` (JSON, nullable) - Optional additional data
+- `createdAt` (datetime) - When the activity occurred
+
+**Development**: Uses SQLite with `synchronize: true` (auto-creates table)
+**Production**: Requires migration to create the `activities` table with indices on `(ownerId, createdAt DESC)` for performance
+
 You can start editing the demo **APIs** by modifying [linksService](./src/links/links.service.ts) provider.
 
 ### Important Note 🚧

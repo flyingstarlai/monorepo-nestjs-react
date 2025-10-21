@@ -8,6 +8,8 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import { ActivityType } from '../activities/entities/activity.entity';
+import { ActivitiesService } from '../activities/activities.service';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -28,7 +30,8 @@ export class ChangePasswordDto {
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly activitiesService: ActivitiesService
   ) {}
 
   @Post('login')
@@ -37,6 +40,14 @@ export class AuthController {
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    // Record login success activity
+    await this.activitiesService.record(
+      user.id,
+      ActivityType.LOGIN_SUCCESS,
+      'Successfully logged in',
+    );
+
     return this.authService.login(user);
   }
 
@@ -88,6 +99,13 @@ export class AuthController {
       await this.usersService.update(user.id, {
         password: hashedNewPassword,
       });
+
+      // Record password change activity
+      await this.activitiesService.record(
+        user.id,
+        ActivityType.PASSWORD_CHANGED,
+        'Password changed successfully',
+      );
 
       return { message: 'Password changed successfully' };
     } catch (error) {

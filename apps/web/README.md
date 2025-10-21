@@ -1,6 +1,6 @@
 # Dashboard Web Application
 
-A modern React-based dashboard frontend with authentication, user management, and admin features.
+A modern React-based dashboard frontend with authentication, user management, admin features, and a recent activities feed.
 
 # Getting Started
 
@@ -123,6 +123,34 @@ export const Route = createRootRoute({
 The `<TanStackRouterDevtools />` component is not required so you can remove it if you don't want it in your layout.
 
 More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
+
+## Features
+
+### Recent Activities Feed
+The dashboard includes a live Recent Activities feed that displays:
+- Login success events
+- Profile updates
+- Password changes
+- Avatar updates
+
+The feed automatically updates when users perform these actions and includes:
+- Loading skeleton states
+- Empty state when no activities exist
+- Error handling with retry functionality
+- Relative timestamps (e.g., "2 hours ago")
+- Activity-type icons and colors
+
+### Authentication & User Management
+- JWT-based authentication
+- Role-based access control (Admin/User)
+- Profile management
+- Avatar upload
+- Password change functionality
+
+### Admin Panel
+- User management (create, enable/disable, role changes)
+- Admin-only access controls
+- Safety rules (self-protection, last-admin protection)
 
 ## Data Fetching
 

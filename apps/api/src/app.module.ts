@@ -4,6 +4,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ActivitiesModule } from './activities/activities.module';
 import { AuthModule } from './auth/auth.module';
 import { databaseConfig } from './config/database.config';
 import { UsersModule } from './users/users.module';
@@ -23,6 +24,7 @@ import { UsersModule } from './users/users.module';
     }),
     UsersModule,
     AuthModule,
+    ActivitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

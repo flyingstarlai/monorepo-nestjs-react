@@ -9,18 +9,70 @@ import {
   Star,
   TrendingUp,
   UserCheck,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '../../features/auth';
+import { useRecentActivities } from '../../features/activities';
 
 export const Route = createFileRoute('/_dashboard/dashboard')({
   component: DashboardComponent,
 });
 
+export { DashboardComponent };
+
 function DashboardComponent() {
   const { user } = useAuth();
+  const { data: activitiesData, isLoading, error, refetch } = useRecentActivities({ limit: 5 });
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'login_success':
+        return UserCheck;
+      case 'profile_updated':
+        return Settings;
+      case 'password_changed':
+        return Lock;
+      case 'avatar_updated':
+        return Activity;
+      default:
+        return Activity;
+    }
+  };
+
+  const getActivityIconColor = (type: string) => {
+    switch (type) {
+      case 'login_success':
+        return 'text-green-600 bg-green-50';
+      case 'profile_updated':
+        return 'text-blue-600 bg-blue-50';
+      case 'password_changed':
+        return 'text-yellow-600 bg-yellow-50';
+      case 'avatar_updated':
+        return 'text-purple-600 bg-purple-50';
+      default:
+        return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  };
 
   const quickActions = [
     {
@@ -199,35 +251,58 @@ function DashboardComponent() {
           <CardDescription>Your latest account activities</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 pb-3 border-b">
-              <div className="p-2 bg-green-50 rounded-full flex-shrink-0">
-                <UserCheck className="h-4 w-4 text-green-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">Successfully logged in</p>
-                <p className="text-xs text-muted-foreground">Just now</p>
-              </div>
+          {isLoading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="flex items-center gap-3 pb-3 border-b">
-              <div className="p-2 bg-blue-50 rounded-full flex-shrink-0">
-                <Settings className="h-4 w-4 text-blue-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">Profile updated</p>
-                <p className="text-xs text-muted-foreground">2 hours ago</p>
-              </div>
+          ) : error ? (
+            <div className="flex flex-col items-center gap-3 py-6">
+              <AlertCircle className="h-8 w-8 text-destructive" />
+              <p className="text-sm text-muted-foreground text-center">
+                Failed to load recent activities
+              </p>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-50 rounded-full flex-shrink-0">
-                <Shield className="h-4 w-4 text-purple-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">Account created</p>
-                <p className="text-xs text-muted-foreground">Today</p>
-              </div>
+          ) : activitiesData?.items && activitiesData.items.length > 0 ? (
+            <div className="space-y-4">
+              {activitiesData.items.map((activity) => {
+                const Icon = getActivityIcon(activity.type);
+                const iconColor = getActivityIconColor(activity.type);
+                return (
+                  <div key={activity.id} className="flex items-center gap-3 pb-3 border-b last:border-b-0">
+                    <div className={`p-2 rounded-full flex-shrink-0 ${iconColor}`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{activity.message}</p>
+                      <p className="text-xs text-muted-foreground">{formatRelativeTime(activity.createdAt)}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3 py-6">
+              <Clock className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground text-center">
+                No recent activities
+              </p>
+              <p className="text-xs text-muted-foreground text-center">
+                Your activities will appear here as you use the app
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

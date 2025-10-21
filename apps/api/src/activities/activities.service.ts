@@ -1,0 +1,68 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Activity, ActivityType } from './entities/activity.entity';
+import { ActivityDto, ActivitiesResponseDto } from './dto/activity.dto';
+
+@Injectable()
+export class ActivitiesService {
+  constructor(
+    @InjectRepository(Activity)
+    private readonly activityRepository: Repository<Activity>,
+  ) {}
+
+  async record(
+    ownerId: string,
+    type: ActivityType,
+    message: string,
+    metadata?: Record<string, any>,
+  ): Promise<Activity> {
+    const activity = this.activityRepository.create({
+      ownerId,
+      type,
+      message,
+      metadata,
+    });
+    return this.activityRepository.save(activity);
+  }
+
+  async findByOwner(
+    ownerId: string,
+    options: { limit?: number; cursor?: string } = {},
+  ): Promise<ActivitiesResponseDto> {
+    const limit = Math.min(options.limit ?? 20, 100);
+    const queryBuilder = this.activityRepository
+      .createQueryBuilder('activity')
+      .where('activity.ownerId = :ownerId', { ownerId })
+      .orderBy('activity.createdAt', 'DESC')
+      .addOrderBy('activity.id', 'DESC')
+      .limit(limit + 1);
+
+    if (options.cursor) {
+      queryBuilder.andWhere(
+        '(activity.createdAt < :cursor OR (activity.createdAt = :cursor AND activity.id < :cursorId))',
+        { cursor: options.cursor, cursorId: options.cursor },
+      );
+    }
+
+    const activities = await queryBuilder.getMany();
+
+    const hasMore = activities.length > limit;
+    const items = hasMore ? activities.slice(0, -1) : activities;
+    const nextCursor = hasMore ? items[items.length - 1].createdAt.toISOString() : undefined;
+
+    return {
+      items: items.map(this.toDto),
+      nextCursor,
+    };
+  }
+
+  private toDto(activity: Activity): ActivityDto {
+    return {
+      id: activity.id,
+      type: activity.type,
+      message: activity.message,
+      createdAt: activity.createdAt.toISOString(),
+    };
+  }
+}
