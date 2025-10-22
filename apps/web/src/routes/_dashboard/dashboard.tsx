@@ -21,9 +21,8 @@ import { useRecentActivities } from '../../features/activities';
 import { useAuth } from '../../features/auth';
 
 
-
 export const Route = createFileRoute('/_dashboard/dashboard')({
-  component: Dashboard,
+    component: Dashboard,
 });
 
 function Dashboard() {
@@ -318,4 +317,4 @@ function Dashboard() {
     );
 }
 
-export const DashboardComponent = Dashboard;
+
