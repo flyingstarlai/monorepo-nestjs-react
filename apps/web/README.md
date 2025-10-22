@@ -1,23 +1,40 @@
 # Dashboard Web Application
 
-A modern React-based dashboard frontend with authentication, user management, admin features, and a recent activities feed.
+A modern React-based dashboard frontend with authentication, user management, admin features, and real-time activities feed.
 
-# Getting Started
+## Tech Stack
+
+- **Framework**: React 19 with TypeScript 5
+- **Build Tool**: Vite 7 with Turborepo
+- **Routing**: TanStack Router v1 (file-based routing)
+- **Forms**: @tanstack/react-form with Zod validation
+- **Data Fetching**: TanStack Query v5 for server state
+- **UI Components**: Shadcn UI (Radix UI primitives)
+- **Styling**: Tailwind CSS v4 with utility-first approach
+- **State Management**: TanStack Query + React Context
+- **Testing**: Vitest 3 + Testing Library
+- **Linting**: Biome 2 for formatting and linting
+
+## Getting Started
 
 To run this application:
 
 ```bash
 pnpm install
-pnpm start
+pnpm dev
 ```
 
-# Building For Production
+The application will be available at [http://localhost:5173](http://localhost:5173).
+
+## Building For Production
 
 To build this application for production:
 
 ```bash
 pnpm build
 ```
+
+The build output will be in the `dist/` directory.
 
 ## Testing
 
@@ -43,6 +60,15 @@ cp .env.example .env
 
 - `VITE_API_BASE_URL`: Base URL for API calls (default: `http://localhost:3000`)
 - `VITE_ENABLE_DEVTOOLS`: Enable/disable TanStack devtools (default: `true`)
+
+### API Integration
+
+The application integrates with the NestJS backend using:
+- JWT token storage in localStorage
+- Automatic token injection in API calls
+- Optimistic updates with TanStack Query
+- Error handling with user-friendly messages
+- Request/response interceptors for auth
 
 ## Linting & Formatting
 
@@ -134,215 +160,263 @@ The dashboard includes a live Recent Activities feed that displays:
 - Avatar updates
 
 The feed automatically updates when users perform these actions and includes:
-- Loading skeleton states
+- Loading skeleton states with Shadcn UI components
 - Empty state when no activities exist
 - Error handling with retry functionality
 - Relative timestamps (e.g., "2 hours ago")
-- Activity-type icons and colors
+- Activity-type icons and colors using Lucide React
 
 ### Authentication & User Management
-- JWT-based authentication
-- Role-based access control (Admin/User)
-- Profile management
-- Avatar upload
-- Password change functionality
+- JWT-based authentication with automatic token refresh
+- Role-based access control (Admin/User) with route guards
+- Profile management with optimistic updates
+- Avatar upload with 2MB limit and image preview
+- Password change functionality with validation
+- Protected routes with `beforeLoad` guards
 
 ### Admin Panel
 - User management (create, enable/disable, role changes)
-- Admin-only access controls
+- Admin-only access controls with role-based UI
 - Safety rules (self-protection, last-admin protection)
+- Real-time user list updates with TanStack Query
+- Bulk operations and user search
 
-## Data Fetching
+### Modern Form Handling
+- **TanStack React Form**: Declarative form management
+- **Zod Validation**: Type-safe schema validation
+- **Optimistic UI**: Instant feedback on form submissions
+- **Error Handling**: Comprehensive error display and recovery
+- **Accessibility**: ARIA labels and keyboard navigation
 
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
+### Responsive Design
+- Mobile-first approach with Tailwind CSS
+- Adaptive layouts for all screen sizes
+- Touch-friendly interactions
+- Dark mode support (configurable)
 
-For example:
+## Data Fetching & State Management
 
-```tsx
-const peopleRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/people',
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people');
-    return response.json() as Promise<{
-      results: {
-        name: string;
-      }[];
-    }>;
-  },
-  component: () => {
-    const data = peopleRoute.useLoaderData();
-    return (
-      <ul>
-        {data.results.map((person) => (
-          <li key={person.name}>{person.name}</li>
-        ))}
-      </ul>
-    );
-  },
-});
-```
+### TanStack Query Integration
 
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-### React-Query
-
-React-Query is an excellent addition or alternative to route loading and integrating it into you application is a breeze.
-
-First add your dependencies:
-
-```bash
-pnpm add @tanstack/react-query @tanstack/react-query-devtools
-```
-
-Next we'll need to create a query client and provider. We recommend putting those in `main.tsx`.
+The application uses TanStack Query for server state management with the following patterns:
 
 ```tsx
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-// ...
-
-const queryClient = new QueryClient();
-
-// ...
-
-if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
-
-  root.render(
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
-  );
-}
-```
-
-You can also add TanStack Query Devtools to the root route (optional).
-
-```tsx
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-
-const rootRoute = createRootRoute({
-  component: () => (
-    <>
-      <Outlet />
-      <ReactQueryDevtools buttonPosition="top-right" />
-      <TanStackRouterDevtools />
-    </>
-  ),
-});
-```
-
-Now you can use `useQuery` to fetch your data.
-
-```tsx
-import { useQuery } from '@tanstack/react-query';
-
-import './App.css';
-
-function App() {
-  const { data } = useQuery({
-    queryKey: ['people'],
-    queryFn: () =>
-      fetch('https://swapi.dev/api/people')
-        .then((res) => res.json())
-        .then((data) => data.results as { name: string }[]),
-    initialData: [],
+// Custom hook for API calls
+export function useUsersQuery() {
+  return useQuery({
+    queryKey: ['admin', 'users'],
+    queryFn: () => adminApi.listUsers(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
-
-  return (
-    <div>
-      <ul>
-        {data.map((person) => (
-          <li key={person.name}>{person.name}</li>
-        ))}
-      </ul>
-    </div>
-  );
 }
 
-export default App;
+// Mutation with optimistic updates
+export function useCreateUserMutation() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (payload: CreateUserPayload) => adminApi.createUser(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      toast.success('User created successfully');
+    },
+  });
+}
 ```
 
-You can find out everything you need to know on how to use React-Query in the [React-Query documentation](https://tanstack.com/query/latest/docs/framework/react/overview).
+### API Layer Architecture
 
-## State Management
+The application follows a layered API architecture:
 
-Another common requirement for React applications is state management. There are many options for state management in React. TanStack Store provides a great starting point for your project.
+```tsx
+// API service layer
+export const authApi = {
+  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+    
+    if (!response.ok) {
+      throw new AuthError('Invalid credentials');
+    }
+    
+    return response.json();
+  },
+};
 
-First you need to add TanStack Store as a dependency:
+// Token management
+export const tokenStorage = {
+  getToken(): string | null {
+    return localStorage.getItem('access_token');
+  },
+  // ... other token methods
+};
+```
+
+### Authentication Context
+
+React Context provides global authentication state:
+
+```tsx
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Authentication logic here
+  
+  return (
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+```
+
+## Form Management with TanStack React Form
+
+### Form Patterns
+
+The application uses TanStack React Form for type-safe form handling:
+
+```tsx
+// Form with Zod validation
+const form = useForm({
+  defaultValues: {
+    username: '',
+    password: '',
+  },
+  validators: {
+    onSubmit: loginSchema,
+  },
+  onSubmit: async ({ value }) => {
+    await login(value);
+    router.navigate({ to: '/dashboard' });
+  },
+});
+
+// Field usage
+<form.Field name="username">
+  {(field) => (
+    <Field>
+      <FieldLabel>Username</FieldLabel>
+      <Input
+        value={field.state.value}
+        onChange={(e) => field.handleChange(e.target.value)}
+        onBlur={field.handleBlur}
+      />
+      <FieldError errors={field.state.meta.errors} />
+    </Field>
+  )}
+</form.Field>
+```
+
+### Validation Strategy
+
+- **Zod Schemas**: Type-safe validation rules
+- **Field-level Validation**: Real-time validation feedback
+- **Form Submission**: Comprehensive validation before submit
+- **Error Display**: User-friendly error messages
+
+## Testing Strategy
+
+### Test Structure
+
+```tsx
+// Component testing with Testing Library
+describe('LoginForm', () => {
+  it('renders login form correctly', () => {
+    render(<LoginForm />);
+    
+    expect(screen.getByLabelText('Username')).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+  });
+  
+  it('handles form submission', async () => {
+    const mockLogin = vi.fn();
+    render(<LoginForm />);
+    
+    // Fill form and submit
+    // ... test implementation
+  });
+});
+```
+
+### Test Coverage Areas
+
+- **Authentication Flows**: Login, logout, password changes
+- **User Management**: CRUD operations, role changes
+- **Form Validation**: Error handling and user feedback
+- **Route Guards**: Protected routes and role-based access
+- **API Integration**: Mock API responses and error states
+
+## Performance Optimizations
+
+### Code Splitting
+- Automatic route-based code splitting with TanStack Router
+- Lazy loading of heavy components
+- Dynamic imports for admin features
+
+### Bundle Optimization
+- Tree shaking for unused dependencies
+- Asset optimization with Vite
+- Production builds with minification
+
+### Caching Strategy
+- TanStack Query caching with stale-while-revalidate
+- API response caching for user data
+- Optimistic updates for better UX
+
+## Deployment
+
+### Docker Deployment
 
 ```bash
-pnpm add @tanstack/store
+# Build Docker image
+docker build -t dashboard-web .
+
+# Run with Docker Compose
+docker-compose up web
 ```
 
-Now let's create a simple counter in the `src/App.tsx` file as a demonstration.
+### Production Considerations
 
-```tsx
-import { useStore } from '@tanstack/react-store';
-import { Store } from '@tanstack/store';
-import './App.css';
+- Use HTTPS in production
+- Configure proper CORS headers
+- Set up CDN for static assets
+- Monitor bundle size and performance
+- Configure proper error tracking
 
-const countStore = new Store(0);
+## Available Scripts
 
-function App() {
-  const count = useStore(countStore);
-  return (
-    <div>
-      <button onClick={() => countStore.setState((n) => n + 1)}>
-        Increment - {count}
-      </button>
-    </div>
-  );
-}
+```bash
+# Development
+pnpm dev              # Start development server
+pnpm build            # Build for production
+pnpm serve            # Preview production build
 
-export default App;
+# Testing
+pnpm test             # Run tests
+pnpm test:ui          # Run tests with UI
+
+# Code Quality
+pnpm lint             # Run Biome linter
+pnpm format           # Format code
+pnpm check            # Run all checks (lint + format)
 ```
-
-One of the many nice features of TanStack Store is the ability to derive state from other state. That derived state will update when the base state updates.
-
-Let's check this out by doubling the count using derived state.
-
-```tsx
-import { useStore } from '@tanstack/react-store';
-import { Store, Derived } from '@tanstack/store';
-import './App.css';
-
-const countStore = new Store(0);
-
-const doubledStore = new Derived({
-  fn: () => countStore.state * 2,
-  deps: [countStore],
-});
-doubledStore.mount();
-
-function App() {
-  const count = useStore(countStore);
-  const doubledCount = useStore(doubledStore);
-
-  return (
-    <div>
-      <button onClick={() => countStore.setState((n) => n + 1)}>
-        Increment - {count}
-      </button>
-      <div>Doubled - {doubledCount}</div>
-    </div>
-  );
-}
-
-export default App;
-```
-
-We use the `Derived` class to create a new store that is derived from another store. The `Derived` class has a `mount` method that will start the derived store updating.
-
-Once we've created the derived store we can use it in the `App` component just like we would any other store using the `useStore` hook.
-
-You can find out everything you need to know on how to use TanStack Store in the [TanStack Store documentation](https://tanstack.com/store/latest).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
 
 # Learn More
 
 You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
+
+### Key Documentation
+- [TanStack Router](https://tanstack.com/router) - File-based routing
+- [TanStack Query](https://tanstack.com/query) - Server state management
+- [TanStack Form](https://tanstack.com/form) - Form management
+- [Shadcn UI](https://ui.shadcn.com) - Component library
+- [Tailwind CSS](https://tailwindcss.com) - Utility-first CSS
+- [Vite](https://vitejs.dev) - Build tool and dev server
