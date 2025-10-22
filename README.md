@@ -13,7 +13,7 @@ A modern dashboard application with user management, authentication, and admin f
 
 ## Tech Stack
 
-- **Backend**: NestJS 11, TypeORM, PostgreSQL, JWT authentication
+- **Backend**: NestJS 11, TypeORM, Microsoft SQL Server (MSSQL), JWT authentication
 - **Frontend**: React 19, Vite, TanStack Router/Query/Form, Tailwind CSS, Shadcn UI
 - **Observability**: Prometheus metrics, Grafana dashboards, structured logging
 - **Deployment**: Docker, Docker Compose, Nginx
@@ -40,7 +40,7 @@ pnpm test
 - **Monorepo**: PNPM workspaces with Turborepo
 - **API**: NestJS with modular architecture, TypeORM entities, JWT guards
 - **Web**: React with feature-first structure, file-based routing, optimistic updates
-- **Database**: PostgreSQL with migrations and seed data
+- **Database**: Microsoft SQL Server (MSSQL) with migrations and seed data
 - **Monitoring**: HTTP metrics, request correlation, centralized logging
 
 ## Documentation

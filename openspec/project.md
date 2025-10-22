@@ -8,7 +8,7 @@ Monorepo for a modern dashboard with a NestJS API and a React web app. It delive
 
 - Monorepo: PNPM workspaces, Turborepo 2
 - Language/Runtime: TypeScript 5, Node >= 20
-- Backend: NestJS 11, TypeORM 0.3, Passport (JWT), class-validator/transformer, bcrypt; DB: PostgreSQL 15 across dev/test/prod
+- Backend: NestJS 11, TypeORM 0.3, Passport (JWT), class-validator/transformer, bcrypt; DB: Microsoft SQL Server (MSSQL) across dev/test/prod
 - Frontend: React 19, Vite 7, TanStack Router v1 (file-based via plugin), TanStack Query v5, TanStack Table v8, Tailwind CSS v4, Shadcn UI (Radix UI), TanStack React Form + Zod, Sonner toasts; env-based API URL via `VITE_API_BASE_URL`
 - Testing: Jest 29 for API (unit + e2e), Vitest 3 + Testing Library for web
 - Lint/Format: Biome 2 everywhere with shared config (@repo/biome-config)
@@ -28,7 +28,7 @@ Monorepo for a modern dashboard with a NestJS API and a React web app. It delive
 ### Architecture Patterns
 
 - Backend (NestJS): modular architecture (AuthModule, UsersModule); TypeORM repositories for data access; JWT auth via Passport strategy + `JwtAuthGuard`; role checks via `@Roles()` decorator and `RolesGuard`; avatar uploads via Multer (2MB limit)
-- Database: PostgreSQL (`dashboard` database) with TypeORM migrations; entities `User`, `Role`, `Activity` (users eager-load roles). Seeds ensure roles (Admin/User) and default admin/user credentials
+- Database: Microsoft SQL Server (MSSQL) (`dashboard` database) with TypeORM migrations; entities `User`, `Role`, `Activity` (users eager-load roles). Seeds ensure roles (Admin/User) and default admin/user credentials
 - Frontend (React): feature-first structure; file-based routing with TanStack Router; `QueryClient` and Auth context injected via root route context; Admin route guarded in `beforeLoad` by role
 - Data fetching/state: TanStack Query for queries/mutations, optimistic UX, and invalidation (e.g., invalidate `['admin','users']` after mutations)
 - API boundaries: REST endpoints under `/auth`, `/users`, and `/activities`; server returns sanitized user shapes (no password) and stable activity contracts `{ id, type, message, createdAt }`; consistent Nest exceptions map to client errors
@@ -59,7 +59,7 @@ Monorepo for a modern dashboard with a NestJS API and a React web app. It delive
 ## Important Constraints
 
 - Node.js >= 20
-- Dev DB: PostgreSQL via Docker (dashboard/dashboard123 by default); migrations required—`synchronize` disabled in all environments
+- Dev DB: External Microsoft SQL Server (no DB container); migrations required—`synchronize` disabled in all environments
 - Avatars: image-only uploads, max 2MB (enforced by Multer and controller)
 - Auth: disabled users cannot log in; JWT secret and expiry must be configured; tokens stored in `localStorage` on the web
 - API base URL is configurable via `VITE_API_BASE_URL` (defaults to `http://localhost:3000`)
@@ -79,4 +79,4 @@ Monorepo for a modern dashboard with a NestJS API and a React web app. It delive
 - Logging: Structured logging with `nestjs-pino`; request correlation via `x-request-id` interceptor; sensitive fields redacted; pretty logs in development.
 - Docker & Deployment: Dev and prod Dockerfiles and Compose files; optional Nginx reverse proxy with TLS and rate limiting; helper scripts `build-docker.sh` and `deploy.sh`; environment-driven config for API base URL and JWT settings.
 - Testing: API e2e tests cover `/metrics` and `/activities`; Jest used for API, Vitest + Testing Library for web; local gate remains `pnpm lint && pnpm test && pnpm build`.
-- Constraints: Node >= 20; PostgreSQL 15; TypeORM migrations enabled (`migrationsRun: true`); avatars limited to 2MB.
+- Constraints: Node >= 20; Microsoft SQL Server; TypeORM migrations enabled (`migrationsRun: true`); avatars limited to 2MB.

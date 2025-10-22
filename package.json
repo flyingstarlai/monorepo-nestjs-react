@@ -15,7 +15,7 @@
 		"format": "biome format --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
 		"docker:build": "./build-docker.sh",
 		"docker:build:push": "./build-docker.sh --push",
-        "docker:build:dev": "docker-compose build api web",
+		"docker:build:dev": "docker-compose build api web",
 		"docker:dev": "docker-compose up -d",
 		"docker:dev:stop": "docker-compose down",
 		"docker:dev:logs": "docker-compose logs -f",
@@ -30,6 +30,7 @@
 	"devDependencies": {
 		"@repo/biome-config": "workspace:*",
 		"@repo/typescript-config": "workspace:*",
+		"ts-node": "^10.9.2",
 		"turbo": "^2.5.8"
 	},
 	"packageManager": "pnpm@8.15.5",

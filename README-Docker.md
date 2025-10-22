@@ -27,7 +27,7 @@ This guide covers how to deploy and run the Dashboard application using Docker c
    This will start:
    - API service on http://localhost:3000
    - Web app on http://localhost:5173
-   - PostgreSQL database with automatic migrations and seed data
+   - Connects to your external MSSQL database; migrations and seeds run automatically
    - Redis cache (optional, start with `--profile redis`)
 
 3. **View logs:**
@@ -60,7 +60,7 @@ This guide covers how to deploy and run the Dashboard application using Docker c
 3. **Access the application:**
    - Web app: http://localhost (or your domain)
    - API: http://localhost:3000
-   - Database: localhost:5432
+   - Database: External SQL Server (configure host/port/user/password)
 
 ## Configuration
 
@@ -69,11 +69,11 @@ This guide covers how to deploy and run the Dashboard application using Docker c
 Key environment variables for production:
 
 ```bash
-# Database
-DB_HOST=db
-DB_PORT=5432
-DB_USERNAME=dashboard
-DB_PASSWORD=your-secure-password
+# Database (MSSQL)
+DB_HOST=<your-mssql-host>
+DB_PORT=1433
+DB_USERNAME=<your-username>
+DB_PASSWORD=<your-password>
 DB_DATABASE=dashboard
 
 # JWT
@@ -86,7 +86,7 @@ API_BASE_URL=https://your-domain.com
 
 ### Database Configuration
 
-**Development & Production:** Use PostgreSQL 15 with persistent volumes.
+**Development & Production:** Use an external Microsoft SQL Server. No database container is included.
 
 Migrations run automatically when the API container starts, and the first boot seeds default admin (`admin/nimda`) and user (`user/user123`) accounts.
 
@@ -146,11 +146,9 @@ docker-compose -f docker-compose.prod.yml up -d --scale api=2
 - **Technology:** Nginx serving static React build
 - **Resources:** 128MB limit, 64MB reservation
 
-### Database Service
-- **Port:** 5432
-- **Engine:** PostgreSQL 15
-- **Persistence:** Docker volume
-- **Resources:** 1GB limit, 512MB reservation
+### Database
+- External SQL Server (MSSQL)
+- Provided and managed outside Docker Compose
 
 ### Redis Service
 - **Port:** 6379
@@ -216,7 +214,7 @@ For production with HTTPS:
 ### Common Issues
 
 1. **Port conflicts:**
-   - Check if ports 80, 3000, 5432 are available
+   - Check if ports 80, 3000, 1433 are available
    - Modify ports in docker-compose files if needed
 
 2. **Permission issues:**
@@ -225,7 +223,7 @@ For production with HTTPS:
    ```
 
 3. **Database connection:**
-   - Ensure database is healthy: `docker-compose exec db pg_isready`
+   - Verify database connectivity from API container: `docker-compose exec api /bin/sh -lc "sqlcmd -S $DB_HOST,$DB_PORT -U $DB_USERNAME -P $DB_PASSWORD -Q 'SELECT 1'"`
    - Check environment variables in .env file
 
 4. **Build failures:**
@@ -242,8 +240,8 @@ docker-compose -f docker-compose.prod.yml up --build
 ### Performance Tuning
 
 1. **Database optimization:**
-   - Monitor connections: `docker-compose exec db psql -U dashboard -c "SELECT * FROM pg_stat_activity;"`
-   - Adjust PostgreSQL settings in docker-compose.prod.yml
+   - Monitor connections: connect with sqlcmd and query DMVs, e.g., `SELECT COUNT(*) FROM sys.dm_exec_sessions;`
+   - Adjust SQL Server settings on your database host (outside Compose)
 
 2. **Resource limits:**
    - Monitor resource usage: `docker stats`

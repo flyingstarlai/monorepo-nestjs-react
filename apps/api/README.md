@@ -5,7 +5,7 @@ A modern NestJS backend providing authentication, user management, activities tr
 ## Tech Stack
 
 - **Framework**: NestJS 11 with TypeScript 5
-- **Database**: PostgreSQL 15 with TypeORM 0.3
+- **Database**: Microsoft SQL Server (MSSQL) with TypeORM 0.3
 - **Authentication**: JWT with Passport strategy
 - **Validation**: class-validator and class-transformer
 - **Observability**: Prometheus metrics, structured logging with nestjs-pino
@@ -32,14 +32,14 @@ cp .env.example .env
 ```
 
 Key environment variables:
-- `DATABASE_URL`: PostgreSQL connection string
+- `DB_HOST`, `DB_PORT` (1433), `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE` (MSSQL connection)
 - `JWT_SECRET`: Secret for JWT token signing
 - `JWT_EXPIRES_IN`: Token expiration time
 - `NODE_ENV`: Environment (development/production)
 
 ### Database Setup
 
-The application uses PostgreSQL with automatic migrations and seeding:
+The application uses Microsoft SQL Server (MSSQL). Migrations run automatically and seeding sets up default roles and users:
 
 ```bash
 # Reset database (runs migrations and seeds)
@@ -108,7 +108,7 @@ Default seeded accounts:
 
 ### Database Configuration
 
-**Database Engine**: PostgreSQL 15 in every environment. TypeORM migrations run automatically at startup (`migrationsRun: true`), and the first boot seeds default roles plus admin (`admin/nimda`) and user (`user/user123`) accounts for testing.
+**Database Engine**: Microsoft SQL Server (MSSQL) in every environment (external instance). TypeORM migrations run automatically at startup (`migrationsRun: true`), and the first boot seeds default roles plus admin (`admin/nimda`) and user (`user/user123`) accounts for testing.
 
 **Performance**: Index on `(owner_id, createdAt)` keeps activity pagination efficient. Users eager-load roles to avoid N+1 queries.
 
@@ -183,7 +183,7 @@ docker-compose up api
 
 ### Production Considerations
 
-- Use PostgreSQL 15 with connection pooling
+- Use Microsoft SQL Server with appropriate connection pooling
 - Configure JWT secrets via environment variables
 - Enable HTTPS in production
 - Set up monitoring with Prometheus + Grafana

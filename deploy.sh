@@ -29,17 +29,9 @@ command_exists() {
 # Function to create backup
 create_backup() {
     if [ "$ENVIRONMENT" = "production" ]; then
-        echo -e "${YELLOW}📦 Creating database backup...${NC}"
+        echo -e "${YELLOW}📦 Skipping database backup (external MSSQL managed outside Compose)${NC}"
         mkdir -p ${BACKUP_DIR}
-        
-        docker-compose -f ${COMPOSE_FILE} exec -T db pg_dump -U dashboard dashboard > ${BACKUP_DIR}/backup-$(date +%Y%m%d-%H%M%S).sql
-        
-        if [ $? -eq 0 ]; then
-            echo -e "${GREEN}✅ Database backup created${NC}"
-        else
-            echo -e "${RED}❌ Failed to create backup${NC}"
-            exit 1
-        fi
+        echo "Backups should be performed using your SQL Server tooling (e.g., BACKUP DATABASE)." | tee -a ${LOG_FILE}
     fi
 }
 
@@ -95,18 +87,16 @@ rollback() {
     
     # Stop current services
     docker-compose -f ${COMPOSE_FILE} down
-    
-    # Restore from backup if exists
+
+    # Database rollback is managed externally for MSSQL
     if [ -f "${BACKUP_DIR}/rollback.sql" ]; then
-        docker-compose -f ${COMPOSE_FILE} up -d db
-        sleep 10
-        docker-compose -f ${COMPOSE_FILE} exec -T db psql -U dashboard -d dashboard < ${BACKUP_DIR}/rollback.sql
+        echo -e "${YELLOW}⚠️  Detected ${BACKUP_DIR}/rollback.sql but DB rollback is not handled by this script. Use your MSSQL tooling to restore.${NC}"
     fi
     
     # Restart services
     docker-compose -f ${COMPOSE_FILE} up -d
     
-    echo -e "${GREEN}✅ Rollback completed${NC}"
+    echo -e "${GREEN}✅ Rollback completed (application only)${NC}"
 }
 
 # Main deployment function

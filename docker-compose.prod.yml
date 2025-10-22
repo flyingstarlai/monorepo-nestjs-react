@@ -13,16 +13,10 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USERNAME=dashboard
-      - DB_PASSWORD=${DB_PASSWORD:-dashboard123}
-      - DB_DATABASE=dashboard
+      - DB_TYPE=mssql
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
-    depends_on:
-      db:
-        condition: service_healthy
+
     networks:
       - dashboard-network
     restart: unless-stopped
@@ -56,34 +50,7 @@ services:
         reservations:
           memory: 64M
 
-  # Database (Production PostgreSQL)
-  db:
-    image: postgres:15-alpine
-    container_name: dashboard-db-prod
-    environment:
-      - POSTGRES_DB=dashboard
-      - POSTGRES_USER=dashboard
-      - POSTGRES_PASSWORD=${DB_PASSWORD:-dashboard123}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backups:/backups
-    networks:
-      - dashboard-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dashboard -d dashboard"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 512M
+
 
   # Redis (Production)
   redis:
@@ -129,8 +96,6 @@ services:
       - nginx  # Only start with --profile nginx
 
 volumes:
-  postgres_data:
-    driver: local
   redis_data:
     driver: local
 

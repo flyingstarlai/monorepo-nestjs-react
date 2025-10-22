@@ -27,6 +27,7 @@ import { SeedsModule } from './seeds/seeds.module';
     AuthModule,
     UsersModule,
     ActivitiesModule,
+    SeedsModule,
   ],
   controllers: [AppController],
   providers: [
