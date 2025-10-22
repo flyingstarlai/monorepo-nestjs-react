@@ -1,7 +1,6 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from '@tanstack/react-router';
+import { useForm } from '@tanstack/react-form';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button.tsx';
 import {
   Card,
@@ -10,17 +9,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card.tsx';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form.tsx';
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input.tsx';
 import { useAuth } from '../hooks';
-import { type LoginFormData, loginSchema } from '../schema';
+import { loginSchema } from '../schema';
 
 export function LoginForm() {
   const [error, setError] = useState('');
@@ -28,27 +20,27 @@ export function LoginForm() {
   const router = useRouter();
   const { login } = useAuth();
 
-  const form = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm({
     defaultValues: {
       username: '',
       password: '',
     },
+    validators: {
+      onSubmit: loginSchema,
+    },
+    onSubmit: async ({ value }) => {
+      setError('');
+      setIsLoading(true);
+      try {
+        await login(value);
+        router.navigate({ to: '/dashboard' });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Login failed');
+      } finally {
+        setIsLoading(false);
+      }
+    },
   });
-
-  const onSubmit = async (data: LoginFormData) => {
-    setError('');
-    setIsLoading(true);
-
-    try {
-      await login(data);
-      router.navigate({ to: '/dashboard' });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -60,42 +52,74 @@ export function LoginForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your username" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="Enter your password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void form.handleSubmit();
+            }}
+            className="space-y-4"
+          >
+            <FieldGroup>
+              <form.Field name="username">
+                {(field) => {
+                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>Username</FieldLabel>
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        aria-invalid={isInvalid}
+                        placeholder="Enter your username"
+                        autoComplete="username"
+                      />
+                      <FieldError
+                        errors={field.state.meta.errors.map((err: any) =>
+                          typeof err === 'string' ? err : err?.message,
+                        )}
+                      />
+                    </Field>
+                  );
+                }}
+              </form.Field>
 
-              {error && <div className="text-sm text-destructive text-center">{error}</div>}
+              <form.Field name="password">
+                {(field) => {
+                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        type="password"
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        aria-invalid={isInvalid}
+                        placeholder="Enter your password"
+                        autoComplete="current-password"
+                      />
+                      <FieldError
+                        errors={field.state.meta.errors.map((err: any) =>
+                          typeof err === 'string' ? err : err?.message,
+                        )}
+                      />
+                    </Field>
+                  );
+                }}
+              </form.Field>
+            </FieldGroup>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Signing in...' : 'Sign in'}
-              </Button>
-            </form>
-          </Form>
+            {error && <div className="text-sm text-destructive text-center">{error}</div>}
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Signing in...' : 'Sign in'}
+            </Button>
+          </form>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             <p className="font-medium">Demo credentials:</p>

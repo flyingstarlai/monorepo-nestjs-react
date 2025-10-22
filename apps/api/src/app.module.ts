@@ -1,13 +1,19 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
-import { MulterModule } from '@nestjs/platform-express';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 import { ActivitiesModule } from './activities/activities.module';
+
+import { AppMetricsModule } from './modules/metrics/metrics.module';
+import { HttpMetricsInterceptor } from './interceptors/http-metrics.interceptor';
+import { databaseConfig } from './config/database.config';
+import { RequestIdInterceptor } from './interceptors/request-id.interceptor';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthModule } from './auth/auth.module';
-import { databaseConfig } from './config/database.config';
-import { UsersModule } from './users/users.module';
+import { AppLoggerModule } from './modules/logger/logger.module';
+import { SeedsModule } from './seeds/seeds.module';
 
 @Module({
   imports: [
@@ -17,16 +23,22 @@ import { UsersModule } from './users/users.module';
     TypeOrmModule.forRootAsync({
       useFactory: () => databaseConfig,
     }),
-    MulterModule.register({
-      limits: {
-        fileSize: 2 * 1024 * 1024, // 2MB limit
-      },
-    }),
-    UsersModule,
+    AppMetricsModule,
     AuthModule,
+    UsersModule,
     ActivitiesModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RequestIdInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: HttpMetricsInterceptor,
+    },
+  ],
 })
 export class AppModule {}

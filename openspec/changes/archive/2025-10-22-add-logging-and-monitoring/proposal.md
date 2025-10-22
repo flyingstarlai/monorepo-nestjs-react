@@ -24,7 +24,7 @@ We lack consistent, structured observability across apps (API and Web). Today, d
   - Export traces via OTLP to OTel Collector; store/visualize in Tempo (Grafana)
   - Propagate trace context to downstream calls and logs (trace/span ids)
 - Frontend Metrics/Tracing (Web):
-  - Use existing `reportWebVitals.ts` to capture CLS/LCP/FCP/TTFB; keep local in Phase 1; optional shipping via OTel Web SDK to self-hosted Collector in Phase 2; tag by route and build version
+  - Use existing `report-web-vitals.ts` to capture CLS/LCP/FCP/TTFB; keep local in Phase 1; optional shipping via OTel Web SDK to self-hosted Collector in Phase 2; tag by route and build version
   - Optional web tracing (navigation, data-fetch spans) via OTel Web SDK; correlate with API traces through W3C trace headers
 - Dashboards & Alerts:
   - Provide Grafana dashboards: API latency (p50/p95), error rate, throughput, DB, and resource usage; Web Core Web Vitals
@@ -50,7 +50,7 @@ We lack consistent, structured observability across apps (API and Web). Today, d
 - Affected specs: observability/logging (new), observability/metrics (new), observability/tracing (planned, phase 2), deployment, development-setup
 - Affected code:
   - API: `apps/api/src/main.ts`, Nest modules (logger/guards/interceptors), DB provider for timings, health/metrics module
-  - Web: `apps/web/src/reportWebVitals.ts`, network layer to propagate trace headers, error boundary
+  - Web: `apps/web/src/report-web-vitals.ts`, network layer to propagate trace headers, error boundary
   - Infra: `docker-compose.yml`, `docker-compose.prod.yml`, `nginx/nginx.conf` (access logs); new observability services configs
 - Risks:
   - Over-logging -> cost/perf; mitigated by levels/sampling

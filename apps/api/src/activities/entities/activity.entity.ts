@@ -33,6 +33,6 @@ export class Activity {
   @Column({ type: 'json', nullable: true })
   metadata?: Record<string, any>;
 
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 }

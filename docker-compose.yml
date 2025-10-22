@@ -1,63 +1,69 @@
-version: '3.8'
-
 services:
   # API Service
   api:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-      target: base  # Use base stage for development with hot reload
+      target: development
     container_name: dashboard-api-dev
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=development
       - PORT=3000
-      - DATABASE_TYPE=sqlite
-      - DATABASE_DATABASE=./data.sqlite
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=dashboard
+      - DB_PASSWORD=dashboard123
+      - DB_DATABASE=dashboard
       - JWT_SECRET=dev-jwt-secret-change-in-production
       - JWT_EXPIRES_IN=7d
+      - CHOKIDAR_USEPOLLING=1
+      - WATCHPACK_POLLING=1
     volumes:
       - ./apps/api:/app/apps/api
       - ./packages:/app/packages
-      - ./package.json:/app/package.json
-      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
-      - api_node_modules:/app/node_modules
-      - api_data:/app/apps/api/data
-    working_dir: /app
-    command: sh -c "npm install -g pnpm && pnpm install && cd apps/api && pnpm run start:debug"
-    depends_on:
-      - db
+      - ./package.json:/app/package.json:ro
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml:ro
+      - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./turbo.json:/app/turbo.json:ro
     networks:
       - dashboard-network
     restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
 
   # Web Service
   web:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-      target: base  # Use base stage for development with hot reload
+      target: development
     container_name: dashboard-web-dev
     ports:
       - "5173:5173"
     environment:
       - VITE_API_BASE_URL=http://localhost:3000
+      - CHOKIDAR_USEPOLLING=1
+      - WATCHPACK_POLLING=1
     volumes:
       - ./apps/web:/app/apps/web
       - ./packages:/app/packages
-      - ./package.json:/app/package.json
-      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
-      - web_node_modules:/app/node_modules
+      - ./package.json:/app/package.json:ro
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml:ro
+      - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./turbo.json:/app/turbo.json:ro
     working_dir: /app
-    command: sh -c "npm install -g pnpm && pnpm install && cd apps/web && pnpm run dev"
     depends_on:
       - api
     networks:
       - dashboard-network
     restart: unless-stopped
 
-  # Database (SQLite for development, PostgreSQL for production)
+  # Database (PostgreSQL for all environments)
   db:
     image: postgres:15-alpine
     container_name: dashboard-db-dev
@@ -73,8 +79,12 @@ services:
     networks:
       - dashboard-network
     restart: unless-stopped
-    profiles:
-      - postgres  # Only start with --profile postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dashboard -d dashboard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   # Redis (optional, for caching/sessions)
   redis:
@@ -90,12 +100,53 @@ services:
     profiles:
       - redis  # Only start with --profile redis
 
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: dashboard-prometheus-dev
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - dashboard-network
+    restart: unless-stopped
+    profiles:
+      - observability  # Only start with --profile observability
+
+  # Grafana for visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: dashboard-grafana-dev
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - dashboard-network
+    restart: unless-stopped
+    profiles:
+      - observability  # Only start with --profile observability
+
 volumes:
-  api_node_modules:
-  api_data:
-  web_node_modules:
   postgres_data:
   redis_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   dashboard-network:

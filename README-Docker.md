@@ -27,8 +27,8 @@ This guide covers how to deploy and run the Dashboard application using Docker c
    This will start:
    - API service on http://localhost:3000
    - Web app on http://localhost:5173
-   - PostgreSQL database (optional, with `--profile postgres`)
-   - Redis cache (optional, with `--profile redis`)
+   - PostgreSQL database with automatic migrations and seed data
+   - Redis cache (optional, start with `--profile redis`)
 
 3. **View logs:**
    ```bash
@@ -70,11 +70,11 @@ Key environment variables for production:
 
 ```bash
 # Database
+DB_HOST=db
+DB_PORT=5432
+DB_USERNAME=dashboard
 DB_PASSWORD=your-secure-password
-DATABASE_HOST=db
-DATABASE_PORT=5432
-DATABASE_USERNAME=dashboard
-DATABASE_DATABASE=dashboard
+DB_DATABASE=dashboard
 
 # JWT
 JWT_SECRET=your-super-secure-jwt-secret
@@ -86,13 +86,9 @@ API_BASE_URL=https://your-domain.com
 
 ### Database Configuration
 
-**Development:** Uses SQLite by default (simpler setup)
-**Production:** Uses PostgreSQL with persistent volumes
+**Development & Production:** Use PostgreSQL 15 with persistent volumes.
 
-To use PostgreSQL in development:
-```bash
-docker-compose --profile postgres up -d
-```
+Migrations run automatically when the API container starts, and the first boot seeds default admin (`admin/nimda`) and user (`user/user123`) accounts.
 
 ## Build and Deployment
 

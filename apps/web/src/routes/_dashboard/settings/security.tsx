@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { Key } from 'lucide-react';
+import { Key, LucideLock } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,7 +26,7 @@ function SecuritySettings() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Lock className="h-5 w-5" />
+              <LucideLock className="h-5 w-5" />
               Password
             </CardTitle>
             <CardDescription>Change your password to keep your account secure</CardDescription>

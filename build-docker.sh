@@ -10,9 +10,11 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-REGISTRY=${REGISTRY:-"localhost:5000"}
+API_IMAGE=${API_IMAGE:-"twsbpmac/dashboard-api"}
+WEB_IMAGE=${WEB_IMAGE:-"twsbpmac/dashboard-web"}
 TAG=${TAG:-"latest"}
 PLATFORM=${PLATFORM:-"linux/amd64"}
+GIT_TAG=$(git rev-parse --short HEAD 2>/dev/null || echo "latest")
 
 echo -e "${GREEN}🐳 Building Docker images for platform: ${PLATFORM}${NC}"
 
@@ -20,15 +22,16 @@ echo -e "${GREEN}🐳 Building Docker images for platform: ${PLATFORM}${NC}"
 build_image() {
     local service=$1
     local dockerfile=$2
-    local context=${3:-"."}
+    local image_name=$3
+    local context=${4:-"."}
     
-    echo -e "${YELLOW}Building ${service} image...${NC}"
+    echo -e "${YELLOW}Building ${service} image (${image_name})...${NC}"
     
     docker buildx build \
         --platform ${PLATFORM} \
         --file ${dockerfile} \
-        --tag ${REGISTRY}/${service}:${TAG} \
-        --tag ${REGISTRY}/${service}:$(git rev-parse --short HEAD 2>/dev/null || echo "latest") \
+        --tag ${image_name}:${TAG} \
+        --tag ${image_name}:${GIT_TAG} \
         --load \
         ${context}
     
@@ -52,20 +55,22 @@ docker buildx create --use --name multiarch-builder --driver docker-container 2>
 docker buildx inspect --bootstrap
 
 # Build API image
-build_image "dashboard-api" "apps/api/Dockerfile"
+build_image "API" "apps/api/Dockerfile" "${API_IMAGE}"
 
 # Build Web image
-build_image "dashboard-web" "apps/web/Dockerfile"
+build_image "Web" "apps/web/Dockerfile" "${WEB_IMAGE}"
 
 # Show built images
 echo -e "${GREEN}📋 Built images:${NC}"
-docker images | grep dashboard-
+docker images | grep -E "${API_IMAGE}|${WEB_IMAGE}" || true
 
 # Optional: Push to registry
 if [ "$1" = "--push" ]; then
     echo -e "${YELLOW}Pushing images to registry...${NC}"
-    docker push ${REGISTRY}/dashboard-api:${TAG}
-    docker push ${REGISTRY}/dashboard-web:${TAG}
+    docker push ${API_IMAGE}:${TAG}
+    docker push ${API_IMAGE}:${GIT_TAG}
+    docker push ${WEB_IMAGE}:${TAG}
+    docker push ${WEB_IMAGE}:${GIT_TAG}
     echo -e "${GREEN}✅ Images pushed to registry${NC}"
 fi
 

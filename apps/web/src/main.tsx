@@ -9,7 +9,7 @@ import * as TanStackQueryProvider from './integrations/tanstack-query/root-provi
 import { routeTree } from './routeTree.gen';
 
 import './styles.css';
-import reportWebVitals from './reportWebVitals.ts';
+import reportWebVitals from './report-web-vitals.ts';
 
 // Create a new router instance with authentication context
 const TanStackQueryProviderContext = TanStackQueryProvider.getContext();

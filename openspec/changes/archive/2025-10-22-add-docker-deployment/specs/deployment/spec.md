@@ -45,7 +45,7 @@ The system SHALL support environment-specific configuration through Docker envir
 
 #### Scenario: Development environment
 - **WHEN** using docker-compose.yml
-- **THEN** SQLite database is used for simplicity
+- **THEN** PostgreSQL database container is used
 - **AND** development environment variables are loaded
 - **AND** hot reload and debugging features are enabled
 

@@ -44,8 +44,7 @@ The `activities` table stores user activity events with the following schema:
 - `metadata` (JSON, nullable) - Optional additional data
 - `createdAt` (datetime) - When the activity occurred
 
-**Development**: Uses SQLite with `synchronize: true` (auto-creates table)
-**Production**: Requires migration to create the `activities` table with indices on `(ownerId, createdAt DESC)` for performance
+**Database Engine**: PostgreSQL 15 in every environment. TypeORM migrations run automatically at startup, and the first boot seeds default roles plus admin (`admin/nimda`) and user (`user/user123`) accounts for testing. An index on `(owner_id, createdAt)` keeps activity pagination efficient.
 
 You can start editing the demo **APIs** by modifying [linksService](./src/links/links.service.ts) provider.
 

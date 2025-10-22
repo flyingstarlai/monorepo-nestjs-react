@@ -1,21 +1,50 @@
 # Multi-stage build for React web app
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
 
 # Copy package files
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json tsconfig.json ./
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/biome-config/package.json ./packages/biome-config/
 COPY packages/typescript-config/package.json ./packages/typescript-config/
+COPY packages/api/package.json ./packages/api/
+COPY apps/web/package.json ./apps/web/package.json
+COPY apps/api/package.json ./apps/api/package.json
 
 # Install pnpm
-RUN npm install -g pnpm
+RUN corepack enable && corepack prepare pnpm@8.15.5 --activate
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
+
+# Development stage with hot reload
+FROM base AS development
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@8.15.5 --activate
+
+# Copy manifests and dependencies from deps stage
+COPY --from=deps /app/package.json ./package.json
+COPY --from=deps /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=deps /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=deps /app/turbo.json ./turbo.json
+COPY --from=deps /app/tsconfig.json ./tsconfig.json
+COPY --from=deps /app/apps ./apps
+COPY --from=deps /app/packages ./packages
+COPY --from=deps /app/node_modules ./node_modules
+
+# Development environment variables
+ENV NODE_ENV=development
+ENV VITE_API_BASE_URL=http://localhost:3000
+ENV CHOKIDAR_USEPOLLING=1
+ENV WATCHPACK_POLLING=1
+
+# Default command runs Vite dev server
+CMD ["pnpm", "--filter", "dashboard-web", "dev"]
 
 # Build stage
 FROM base AS builder

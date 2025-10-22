@@ -10,7 +10,7 @@ The project needs containerized deployment support for consistent environments a
 - Add docker-compose.prod.yml for production deployment
 - Add .dockerignore files for optimized builds
 - Add build scripts for cross-compilation to Linux AMD64
-- **BREAKING**: Change database default from SQLite to PostgreSQL in production
+- **BREAKING**: Change database default from SQLite to PostgreSQL across all environments
 
 ## Impact
 

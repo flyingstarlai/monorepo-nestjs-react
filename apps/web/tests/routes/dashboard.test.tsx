@@ -1,10 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import { vi } from 'vitest';
-import * as activitiesHooks from '../../features/activities';
-import * as authHooks from '../../features/auth';
-import { DashboardComponent } from './dashboard';
+import { vi, describe, beforeEach, it, expect } from 'vitest';
+import '@testing-library/jest-dom';
+import * as activitiesHooks from '../../src/features/activities';
+import * as authHooks from '../../src/features/auth';
+import { DashboardComponent } from '../../src/routes/_dashboard/dashboard';
 
 // Mock the route component
 vi.mock('@tanstack/react-router', () => ({
@@ -24,7 +24,7 @@ const mockUser = {
   avatar: null,
 };
 
-vi.mock('../../features/auth', () => ({
+vi.mock('../../src/features/auth', () => ({
   useAuth: () => ({ user: mockUser }),
 }));
 
@@ -60,7 +60,7 @@ const renderWithProviders = (ui: React.ReactElement) => {
   const queryClient = createTestQueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>{ui}</BrowserRouter>
+      {ui}
     </QueryClientProvider>
   );
 };

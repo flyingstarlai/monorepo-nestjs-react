@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCreateUserMutation, useRolesQuery } from '../hooks';
+import { type CreateUserPayload } from '../api';
 
 const createUserSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -51,7 +52,7 @@ export function AddUserDialog({ children }: AddUserDialogProps) {
     },
     onSubmit: async ({ value }) => {
       try {
-        await createUserMutation.mutateAsync(value);
+        await createUserMutation.mutateAsync(value as CreateUserPayload);
         setOpen(false);
         form.reset();
       } catch {

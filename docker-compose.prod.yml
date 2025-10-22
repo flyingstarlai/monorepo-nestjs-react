@@ -13,12 +13,11 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - DATABASE_TYPE=postgres
-      - DATABASE_HOST=db
-      - DATABASE_PORT=5432
-      - DATABASE_USERNAME=dashboard
-      - DATABASE_PASSWORD=${DB_PASSWORD:-dashboard123}
-      - DATABASE_DATABASE=dashboard
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=dashboard
+      - DB_PASSWORD=${DB_PASSWORD:-dashboard123}
+      - DB_DATABASE=dashboard
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
     depends_on:

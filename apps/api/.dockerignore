@@ -17,8 +17,7 @@ build
 .env.test.local
 .env.production.local
 
-# Database
-*.sqlite
+# Database artifacts
 *.db
 
 # Logs

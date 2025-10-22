@@ -1,9 +1,12 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Inject, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+  ) {}
 
   @Get()
   getHello(): string {
@@ -19,4 +22,6 @@ export class AppController {
       environment: process.env.NODE_ENV || 'development',
     };
   }
+
+
 }

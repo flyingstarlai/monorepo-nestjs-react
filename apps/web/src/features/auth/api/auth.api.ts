@@ -97,6 +97,27 @@ export const authApi = {
 
     return JSON.parse(text);
   },
+
+  async changePassword(passwordData: { currentPassword: string; newPassword: string }): Promise<void> {
+    const token = tokenStorage.getToken();
+    if (!token) {
+      throw new AuthError('No authentication token');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(passwordData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new AuthError(error.message || 'Failed to change password');
+    }
+  },
 };
 
 export const tokenStorage = {

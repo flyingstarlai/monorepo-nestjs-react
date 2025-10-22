@@ -22,9 +22,9 @@ The project is a monorepo with NestJS API and React web app. Currently requires 
   - Rationale: Smaller final images, separate build dependencies
   - Alternatives considered: Single-stage, but larger image sizes
 
-- Decision: PostgreSQL as production database (SQLite for dev)
-  - Rationale: PostgreSQL better for production, SQLite for simplicity
-  - Alternatives considered: SQLite everywhere, but less robust
+- Decision: PostgreSQL as default database for all environments
+  - Rationale: Single database engine simplifies parity between development and production
+  - Alternatives considered: SQLite in development for simplicity, but diverging engines increase risk
 
 - Decision: Docker Compose for orchestration
   - Rationale: Simple, widely adopted, good for local dev
