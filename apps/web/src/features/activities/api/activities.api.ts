@@ -18,9 +18,13 @@ export interface ActivitiesResponseDto {
   nextCursor?: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
-export async function getActivities(params?: { limit?: number; cursor?: string }) {
+export async function getActivities(params?: {
+  limit?: number;
+  cursor?: string;
+}) {
   const token = tokenStorage.getToken();
   if (!token) {
     throw new Error('No authentication token');
@@ -34,11 +38,14 @@ export async function getActivities(params?: { limit?: number; cursor?: string }
     searchParams.set('cursor', params.cursor);
   }
 
-  const response = await fetch(`${API_BASE_URL}/activities?${searchParams.toString()}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/activities?${searchParams.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   if (!response.ok) {
     throw new Error('Failed to fetch activities');

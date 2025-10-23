@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Monorepo for a modern dashboard with a NestJS API and a React web app. It delivers JWT authentication, role-based access control (Admin/User), and an Admin Panel to create users, enable/disable accounts, and change roles. Shared tooling (TypeScript, Biome, Jest/Vitest) and Turborepo keep code style, testing, and builds consistent and fast.
+Monorepo for a modern dashboard with a NestJS API and a React web app. It delivers JWT authentication, role-based access control (Admin/User), and an Admin Panel to create users, enable/disable accounts, and change roles. Shared tooling (TypeScript, ESLint/Prettier, Jest/Vitest) and Turborepo keep code style, testing, and builds consistent and fast.
 
 ## Tech Stack
 
@@ -11,7 +11,7 @@ Monorepo for a modern dashboard with a NestJS API and a React web app. It delive
 - Backend: NestJS 11, TypeORM 0.3, Passport (JWT), class-validator/transformer, bcrypt; DB: Microsoft SQL Server (MSSQL) across dev/test/prod
 - Frontend: React 19, Vite 7, TanStack Router v1 (file-based via plugin), TanStack Query v5, TanStack Table v8, Tailwind CSS v4, Shadcn UI (Radix UI), TanStack React Form + Zod, Sonner toasts; env-based API URL via `VITE_API_BASE_URL`
 - Testing: Jest 29 for API (unit + e2e), Vitest 3 + Testing Library for web
-- Lint/Format: Biome 2 everywhere with shared config (@repo/biome-config)
+- Lint/Format: ESLint and Prettier everywhere with shared config (@repo/eslint-config)
 - Devtools: TanStack Devtools (Router + Query)
 
 ## Project Conventions
@@ -19,7 +19,7 @@ Monorepo for a modern dashboard with a NestJS API and a React web app. It delive
 ### Code Style
 
 - TypeScript first; strict settings via shared configs in `@repo/typescript-config` (ES2022 target; NodeNext/bundler resolution)
-- Formatting and linting via shared Biome config (`@repo/biome-config`); single quotes, 2-space indent, 100-char line width; kebab-case filenaming enforced; use `pnpm run check` in apps/web or apps/api for Biome operations; for individual commands use `npx @biomejs/biome format --write`
+- Formatting and linting via shared ESLint/Prettier config (`@repo/eslint-config`); single quotes, 2-space indent, 80-char line width; kebab-case filenaming enforced; use `pnpm run check` in apps/web or apps/api for ESLint/Prettier operations; for individual commands use `npx prettier --write` or `npx eslint --fix`
 - React: components in PascalCase; hooks prefixed with `use*`; colocate feature code under `src/features/*`; route files follow TanStack Router file-based naming (`__root.tsx`, `/_dashboard.tsx`)
 - Imports: web uses `@/*` path alias; prefer named exports; avoid default exports for shared modules
 - Tailwind CSS utility-first styling; avoid ad-hoc CSS files beyond global base
@@ -39,7 +39,7 @@ Monorepo for a modern dashboard with a NestJS API and a React web app. It delive
 - API: Jest for unit/integration; `apps/api/test/jest-e2e.json` for e2e tests. Prioritize AuthService.validateUser (disabled user denied), UsersService safety rules (self-protection, last-admin protection), and controller exception mapping
 - Web: Vitest + React Testing Library + JSDOM; test hooks (queries/mutations) and route guards; prefer component-level tests over snapshots; keep tests colocated near the unit
 - CI/local gates: run `pnpm lint && pnpm test && pnpm build` before merging; aim for meaningful coverage on auth/admin flows
-- Fixtures: seed data creates Admin `admin/nimda` and User `user/user123` for local dev
+- Fixtures: seed data creates Admin `admin/admin` and User `user/user` for local dev
 
 ### Git Workflow
 

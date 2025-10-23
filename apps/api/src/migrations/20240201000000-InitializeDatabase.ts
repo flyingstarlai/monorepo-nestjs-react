@@ -67,9 +67,15 @@ export class InitializeDatabase20240201000000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_activities_owner_created"`);
-    await queryRunner.query(`ALTER TABLE "activities" DROP CONSTRAINT IF EXISTS "FK_activities_owner"`);
-    await queryRunner.query(`ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "FK_users_role"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_activities_owner_created"`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "activities" DROP CONSTRAINT IF EXISTS "FK_activities_owner"`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "FK_users_role"`
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "activities"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "users"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "roles"`);

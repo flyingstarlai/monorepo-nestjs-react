@@ -1,9 +1,11 @@
 ## 0. Self-Hosted Policy
+
 - [x] Enforce self-hosted only: no telemetry egress to third parties; disable any SDK default exporters
 - [x] Use only self-hosted Prometheus and Grafana; no managed services
 - [x] Validate containers/network rules prevent outbound telemetry endpoints
 
 ## 1. Implementation
+
 - [x] 1.1 API Logging: Add `nestjs-pino` to `apps/api`
   - [x] Configure JSON logging to stdout
   - [x] Add request ID middleware (use `x-request-id` header; generate if missing)
@@ -25,8 +27,10 @@
   - [x] How to open Grafana and read the dashboard
 
 ## 2. Quality
+
 - [x] 2.1 E2E test: `/metrics` endpoint responds 200 and includes standard metrics
 - [x] 2.2 Logging redaction sanity: ensure tokens not present in logs during auth flows
 
 ## Status: COMPLETE ✅
+
 All logging and monitoring implementation is complete and operational.

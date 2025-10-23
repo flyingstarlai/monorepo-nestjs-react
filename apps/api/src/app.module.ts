@@ -1,45 +1,45 @@
-import { Module } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
-import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { ActivitiesModule } from './activities/activities.module';
+import { Module } from "@nestjs/common";
+import { APP_INTERCEPTOR } from "@nestjs/core";
+import { ConfigModule } from "@nestjs/config";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { AuthModule } from "./auth/auth.module";
+import { UsersModule } from "./users/users.module";
+import { ActivitiesModule } from "./activities/activities.module";
 
-import { AppMetricsModule } from './modules/metrics/metrics.module';
-import { HttpMetricsInterceptor } from './interceptors/http-metrics.interceptor';
-import { databaseConfig } from './config/database.config';
-import { RequestIdInterceptor } from './interceptors/request-id.interceptor';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { AppLoggerModule } from './modules/logger/logger.module';
-import { SeedsModule } from './seeds/seeds.module';
+import { AppMetricsModule } from "./modules/metrics/metrics.module";
+import { HttpMetricsInterceptor } from "./interceptors/http-metrics.interceptor";
+import { databaseConfig } from "./config/database.config";
+import { RequestIdInterceptor } from "./interceptors/request-id.interceptor";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+
+import { SeedsModule } from "./seeds/seeds.module";
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    TypeOrmModule.forRootAsync({
-      useFactory: () => databaseConfig,
-    }),
-    AppMetricsModule,
-    AuthModule,
-    UsersModule,
-    ActivitiesModule,
-    SeedsModule,
-  ],
-  controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: RequestIdInterceptor,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: HttpMetricsInterceptor,
-    },
-  ],
+	imports: [
+		ConfigModule.forRoot({
+			isGlobal: true,
+		}),
+		TypeOrmModule.forRootAsync({
+			useFactory: () => databaseConfig,
+		}),
+		AppMetricsModule,
+		AuthModule,
+		UsersModule,
+		ActivitiesModule,
+		SeedsModule,
+	],
+	controllers: [AppController],
+	providers: [
+		AppService,
+		{
+			provide: APP_INTERCEPTOR,
+			useClass: RequestIdInterceptor,
+		},
+		{
+			provide: APP_INTERCEPTOR,
+			useClass: HttpMetricsInterceptor,
+		},
+	],
 })
 export class AppModule {}

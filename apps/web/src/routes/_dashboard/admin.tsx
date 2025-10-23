@@ -8,11 +8,24 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Lock, Settings, Shield, UserCheck, UserPlus, Users } from 'lucide-react';
+import {
+  Lock,
+  Settings,
+  Shield,
+  UserCheck,
+  UserPlus,
+  Users,
+} from 'lucide-react';
 import React, { useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -84,7 +97,13 @@ function DebouncedInput({
     return () => clearTimeout(timeout);
   }, [value, onChange, debounce]);
 
-  return <Input {...props} value={value} onChange={(e) => setValue(e.target.value)} />;
+  return (
+    <Input
+      {...props}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+    />
+  );
 }
 
 function AdminPanel() {
@@ -93,7 +112,9 @@ function AdminPanel() {
   const setUserActiveMutation = useSetUserActiveMutation();
   const setUserRoleMutation = useSetUserRoleMutation();
 
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
   const [globalFilter, setGlobalFilter] = React.useState('');
 
   const handleToggleActive = useCallback(
@@ -120,7 +141,9 @@ function AdminPanel() {
           return (
             <div>
               <div className="font-medium">{userData.name}</div>
-              <div className="text-sm text-muted-foreground">@{userData.username}</div>
+              <div className="text-sm text-muted-foreground">
+                @{userData.username}
+              </div>
             </div>
           );
         },
@@ -181,7 +204,9 @@ function AdminPanel() {
             <div className="flex justify-end gap-2">
               <Select
                 value={userData.role}
-                onValueChange={(value: 'Admin' | 'User') => handleRoleChange(userData.id, value)}
+                onValueChange={(value: 'Admin' | 'User') =>
+                  handleRoleChange(userData.id, value)
+                }
                 disabled={userData.id === user?.id}
               >
                 <SelectTrigger className="w-24">
@@ -195,7 +220,9 @@ function AdminPanel() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleToggleActive(userData.id, !userData.isActive)}
+                onClick={() =>
+                  handleToggleActive(userData.id, !userData.isActive)
+                }
                 disabled={userData.id === user?.id}
               >
                 {userData.isActive ? 'Disable' : 'Enable'}
@@ -236,7 +263,9 @@ function AdminPanel() {
             <Shield className="h-8 w-8" />
             Admin Panel
           </h1>
-          <p className="mt-2 text-muted-foreground">Manage users and system administration</p>
+          <p className="mt-2 text-muted-foreground">
+            Manage users and system administration
+          </p>
         </div>
         <AddUserDialog>
           <Button>
@@ -254,7 +283,9 @@ function AdminPanel() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{users.length}</div>
-            <p className="text-xs text-muted-foreground">Total registered users</p>
+            <p className="text-xs text-muted-foreground">
+              Total registered users
+            </p>
           </CardContent>
         </Card>
 
@@ -267,7 +298,9 @@ function AdminPanel() {
             <div className="text-2xl font-bold">
               {users.filter((u) => u.role === 'Admin').length}
             </div>
-            <p className="text-xs text-muted-foreground">System administrators</p>
+            <p className="text-xs text-muted-foreground">
+              System administrators
+            </p>
           </CardContent>
         </Card>
 
@@ -277,18 +310,26 @@ function AdminPanel() {
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{users.filter((u) => u.isActive).length}</div>
-            <p className="text-xs text-muted-foreground">Currently active users</p>
+            <div className="text-2xl font-bold">
+              {users.filter((u) => u.isActive).length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Currently active users
+            </p>
           </CardContent>
         </Card>
 
         <Card className="w-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inactive Users</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Inactive Users
+            </CardTitle>
             <Lock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{users.filter((u) => !u.isActive).length}</div>
+            <div className="text-2xl font-bold">
+              {users.filter((u) => !u.isActive).length}
+            </div>
             <p className="text-xs text-muted-foreground">Disabled accounts</p>
           </CardContent>
         </Card>
@@ -329,7 +370,9 @@ function AdminPanel() {
             <Users className="h-5 w-5" />
             User Management
           </CardTitle>
-          <CardDescription>View and manage all registered users</CardDescription>
+          <CardDescription>
+            View and manage all registered users
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {/* Search Input */}
@@ -352,7 +395,10 @@ function AdminPanel() {
                       <TableHead key={header.id}>
                         {header.isPlaceholder
                           ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
                       </TableHead>
                     ))}
                   </TableRow>
@@ -367,7 +413,10 @@ function AdminPanel() {
                   </TableRow>
                 ) : error ? (
                   <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center text-destructive">
+                    <TableCell
+                      colSpan={columns.length}
+                      className="text-center text-destructive"
+                    >
                       Failed to load users
                     </TableCell>
                   </TableRow>
@@ -382,10 +431,16 @@ function AdminPanel() {
                   </TableRow>
                 ) : (
                   table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && 'selected'}
+                    >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
                         </TableCell>
                       ))}
                     </TableRow>
@@ -424,7 +479,9 @@ function AdminPanel() {
           {/* Page Size Selector and Page Info */}
           <div className="flex items-center justify-between space-x-2 py-2">
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-muted-foreground">Items per page</span>
+              <span className="text-sm text-muted-foreground">
+                Items per page
+              </span>
               <Select
                 value={table.getState().pagination.pageSize.toString()}
                 onValueChange={(value) => {
@@ -432,7 +489,9 @@ function AdminPanel() {
                 }}
               >
                 <SelectTrigger className="h-8 w-[70px]">
-                  <SelectValue placeholder={table.getState().pagination.pageSize} />
+                  <SelectValue
+                    placeholder={table.getState().pagination.pageSize}
+                  />
                 </SelectTrigger>
                 <SelectContent side="top">
                   {[10, 20, 30, 40, 50].map((pageSize) => (
@@ -445,7 +504,8 @@ function AdminPanel() {
             </div>
             <div className="flex items-center space-x-2">
               <span className="text-sm text-muted-foreground">
-                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                Page {table.getState().pagination.pageIndex + 1} of{' '}
+                {table.getPageCount()}
               </span>
             </div>
           </div>

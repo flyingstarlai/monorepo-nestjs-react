@@ -9,7 +9,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card.tsx';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input.tsx';
 import { useAuth } from '../hooks';
 import { loginSchema } from '../schema';
@@ -46,7 +51,9 @@ export function LoginForm() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Sign in</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Sign in
+          </CardTitle>
           <CardDescription className="text-center">
             Enter your username and password to access your account
           </CardDescription>
@@ -62,7 +69,8 @@ export function LoginForm() {
             <FieldGroup>
               <form.Field name="username">
                 {(field) => {
-                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                  const isInvalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid;
                   return (
                     <Field data-invalid={isInvalid}>
                       <FieldLabel htmlFor={field.name}>Username</FieldLabel>
@@ -78,7 +86,7 @@ export function LoginForm() {
                       />
                       <FieldError
                         errors={field.state.meta.errors.map((err: any) =>
-                          typeof err === 'string' ? err : err?.message,
+                          typeof err === 'string' ? err : err?.message
                         )}
                       />
                     </Field>
@@ -88,7 +96,8 @@ export function LoginForm() {
 
               <form.Field name="password">
                 {(field) => {
-                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                  const isInvalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid;
                   return (
                     <Field data-invalid={isInvalid}>
                       <FieldLabel htmlFor={field.name}>Password</FieldLabel>
@@ -105,7 +114,7 @@ export function LoginForm() {
                       />
                       <FieldError
                         errors={field.state.meta.errors.map((err: any) =>
-                          typeof err === 'string' ? err : err?.message,
+                          typeof err === 'string' ? err : err?.message
                         )}
                       />
                     </Field>
@@ -114,7 +123,11 @@ export function LoginForm() {
               </form.Field>
             </FieldGroup>
 
-            {error && <div className="text-sm text-destructive text-center">{error}</div>}
+            {error && (
+              <div className="text-sm text-destructive text-center">
+                {error}
+              </div>
+            )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Signing in...' : 'Sign in'}

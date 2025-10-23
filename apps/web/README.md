@@ -13,7 +13,7 @@ A modern React-based dashboard frontend with authentication, user management, ad
 - **Styling**: Tailwind CSS v4 with utility-first approach
 - **State Management**: TanStack Query + React Context
 - **Testing**: Vitest 3 + Testing Library
-- **Linting**: Biome 2 for formatting and linting
+- **Linting**: ESLint for linting and Prettier for formatting
 
 ## Getting Started
 
@@ -64,6 +64,7 @@ cp .env.example .env
 ### API Integration
 
 The application integrates with the NestJS backend using:
+
 - JWT token storage in localStorage
 - Automatic token injection in API calls
 - Optimistic updates with TanStack Query
@@ -72,7 +73,7 @@ The application integrates with the NestJS backend using:
 
 ## Linting & Formatting
 
-This project uses [Biome](https://biomejs.dev/) for linting and formatting. The following scripts are available:
+This project uses [ESLint](https://eslint.org/) for linting and [Prettier](https://prettier.io/) for formatting. The following scripts are available:
 
 ```bash
 pnpm lint
@@ -153,13 +154,16 @@ More information on layouts can be found in the [Layouts documentation](https://
 ## Features
 
 ### Recent Activities Feed
+
 The dashboard includes a live Recent Activities feed that displays:
+
 - Login success events
 - Profile updates
 - Password changes
 - Avatar updates
 
 The feed automatically updates when users perform these actions and includes:
+
 - Loading skeleton states with Shadcn UI components
 - Empty state when no activities exist
 - Error handling with retry functionality
@@ -167,6 +171,7 @@ The feed automatically updates when users perform these actions and includes:
 - Activity-type icons and colors using Lucide React
 
 ### Authentication & User Management
+
 - JWT-based authentication with automatic token refresh
 - Role-based access control (Admin/User) with route guards
 - Profile management with optimistic updates
@@ -175,6 +180,7 @@ The feed automatically updates when users perform these actions and includes:
 - Protected routes with `beforeLoad` guards
 
 ### Admin Panel
+
 - User management (create, enable/disable, role changes)
 - Admin-only access controls with role-based UI
 - Safety rules (self-protection, last-admin protection)
@@ -182,6 +188,7 @@ The feed automatically updates when users perform these actions and includes:
 - Bulk operations and user search
 
 ### Modern Form Handling
+
 - **TanStack React Form**: Declarative form management
 - **Zod Validation**: Type-safe schema validation
 - **Optimistic UI**: Instant feedback on form submissions
@@ -189,6 +196,7 @@ The feed automatically updates when users perform these actions and includes:
 - **Accessibility**: ARIA labels and keyboard navigation
 
 ### Responsive Design
+
 - Mobile-first approach with Tailwind CSS
 - Adaptive layouts for all screen sizes
 - Touch-friendly interactions
@@ -213,7 +221,7 @@ export function useUsersQuery() {
 // Mutation with optimistic updates
 export function useCreateUserMutation() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (payload: CreateUserPayload) => adminApi.createUser(payload),
     onSuccess: () => {
@@ -237,11 +245,11 @@ export const authApi = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials),
     });
-    
+
     if (!response.ok) {
       throw new AuthError('Invalid credentials');
     }
-    
+
     return response.json();
   },
 };
@@ -265,11 +273,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Authentication logic here
-  
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, isAuthenticated, isLoading, login, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -311,7 +321,7 @@ const form = useForm({
       <FieldError errors={field.state.meta.errors} />
     </Field>
   )}
-</form.Field>
+</form.Field>;
 ```
 
 ### Validation Strategy
@@ -330,16 +340,16 @@ const form = useForm({
 describe('LoginForm', () => {
   it('renders login form correctly', () => {
     render(<LoginForm />);
-    
+
     expect(screen.getByLabelText('Username')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
   });
-  
+
   it('handles form submission', async () => {
     const mockLogin = vi.fn();
     render(<LoginForm />);
-    
+
     // Fill form and submit
     // ... test implementation
   });
@@ -357,16 +367,19 @@ describe('LoginForm', () => {
 ## Performance Optimizations
 
 ### Code Splitting
+
 - Automatic route-based code splitting with TanStack Router
 - Lazy loading of heavy components
 - Dynamic imports for admin features
 
 ### Bundle Optimization
+
 - Tree shaking for unused dependencies
 - Asset optimization with Vite
 - Production builds with minification
 
 ### Caching Strategy
+
 - TanStack Query caching with stale-while-revalidate
 - API response caching for user data
 - Optimistic updates for better UX
@@ -404,7 +417,7 @@ pnpm test             # Run tests
 pnpm test:ui          # Run tests with UI
 
 # Code Quality
-pnpm lint             # Run Biome linter
+pnpm lint             # Run ESLint linter
 pnpm format           # Format code
 pnpm check            # Run all checks (lint + format)
 ```
@@ -414,6 +427,7 @@ pnpm check            # Run all checks (lint + format)
 You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
 
 ### Key Documentation
+
 - [TanStack Router](https://tanstack.com/router) - File-based routing
 - [TanStack Query](https://tanstack.com/query) - Server state management
 - [TanStack Form](https://tanstack.com/form) - Form management

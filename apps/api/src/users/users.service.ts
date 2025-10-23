@@ -23,7 +23,10 @@ export class UsersService {
   }
 
   async findOne(id: string): Promise<User | null> {
-    return await this.usersRepository.findOne({ where: { id }, relations: ['role'] });
+    return await this.usersRepository.findOne({
+      where: { id },
+      relations: ['role'],
+    });
   }
 
   async findById(id: string): Promise<User | null> {
@@ -148,7 +151,7 @@ export class UsersService {
   }
 
   private async hashPassword(password: string): Promise<string> {
-    const bcrypt = require('bcrypt');
+    const bcrypt = await import('bcrypt');
     return await bcrypt.hash(password, 10);
   }
 

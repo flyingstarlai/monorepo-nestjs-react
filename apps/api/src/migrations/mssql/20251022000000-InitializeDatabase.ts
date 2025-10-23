@@ -1,6 +1,8 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InitializeDatabaseMSSQL20251022000000 implements MigrationInterface {
+export class InitializeDatabaseMSSQL20251022000000
+  implements MigrationInterface
+{
   name = 'InitializeDatabaseMSSQL20251022000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -115,8 +117,14 @@ export class InitializeDatabaseMSSQL20251022000000 implements MigrationInterface
     `);
 
     // Drop tables
-    await queryRunner.query(`IF OBJECT_ID('[dbo].[activities]', 'U') IS NOT NULL DROP TABLE [dbo].[activities];`);
-    await queryRunner.query(`IF OBJECT_ID('[dbo].[users]', 'U') IS NOT NULL DROP TABLE [dbo].[users];`);
-    await queryRunner.query(`IF OBJECT_ID('[dbo].[roles]', 'U') IS NOT NULL DROP TABLE [dbo].[roles];`);
+    await queryRunner.query(
+      `IF OBJECT_ID('[dbo].[activities]', 'U') IS NOT NULL DROP TABLE [dbo].[activities];`
+    );
+    await queryRunner.query(
+      `IF OBJECT_ID('[dbo].[users]', 'U') IS NOT NULL DROP TABLE [dbo].[users];`
+    );
+    await queryRunner.query(
+      `IF OBJECT_ID('[dbo].[roles]', 'U') IS NOT NULL DROP TABLE [dbo].[roles];`
+    );
   }
 }

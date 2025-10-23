@@ -49,7 +49,9 @@ export class ActivitiesService {
 
     const hasMore = activities.length > limit;
     const items = hasMore ? activities.slice(0, -1) : activities;
-    const nextCursor = hasMore ? items[items.length - 1].createdAt.toISOString() : undefined;
+    const nextCursor = hasMore
+      ? items[items.length - 1].createdAt.toISOString()
+      : undefined;
 
     return {
       items: items.map(this.toDto),

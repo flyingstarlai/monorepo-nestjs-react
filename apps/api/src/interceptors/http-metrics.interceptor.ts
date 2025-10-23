@@ -27,25 +27,39 @@ export class HttpMetricsInterceptor implements NestInterceptor {
           const statusCode = response.statusCode.toString();
 
           // Record metrics
-          AppMetricsModule.getHttpRequestCounter().inc({ method, route, status_code: statusCode });
-          AppMetricsModule.getHttpRequestDuration().observe({ method, route, status_code: statusCode }, duration);
+          AppMetricsModule.getHttpRequestCounter().inc({
+            method,
+            route,
+            status_code: statusCode,
+          });
+          AppMetricsModule.getHttpRequestDuration().observe(
+            { method, route, status_code: statusCode },
+            duration
+          );
         },
         error: () => {
           const duration = (Date.now() - startTime) / 1000; // Convert to seconds
           const statusCode = response.statusCode?.toString() || '500';
 
           // Record metrics
-          AppMetricsModule.getHttpRequestCounter().inc({ method, route, status_code: statusCode });
-          AppMetricsModule.getHttpRequestDuration().observe({ method, route, status_code: statusCode }, duration);
+          AppMetricsModule.getHttpRequestCounter().inc({
+            method,
+            route,
+            status_code: statusCode,
+          });
+          AppMetricsModule.getHttpRequestDuration().observe(
+            { method, route, status_code: statusCode },
+            duration
+          );
         },
-      }),
+      })
     );
   }
 
   private getRoutePattern(request: Request): string {
     // Extract route pattern from request
     const path = request.route?.path || request.path;
-    
+
     // Convert numeric IDs to placeholder
     return path.replace(/\/\d+/g, '/{id}');
   }

@@ -36,7 +36,10 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    const user = await this.authService.validateUser(loginDto.username, loginDto.password);
+    const user = await this.authService.validateUser(
+      loginDto.username,
+      loginDto.password
+    );
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -66,9 +69,12 @@ export class AuthController {
 
   @Post('change-password')
   @UseGuards(JwtAuthGuard)
-  async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
+  async changePassword(
+    @Request() req,
+    @Body() changePasswordDto: ChangePasswordDto
+  ) {
     try {
-      const user = await this.usersService.findById(req.user.id);
+      const user = await this.usersService.findById(req.user.id as string);
       if (!user) {
         throw new UnauthorizedException('User not found');
       }
@@ -90,11 +96,15 @@ export class AuthController {
       );
 
       if (isSamePassword) {
-        throw new BadRequestException('New password must be different from current password');
+        throw new BadRequestException(
+          'New password must be different from current password'
+        );
       }
 
       // Hash new password and update user
-      const hashedNewPassword = await this.authService.hashPassword(changePasswordDto.newPassword);
+      const hashedNewPassword = await this.authService.hashPassword(
+        changePasswordDto.newPassword
+      );
 
       await this.usersService.update(user.id, {
         password: hashedNewPassword,
@@ -109,7 +119,10 @@ export class AuthController {
 
       return { message: 'Password changed successfully' };
     } catch (error) {
-      if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
+      if (
+        error instanceof UnauthorizedException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
       throw new BadRequestException('Failed to change password');
@@ -142,7 +155,7 @@ export class AuthController {
 
       // Create admin user with new password
       const adminPassword = await this.authService.hashPassword('nimda');
-      const _adminUser = await this.usersService.create({
+      await this.usersService.create({
         username: 'admin',
         name: 'Admin User',
         password: adminPassword,
@@ -152,7 +165,7 @@ export class AuthController {
 
       // Create regular user with new password
       const userPassword = await this.authService.hashPassword('user123');
-      const _regularUser = await this.usersService.create({
+      await this.usersService.create({
         username: 'user',
         name: 'Regular User',
         password: userPassword,

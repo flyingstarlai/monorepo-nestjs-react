@@ -22,7 +22,11 @@ import { ActivityType } from '../activities/entities/activity.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
-import type { CreateUserDto, UpdateUserRoleDto, UpdateUserStatusDto } from './dto';
+import type {
+  CreateUserDto,
+  UpdateUserRoleDto,
+  UpdateUserStatusDto,
+} from './dto';
 import type { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 
@@ -41,7 +45,10 @@ export class UsersController {
       const user = await this.usersService.createUserWithRole(createUserDto);
       return this.sanitizeUser(user);
     } catch (error) {
-      if (error instanceof Error && error.message === 'Username already exists') {
+      if (
+        error instanceof Error &&
+        error.message === 'Username already exists'
+      ) {
         throw new ConflictException('Username already exists');
       }
       if (error instanceof Error && error.message.includes('not found')) {
@@ -78,7 +85,10 @@ export class UsersController {
   @Put('avatar')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('avatar'))
-  async updateAvatar(@Request() req, @UploadedFile() file: Express.Multer.File) {
+  async updateAvatar(
+    @Request() req,
+    @UploadedFile() file: Express.Multer.File
+  ) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
@@ -98,11 +108,14 @@ export class UsersController {
     const mimeType = file.mimetype;
     const avatarData = `data:${mimeType};base64,${base64}`;
 
-    const updatedUser = await this.usersService.updateAvatar(req.user.id, avatarData);
+    const updatedUser = await this.usersService.updateAvatar(
+      req.user.id as string,
+      avatarData
+    );
 
     // Record avatar update activity
     await this.activitiesService.record(
-      req.user.id,
+      req.user.id as string,
       ActivityType.AVATAR_UPDATED,
       'Avatar updated successfully'
     );
@@ -122,11 +135,14 @@ export class UsersController {
     @Request() req,
     @Body() updateProfileDto: { name?: string; username?: string }
   ) {
-    const updatedUser = await this.usersService.updateProfile(req.user.id, updateProfileDto);
+    const updatedUser = await this.usersService.updateProfile(
+      req.user.id as string,
+      updateProfileDto
+    );
 
     // Record profile update activity
     await this.activitiesService.record(
-      req.user.id,
+      req.user.id as string,
       ActivityType.PROFILE_UPDATED,
       'Profile updated successfully'
     );
@@ -166,7 +182,10 @@ export class UsersController {
       }
     }
 
-    const updatedUser = await this.usersService.setActive(id, updateStatusDto.isActive);
+    const updatedUser = await this.usersService.setActive(
+      id,
+      updateStatusDto.isActive
+    );
     if (!updatedUser) {
       throw new NotFoundException('User not found');
     }
@@ -187,7 +206,11 @@ export class UsersController {
     }
 
     // Self-protection: cannot demote self from Admin
-    if (req.user.id === id && user.role.name === 'Admin' && updateRoleDto.roleName !== 'Admin') {
+    if (
+      req.user.id === id &&
+      user.role.name === 'Admin' &&
+      updateRoleDto.roleName !== 'Admin'
+    ) {
       throw new ForbiddenException('Cannot demote your own admin role');
     }
 
@@ -199,7 +222,10 @@ export class UsersController {
       }
     }
 
-    const updatedUser = await this.usersService.setRole(id, updateRoleDto.roleName);
+    const updatedUser = await this.usersService.setRole(
+      id,
+      updateRoleDto.roleName
+    );
     if (!updatedUser) {
       throw new NotFoundException('User not found');
     }
@@ -217,7 +243,8 @@ export class UsersController {
   }
 
   private sanitizeUser(user: User) {
-    const { password: _password, ...sanitized } = user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...sanitized } = user;
     return {
       ...sanitized,
       role: user.role.name,

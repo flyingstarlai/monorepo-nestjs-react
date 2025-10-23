@@ -32,6 +32,7 @@ cp .env.example .env
 ```
 
 Key environment variables:
+
 - `DB_HOST`, `DB_PORT` (1433), `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE` (MSSQL connection)
 - `JWT_SECRET`: Secret for JWT token signing
 - `JWT_EXPIRES_IN`: Token expiration time
@@ -47,17 +48,20 @@ pnpm run reset-db
 ```
 
 Default seeded accounts:
+
 - Admin: `admin/nimda`
 - User: `user/user123`
 
 ## API Endpoints
 
 ### Authentication
+
 - `POST /auth/login` - User login (records login activity)
 - `POST /auth/change-password` - Change password (records password change activity)
 - `GET /auth/profile` - Get current user profile
 
 ### Users
+
 - `PUT /users/profile` - Update user profile (records profile update activity)
 - `PUT /users/avatar` - Update user avatar (records avatar update activity, max 2MB)
 - `GET /users` - List all users (Admin only)
@@ -66,6 +70,7 @@ Default seeded accounts:
 - `GET /users/roles` - List available roles (Admin only)
 
 ### Activities
+
 - `GET /activities` - Get current user's recent activities
   - Query parameters:
     - `limit` (optional, default: 20) - Number of activities to return
@@ -74,6 +79,7 @@ Default seeded accounts:
   - Returns activities in reverse chronological order (newest first)
 
 ### Observability
+
 - `GET /metrics` - Prometheus metrics endpoint
   - HTTP request counters and duration histograms
   - Labeled by method, route pattern, and status code
@@ -84,6 +90,7 @@ Default seeded accounts:
 ### Core Entities
 
 **User Entity**
+
 - `id` (UUID, primary key) - Unique user identifier
 - `username` (string, unique) - User's login name
 - `name` (string) - Display name
@@ -94,11 +101,13 @@ Default seeded accounts:
 - `createdAt`/`updatedAt` (datetime) - Timestamps
 
 **Role Entity**
+
 - `id` (UUID, primary key) - Role identifier
 - `name` (string, unique) - Role name
 - `description` (string, nullable) - Role description
 
 **Activity Entity**
+
 - `id` (UUID, primary key) - Unique activity identifier
 - `ownerId` (string, foreign key) - ID of the user this activity belongs to
 - `type` (enum) - Activity type: `login_success`, `profile_updated`, `password_changed`, `avatar_updated`
@@ -115,6 +124,7 @@ Default seeded accounts:
 ## Architecture
 
 ### Modular Structure
+
 - **AuthModule**: Authentication, JWT strategy, password changes
 - **UsersModule**: User management, profile updates, avatar uploads
 - **ActivitiesModule**: Activity tracking and feed
@@ -122,6 +132,7 @@ Default seeded accounts:
 - **MetricsModule**: Prometheus metrics collection
 
 ### Security Features
+
 - JWT authentication with configurable expiration
 - Role-based access control with `@Roles()` decorator
 - Password hashing with bcrypt
@@ -130,6 +141,7 @@ Default seeded accounts:
 - Request correlation IDs for tracing
 
 ### Observability
+
 - **Metrics**: HTTP request counters and duration histograms
 - **Logging**: Structured JSON logs with nestjs-pino
 - **Request Tracing**: Correlation IDs across request lifecycle
@@ -147,8 +159,8 @@ pnpm run build            # Build application
 pnpm run test             # Run unit tests
 pnpm run test:e2e         # Run e2e tests
 pnpm run test:watch       # Run tests in watch mode
-pnpm run lint             # Run Biome linter
-pnpm run format           # Format code with Biome
+pnpm run lint             # Run ESLint linter
+pnpm run format           # Format code with Prettier
 
 # Database
 pnpm run reset-db         # Reset database (migrations + seeds)
@@ -193,17 +205,20 @@ docker-compose up api
 ## Monitoring & Observability
 
 ### Metrics
+
 - HTTP request metrics exposed at `/metrics`
 - Request count and duration by route, method, status
 - Compatible with Prometheus scraping
 
 ### Logging
+
 - Structured JSON logging in production
 - Request correlation IDs for distributed tracing
 - Sensitive data redaction (passwords, tokens)
 - Pretty-printed logs in development
 
 ### Health Checks
+
 - `/health` endpoint for application health
 - Database connectivity checks
 - Ready for Kubernetes liveness/readiness probes

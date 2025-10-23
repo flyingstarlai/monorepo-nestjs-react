@@ -15,10 +15,19 @@ function Form({ className, ...props }: React.ComponentProps<'div'>) {
 
 // Simple item container
 function FormItem({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="form-item" className={cn('grid gap-2', className)} {...props} />;
+  return (
+    <div
+      data-slot="form-item"
+      className={cn('grid gap-2', className)}
+      {...props}
+    />
+  );
 }
 
-function FormLabel({ className, ...props }: React.ComponentProps<typeof Label>) {
+function FormLabel({
+  className,
+  ...props
+}: React.ComponentProps<typeof Label>) {
   return <Label data-slot="form-label" className={cn(className)} {...props} />;
 }
 
@@ -27,13 +36,27 @@ function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
 }
 
 function FormDescription({ className, ...props }: React.ComponentProps<'p'>) {
-  return <p data-slot="form-description" className={cn('text-muted-foreground text-sm', className)} {...props} />;
+  return (
+    <p
+      data-slot="form-description"
+      className={cn('text-muted-foreground text-sm', className)}
+      {...props}
+    />
+  );
 }
 
-function FormMessage({ className, children, ...props }: React.ComponentProps<'p'>) {
+function FormMessage({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<'p'>) {
   if (!children) return null;
   return (
-    <p data-slot="form-message" className={cn('text-destructive text-sm', className)} {...props}>
+    <p
+      data-slot="form-message"
+      className={cn('text-destructive text-sm', className)}
+      {...props}
+    >
       {children}
     </p>
   );
@@ -56,4 +79,13 @@ function useFormField() {
   };
 }
 
-export { useFormField, Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormField };
+export {
+  useFormField,
+  Form,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
+  FormField,
+};

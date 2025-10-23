@@ -8,7 +8,7 @@ import { SeedsService } from '../src/seeds/seeds.service';
 
 async function resetDatabase() {
   console.log('🔄 Starting database reset...');
-  
+
   const app = await NestFactory.createApplicationContext(AppModule);
   const dataSource = app.get(DataSource);
   const seedsService = app.get(SeedsService);
@@ -40,7 +40,6 @@ async function resetDatabase() {
     console.log('🎉 Seeding completed');
 
     console.log('🎉 Database reset and seeding completed successfully!');
-
   } catch (error) {
     console.error('❌ Error during database reset:', error);
     throw error;

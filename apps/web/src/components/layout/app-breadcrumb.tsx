@@ -79,7 +79,9 @@ export function AppBreadcrumb() {
               )}
             </BreadcrumbItem>
             {index < items.length - 1 && (
-              <BreadcrumbSeparator className={index === 0 ? 'hidden md:block' : ''} />
+              <BreadcrumbSeparator
+                className={index === 0 ? 'hidden md:block' : ''}
+              />
             )}
           </div>
         ))}

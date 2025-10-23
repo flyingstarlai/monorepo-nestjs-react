@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { ActivitiesController } from './activities.controller';
 import { ActivitiesService } from './activities.service';
 import { ActivityType } from './entities/activity.entity';
@@ -51,7 +52,10 @@ describe('ActivitiesController', () => {
 
       const result = await controller.findAll(mockRequest, 20, undefined);
 
-      expect(service.findByOwner).toHaveBeenCalledWith('user-id', { limit: 20, cursor: undefined });
+      expect(service.findByOwner).toHaveBeenCalledWith('user-id', {
+        limit: 20,
+        cursor: undefined,
+      });
       expect(result).toEqual(mockActivitiesResponse);
     });
 

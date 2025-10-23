@@ -17,7 +17,8 @@ const getMigrationsPath = () => {
 const buildDatabaseOptions = (): TypeOrmModuleOptions => {
   const isProduction = process.env.NODE_ENV === 'production';
   const loggingEnv = process.env.TYPEORM_LOGGING;
-  const logging = loggingEnv !== undefined ? loggingEnv === 'true' : !isProduction;
+  const logging =
+    loggingEnv !== undefined ? loggingEnv === 'true' : !isProduction;
 
   const host = process.env.DB_HOST || 'localhost';
   const port = parseInt(process.env.DB_PORT || '1433', 10);
@@ -41,7 +42,6 @@ const buildDatabaseOptions = (): TypeOrmModuleOptions => {
       trustServerCertificate: true,
     } as any,
   };
-
 };
 
 export const databaseConfig = buildDatabaseOptions();

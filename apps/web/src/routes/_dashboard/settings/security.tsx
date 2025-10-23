@@ -2,7 +2,13 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Key, LucideLock } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { ChangePasswordForm } from '@/features/auth/components/change-password-form';
 
 export const Route = createFileRoute('/_dashboard/settings/security')({
@@ -17,7 +23,9 @@ function SecuritySettings() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Security</h1>
-          <p className="mt-2 text-muted-foreground">Manage your password and API access settings</p>
+          <p className="mt-2 text-muted-foreground">
+            Manage your password and API access settings
+          </p>
         </div>
       </div>
 
@@ -29,7 +37,9 @@ function SecuritySettings() {
               <LucideLock className="h-5 w-5" />
               Password
             </CardTitle>
-            <CardDescription>Change your password to keep your account secure</CardDescription>
+            <CardDescription>
+              Change your password to keep your account secure
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {isChangingPassword ? (
@@ -42,9 +52,14 @@ function SecuritySettings() {
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
                     <h3 className="font-medium">Last changed</h3>
-                    <p className="text-sm text-muted-foreground">3 months ago</p>
+                    <p className="text-sm text-muted-foreground">
+                      3 months ago
+                    </p>
                   </div>
-                  <Button variant="outline" onClick={() => setIsChangingPassword(true)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsChangingPassword(true)}
+                  >
                     Change Password
                   </Button>
                 </div>

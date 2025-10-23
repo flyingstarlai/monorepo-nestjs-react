@@ -1,9 +1,11 @@
 ## 1. Analysis & Planning
+
 - [x] 1.1 Review current `@willsoto/nestjs-prometheus` configuration in `apps/api/src/app.module.ts`
 - [x] 1.2 Check existing Grafana dashboard metric expectations in `grafana/dashboards/api-metrics.json`
 - [x] 1.3 Verify current `/metrics` endpoint output and identify missing HTTP metrics
 
 ## 2. Implementation
+
 - [x] 2.1 Configure HTTP metrics in PrometheusModule
   - [x] 2.1.1 Add default metrics configuration with custom histogram buckets
   - [x] 2.1.2 Configure path-based labeling (route templates, not raw paths)
@@ -14,6 +16,7 @@
 - [x] 2.4 Verify Grafana dashboard panels now show data
 
 ## 3. Quality & Validation
+
 - [x] 3.1 Test HTTP metrics collection across different endpoints:
   - [x] 3.1.1 GET / (root endpoint)
   - [x] 3.1.2 GET /health (health check)
@@ -31,6 +34,7 @@
 - [x] 3.4 Performance impact assessment - ensure <1ms overhead per request
 
 ## 4. Documentation
+
 - [x] 4.1 Update OBSERVABILITY_RUNBOOK.md with HTTP metrics usage
 - [x] 4.2 Add examples of common metric queries for troubleshooting
 - [x] 4.3 Document the new metric labels and their meanings

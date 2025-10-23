@@ -63,7 +63,9 @@ export function UserInfo() {
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">Email:</span>
                 </div>
-                <p className="text-sm text-muted-foreground">{user.email || 'No email provided'}</p>
+                <p className="text-sm text-muted-foreground">
+                  {user.email || 'No email provided'}
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -71,7 +73,9 @@ export function UserInfo() {
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">User ID:</span>
                 </div>
-                <p className="text-sm font-mono text-muted-foreground">{user.id}</p>
+                <p className="text-sm font-mono text-muted-foreground">
+                  {user.id}
+                </p>
               </div>
 
               <div className="space-y-2">

@@ -22,6 +22,9 @@ export class ActivitiesController {
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
     @Query('cursor') cursor?: string
   ): Promise<ActivitiesResponseDto> {
-    return await this.activitiesService.findByOwner(req.user.id, { limit, cursor });
+    return await this.activitiesService.findByOwner(req.user.id as string, {
+      limit,
+      cursor,
+    });
   }
 }

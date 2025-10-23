@@ -1,4 +1,8 @@
-import { nestJsConfig } from "@repo/eslint-config/nest-js";
+import { libraryConfig } from "@repo/eslint-config/library";
 
-/** @type {import("eslint").Linter.Config} */
-export default nestJsConfig;
+export default [
+	...libraryConfig,
+	{
+		ignores: ["dist/", "node_modules/", "coverage/"],
+	},
+];

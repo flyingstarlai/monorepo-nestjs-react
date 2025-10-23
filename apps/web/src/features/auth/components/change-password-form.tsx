@@ -2,7 +2,12 @@ import { useForm } from '@tanstack/react-form';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { authApi } from '../api';
@@ -15,7 +20,7 @@ const passwordSchema = z
       .min(8, 'Password must be at least 8 characters')
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        'Password must contain at least one uppercase letter, one lowercase letter, and one number',
+        'Password must contain at least one uppercase letter, one lowercase letter, and one number'
       ),
     confirmPassword: z.string().min(1, 'Please confirm your new password'),
   })
@@ -24,14 +29,15 @@ const passwordSchema = z
     path: ['confirmPassword'],
   });
 
-
-
 interface ChangePasswordFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export function ChangePasswordForm({ onSuccess, onCancel }: ChangePasswordFormProps) {
+export function ChangePasswordForm({
+  onSuccess,
+  onCancel,
+}: ChangePasswordFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -62,7 +68,10 @@ export function ChangePasswordForm({ onSuccess, onCancel }: ChangePasswordFormPr
       } catch (error) {
         toast({
           title: 'Error',
-          description: error instanceof Error ? error.message : 'Failed to change password',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'Failed to change password',
           variant: 'destructive',
         });
       } finally {
@@ -82,7 +91,8 @@ export function ChangePasswordForm({ onSuccess, onCancel }: ChangePasswordFormPr
       <FieldGroup>
         <form.Field name="currentPassword">
           {(field) => {
-            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid;
             return (
               <Field data-invalid={isInvalid}>
                 <FieldLabel htmlFor={field.name}>Current Password</FieldLabel>
@@ -99,7 +109,7 @@ export function ChangePasswordForm({ onSuccess, onCancel }: ChangePasswordFormPr
                 />
                 <FieldError
                   errors={field.state.meta.errors.map((err: any) =>
-                    typeof err === 'string' ? err : err?.message,
+                    typeof err === 'string' ? err : err?.message
                   )}
                 />
               </Field>
@@ -109,7 +119,8 @@ export function ChangePasswordForm({ onSuccess, onCancel }: ChangePasswordFormPr
 
         <form.Field name="newPassword">
           {(field) => {
-            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid;
             return (
               <Field data-invalid={isInvalid}>
                 <FieldLabel htmlFor={field.name}>New Password</FieldLabel>
@@ -126,7 +137,7 @@ export function ChangePasswordForm({ onSuccess, onCancel }: ChangePasswordFormPr
                 />
                 <FieldError
                   errors={field.state.meta.errors.map((err: any) =>
-                    typeof err === 'string' ? err : err?.message,
+                    typeof err === 'string' ? err : err?.message
                   )}
                 />
               </Field>
@@ -136,10 +147,13 @@ export function ChangePasswordForm({ onSuccess, onCancel }: ChangePasswordFormPr
 
         <form.Field name="confirmPassword">
           {(field) => {
-            const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid;
             return (
               <Field data-invalid={isInvalid}>
-                <FieldLabel htmlFor={field.name}>Confirm New Password</FieldLabel>
+                <FieldLabel htmlFor={field.name}>
+                  Confirm New Password
+                </FieldLabel>
                 <Input
                   id={field.name}
                   name={field.name}
@@ -153,7 +167,7 @@ export function ChangePasswordForm({ onSuccess, onCancel }: ChangePasswordFormPr
                 />
                 <FieldError
                   errors={field.state.meta.errors.map((err: any) =>
-                    typeof err === 'string' ? err : err?.message,
+                    typeof err === 'string' ? err : err?.message
                   )}
                 />
               </Field>

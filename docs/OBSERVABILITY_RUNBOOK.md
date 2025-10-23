@@ -40,6 +40,7 @@ docker logs dashboard-api-dev | grep '"level":"error"'
 ### Log Format
 
 Logs are structured JSON with the following fields:
+
 - `ts`: Timestamp
 - `level`: Log level (trace, debug, info, warn, error, fatal)
 - `msg`: Log message
@@ -75,11 +76,13 @@ Visit http://localhost:3000/metrics to see the raw Prometheus metrics output.
 ### Key Metrics
 
 #### HTTP Metrics
+
 - `http_server_requests_total`: Total HTTP requests by method, status, and route
 - `http_server_requests_duration_seconds`: Request duration histogram
 - `http_server_requests_duration_seconds_bucket`: Duration percentiles
 
 **Metric Labels:**
+
 - `method`: HTTP method (GET, POST, PUT, DELETE)
 - `route`: Route pattern (e.g., `/users/{id}` instead of `/users/123`)
 - `status_code`: HTTP status code (200, 404, 500, etc.)
@@ -88,6 +91,7 @@ Visit http://localhost:3000/metrics to see the raw Prometheus metrics output.
 Numeric IDs in URLs are automatically converted to `{id}` placeholders to group metrics by route pattern rather than specific resources.
 
 #### Process Metrics
+
 - `process_resident_memory_bytes`: Memory usage
 - `process_cpu_seconds_total`: CPU usage
 - `nodejs_heap_size_used_bytes`: Node.js heap usage
@@ -95,6 +99,7 @@ Numeric IDs in URLs are automatically converted to `{id}` placeholders to group 
 ### Prometheus Queries
 
 #### Latency
+
 ```promql
 # 95th percentile latency
 histogram_quantile(0.95, rate(http_server_requests_duration_seconds_bucket[5m]))
@@ -104,6 +109,7 @@ histogram_quantile(0.50, rate(http_server_requests_duration_seconds_bucket[5m]))
 ```
 
 #### Request Rate
+
 ```promql
 # Requests per second by status
 rate(http_server_requests_total[5m])
@@ -113,6 +119,7 @@ rate(http_server_requests_total{status=~"5.."}[5m]) / rate(http_server_requests_
 ```
 
 #### Resource Usage
+
 ```promql
 # Memory usage
 process_resident_memory_bytes
@@ -132,6 +139,7 @@ rate(process_cpu_seconds_total[5m])
 ### Dashboard Features
 
 The API Metrics dashboard includes:
+
 - **HTTP Request Latency**: p50 and p95 response times
 - **HTTP Request Rate**: Requests per second by status
 - **HTTP Error Rate**: Percentage of 5xx responses
@@ -149,6 +157,7 @@ The API Metrics dashboard includes:
 ### Common Issues
 
 #### Metrics Not Available
+
 ```bash
 # Check if API is running
 curl http://localhost:3000/metrics
@@ -158,11 +167,13 @@ curl http://localhost:9090/api/v1/targets
 ```
 
 #### Grafana Can't Connect to Prometheus
+
 1. Verify Prometheus is running: `docker ps | grep prometheus`
 2. Check Prometheus configuration: `docker exec dashboard-prometheus-dev cat /etc/prometheus/prometheus.yml`
 3. Test connection: `curl http://localhost:9090/api/v1/query?query=up`
 
 #### High Memory Usage
+
 ```bash
 # Check container resource usage
 docker stats
@@ -174,11 +185,13 @@ curl -s http://localhost:3000/metrics | grep process_resident_memory_bytes
 ### Performance Investigation
 
 1. **Identify Slow Requests**:
+
    ```bash
    docker logs dashboard-api-dev | grep '"responseTime":[0-9]\{4\}' | head -10
    ```
 
 2. **Check Error Patterns**:
+
    ```promql
    # Top error endpoints
    topk(10, rate(http_server_requests_total{status=~"5.."}[5m]))
@@ -193,7 +206,9 @@ curl -s http://localhost:3000/metrics | grep process_resident_memory_bytes
 ## Security Considerations
 
 ### Log Redaction
+
 The following fields are automatically redacted in logs:
+
 - `authorization` headers
 - `cookie` headers
 - `password` fields in request body
@@ -201,6 +216,7 @@ The following fields are automatically redacted in logs:
 - `secret` fields in request body
 
 ### Access Control
+
 - Change default Grafana credentials in production
 - Use environment variables for sensitive configuration
 - Restrict access to metrics endpoints in production
@@ -208,21 +224,25 @@ The following fields are automatically redacted in logs:
 ## Environment Variables
 
 ### Logging
+
 - `LOG_LEVEL`: Set log level (trace, debug, info, warn, error, fatal)
 - `NODE_ENV`: Set to production for JSON logs (no pretty printing)
 
 ### Metrics
+
 - `ENABLE_METRICS`: Enable/disable metrics endpoint (default: true)
 
 ## Production Deployment
 
 ### Docker Compose Production
+
 ```bash
 # Use production compose file
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml --profile observability up -d
 ```
 
 ### Monitoring Checklist
+
 - [ ] Update default passwords
 - [ ] Configure log retention policies
 - [ ] Set up backup for Grafana dashboards
@@ -233,18 +253,21 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml --profile observ
 ## Incident Response
 
 ### High Error Rate
+
 1. Check Grafana error rate panel
 2. Filter logs by error status codes
 3. Identify affected endpoints
 4. Check recent deployments
 
 ### High Latency
+
 1. Review p95 latency in Grafana
 2. Check for slow database queries
 3. Monitor resource utilization
 4. Look for memory leaks
 
 ### Service Down
+
 1. Check container status: `docker ps`
 2. Review container logs: `docker logs <container>`
 3. Verify resource availability

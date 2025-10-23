@@ -1,6 +1,7 @@
 import type { AuthResponse, LoginCredentials, User } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 export class AuthError extends Error {
   constructor(message: string) {
@@ -65,7 +66,10 @@ export const authApi = {
     return response.json();
   },
 
-  async updateProfile(profileData: { name?: string; username?: string }): Promise<User> {
+  async updateProfile(profileData: {
+    name?: string;
+    username?: string;
+  }): Promise<User> {
     const token = tokenStorage.getToken();
     if (!token) {
       throw new AuthError('No authentication token');
@@ -98,7 +102,10 @@ export const authApi = {
     return JSON.parse(text);
   },
 
-  async changePassword(passwordData: { currentPassword: string; newPassword: string }): Promise<void> {
+  async changePassword(passwordData: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<void> {
     const token = tokenStorage.getToken();
     if (!token) {
       throw new AuthError('No authentication token');
@@ -133,7 +140,9 @@ export const tokenStorage = {
     localStorage.removeItem('access_token');
   },
 
-  parseToken(token: string): { sub: number; username: string; role: string; exp?: number } | null {
+  parseToken(
+    token: string
+  ): { sub: number; username: string; role: string; exp?: number } | null {
     try {
       const payload = token.split('.')[1];
       const decoded = JSON.parse(atob(payload));

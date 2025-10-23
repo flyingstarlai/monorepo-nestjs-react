@@ -59,9 +59,7 @@ const createTestQueryClient = () =>
 const renderWithProviders = (ui: React.ReactElement) => {
   const queryClient = createTestQueryClient();
   return render(
-    <QueryClientProvider client={queryClient}>
-      {ui}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
   );
 };
 
@@ -81,7 +79,9 @@ describe('DashboardComponent', () => {
     renderWithProviders(<DashboardComponent />);
 
     expect(screen.getByText('Welcome back, Test User!')).toBeInTheDocument();
-    expect(screen.getAllByRole('generic', { name: '' })).toHaveLength(expect.any(Number));
+    expect(screen.getAllByRole('generic', { name: '' })).toHaveLength(
+      expect.any(Number)
+    );
     // Check for skeleton loaders
     const skeletons = document.querySelectorAll('.animate-pulse');
     expect(skeletons.length).toBeGreaterThan(0);
@@ -99,11 +99,15 @@ describe('DashboardComponent', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Successfully logged in')).toBeInTheDocument();
-      expect(screen.getByText('Profile updated successfully')).toBeInTheDocument();
+      expect(
+        screen.getByText('Profile updated successfully')
+      ).toBeInTheDocument();
     });
 
     expect(screen.getByText('Recent Activity')).toBeInTheDocument();
-    expect(screen.getByText('Your latest account activities')).toBeInTheDocument();
+    expect(
+      screen.getByText('Your latest account activities')
+    ).toBeInTheDocument();
   });
 
   it('renders empty state when no activities', () => {
@@ -132,7 +136,9 @@ describe('DashboardComponent', () => {
 
     renderWithProviders(<DashboardComponent />);
 
-    expect(screen.getByText('Failed to load recent activities')).toBeInTheDocument();
+    expect(
+      screen.getByText('Failed to load recent activities')
+    ).toBeInTheDocument();
     expect(screen.getByText('Retry')).toBeInTheDocument();
   });
 

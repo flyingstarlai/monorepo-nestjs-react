@@ -1,4 +1,9 @@
-import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useLocation,
+} from '@tanstack/react-router';
 import { CreditCard, Shield, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -38,7 +43,9 @@ function SettingsLayout() {
         {/* Sidebar Navigation */}
         <aside className="w-full lg:w-64 lg:flex-shrink-0">
           <div className="space-y-1">
-            <h2 className="px-3 text-lg font-semibold tracking-tight">Settings</h2>
+            <h2 className="px-3 text-lg font-semibold tracking-tight">
+              Settings
+            </h2>
             <p className="px-3 text-sm text-muted-foreground mb-4">
               Manage your account settings and preferences
             </p>
@@ -51,7 +58,9 @@ function SettingsLayout() {
                     to={item.href}
                     className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors',
-                      isActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
+                      isActive
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground'
                     )}
                   >
                     <item.icon className="h-4 w-4" />
@@ -64,7 +73,9 @@ function SettingsLayout() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {item.description}
+                      </p>
                     </div>
                   </Link>
                 );

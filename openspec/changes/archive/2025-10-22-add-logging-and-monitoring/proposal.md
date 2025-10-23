@@ -40,10 +40,9 @@ We lack consistent, structured observability across apps (API and Web). Today, d
   - Contribution guidelines: logging patterns, when/what to log, metrics naming conventions, trace span naming
 
 ### Recommended Option (Phase 1 default)
+
 - Open-source stack: Prometheus + Grafana only (Phase 1)
 - Reasons: simplest to operate, fast adoption, fully self-hosted, easy upgrade path to LGTM later
-
-
 
 ## Impact
 

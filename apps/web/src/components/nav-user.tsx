@@ -1,7 +1,17 @@
 import { useRouter } from '@tanstack/react-router';
-import { BadgeCheck, ChevronsUpDown, CreditCard, Lock, LogOut } from 'lucide-react';
+import {
+  BadgeCheck,
+  ChevronsUpDown,
+  CreditCard,
+  Lock,
+  LogOut,
+} from 'lucide-react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.tsx';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar.tsx';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,17 +91,23 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => router.navigate({ to: '/settings/profile' })}>
+              <DropdownMenuItem
+                onClick={() => router.navigate({ to: '/settings/profile' })}
+              >
                 <BadgeCheck />
                 Profile
               </DropdownMenuItem>
 
-              <DropdownMenuItem onClick={() => router.navigate({ to: '/settings/security' })}>
+              <DropdownMenuItem
+                onClick={() => router.navigate({ to: '/settings/security' })}
+              >
                 <Lock />
                 Security
               </DropdownMenuItem>
 
-              <DropdownMenuItem onClick={() => router.navigate({ to: '/settings/billing' })}>
+              <DropdownMenuItem
+                onClick={() => router.navigate({ to: '/settings/billing' })}
+              >
                 <CreditCard />
                 Billing
               </DropdownMenuItem>

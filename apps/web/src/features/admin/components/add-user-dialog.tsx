@@ -12,7 +12,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -70,7 +75,9 @@ export function AddUserDialog({ children }: AddUserDialogProps) {
             <UserPlus className="h-5 w-5" />
             Add New User
           </DialogTitle>
-          <DialogDescription>Create a new user account with role assignment.</DialogDescription>
+          <DialogDescription>
+            Create a new user account with role assignment.
+          </DialogDescription>
         </DialogHeader>
         <form
           onSubmit={(e) => {
@@ -82,7 +89,8 @@ export function AddUserDialog({ children }: AddUserDialogProps) {
           <FieldGroup>
             <form.Field name="username">
               {(field) => {
-                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Username</FieldLabel>
@@ -107,7 +115,8 @@ export function AddUserDialog({ children }: AddUserDialogProps) {
             </form.Field>
             <form.Field name="name">
               {(field) => {
-                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Full Name</FieldLabel>
@@ -132,7 +141,8 @@ export function AddUserDialog({ children }: AddUserDialogProps) {
             </form.Field>
             <form.Field name="password">
               {(field) => {
-                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Password</FieldLabel>
@@ -158,7 +168,8 @@ export function AddUserDialog({ children }: AddUserDialogProps) {
             </form.Field>
             <form.Field name="roleName">
               {(field) => {
-                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                const isInvalid =
+                  field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Role</FieldLabel>
@@ -189,7 +200,11 @@ export function AddUserDialog({ children }: AddUserDialogProps) {
             </form.Field>
           </FieldGroup>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={createUserMutation.isPending}>

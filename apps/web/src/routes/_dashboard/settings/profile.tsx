@@ -3,7 +3,13 @@ import { Upload } from 'lucide-react';
 import { useId, useRef, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/features/auth';
@@ -19,7 +25,9 @@ export const Route = createFileRoute('/_dashboard/settings/profile')({
 
 function ProfileSettings() {
   const { user } = useAuth();
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatar || null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(
+    user?.avatar || null
+  );
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -29,7 +37,9 @@ function ProfileSettings() {
   const avatarUploadMutation = useAvatarUploadMutation();
   const profileUpdateMutation = useProfileUpdateMutation();
 
-  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) {
       return;
@@ -110,12 +120,17 @@ function ProfileSettings() {
               <Upload className="h-5 w-5" />
               Avatar
             </CardTitle>
-            <CardDescription>Upload a profile picture. Maximum file size is 2MB.</CardDescription>
+            <CardDescription>
+              Upload a profile picture. Maximum file size is 2MB.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={avatarPreview || undefined} alt={user?.name} />
+                <AvatarImage
+                  src={avatarPreview || undefined}
+                  alt={user?.name}
+                />
                 <AvatarFallback className="text-lg">
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </AvatarFallback>
@@ -127,7 +142,9 @@ function ProfileSettings() {
                   disabled={avatarUploadMutation.isPending}
                 >
                   <Upload className="mr-2 h-4 w-4" />
-                  {avatarUploadMutation.isPending ? 'Uploading...' : 'Change Avatar'}
+                  {avatarUploadMutation.isPending
+                    ? 'Uploading...'
+                    : 'Change Avatar'}
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -136,7 +153,9 @@ function ProfileSettings() {
                   onChange={handleAvatarChange}
                   className="hidden"
                 />
-                {uploadError && <p className="text-sm text-destructive">{uploadError}</p>}
+                {uploadError && (
+                  <p className="text-sm text-destructive">{uploadError}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -159,12 +178,23 @@ function ProfileSettings() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor={usernameId}>Username</Label>
-                <Input id={usernameId} defaultValue={user?.username || ''} readOnly />
+                <Input
+                  id={usernameId}
+                  defaultValue={user?.username || ''}
+                  readOnly
+                />
               </div>
             </div>
             <div className="flex justify-end space-x-2">
-              {saveMessage && <span className="text-sm text-green-600 py-2">{saveMessage}</span>}
-              <Button onClick={handleSaveProfile} disabled={profileUpdateMutation.isPending}>
+              {saveMessage && (
+                <span className="text-sm text-green-600 py-2">
+                  {saveMessage}
+                </span>
+              )}
+              <Button
+                onClick={handleSaveProfile}
+                disabled={profileUpdateMutation.isPending}
+              >
                 {profileUpdateMutation.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>

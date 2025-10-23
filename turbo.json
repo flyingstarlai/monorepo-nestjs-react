@@ -1,25 +1,39 @@
 {
-  "$schema": "https://turborepo.com/schema.json",
-  "globalDependencies": ["**/.env.*local"],
-  "tasks": {
-    "dev": {
-      "cache": false,
-      "persistent": true
-    },
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
-    },
-    "lint": {
-      "outputs": []
-    },
-    "format": {
-      "outputs": []
-    },
-    "check": {
-      "outputs": []
-    },
-    "test": {},
-    "test:e2e": {}
-  }
+	"$schema": "https://turborepo.com/schema.json",
+	"globalDependencies": ["**/.env.*local"],
+	"globalEnv": [
+		"NODE_ENV",
+		"TYPEORM_LOGGING",
+		"DB_HOST",
+		"DB_PORT",
+		"DB_USERNAME",
+		"DB_PASSWORD",
+		"DB_DATABASE",
+		"LOG_LEVEL",
+		"npm_package_version"
+	],
+	"tasks": {
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+		"build": {
+			"dependsOn": ["^build"],
+			"outputs": ["dist/**"]
+		},
+		"lint": {
+			"outputs": []
+		},
+		"lint:fix": {
+			"outputs": []
+		},
+		"format": {
+			"outputs": []
+		},
+		"check": {
+			"outputs": []
+		},
+		"test": {},
+		"test:e2e": {}
+	}
 }

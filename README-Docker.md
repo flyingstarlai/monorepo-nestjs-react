@@ -13,6 +13,7 @@ This guide covers how to deploy and run the Dashboard application using Docker c
 ### Development Environment
 
 1. **Clone and setup:**
+
    ```bash
    git clone <repository-url>
    cd tc
@@ -20,10 +21,11 @@ This guide covers how to deploy and run the Dashboard application using Docker c
    ```
 
 2. **Start development containers:**
+
    ```bash
    npm run docker:dev
    ```
-   
+
    This will start:
    - API service on http://localhost:3000
    - Web app on http://localhost:5173
@@ -31,6 +33,7 @@ This guide covers how to deploy and run the Dashboard application using Docker c
    - Redis cache (optional, start with `--profile redis`)
 
 3. **View logs:**
+
    ```bash
    npm run docker:dev:logs
    ```
@@ -43,16 +46,18 @@ This guide covers how to deploy and run the Dashboard application using Docker c
 ### Production Environment
 
 1. **Configure environment:**
+
    ```bash
    cp .env.docker .env
    # Edit .env with your production values
    ```
 
 2. **Build and deploy:**
+
    ```bash
    # Build images for Linux AMD64
    npm run docker:build
-   
+
    # Deploy to production
    npm run deploy
    ```
@@ -95,11 +100,13 @@ Migrations run automatically when the API container starts, and the first boot s
 ### Building Images
 
 Build for local Linux AMD64:
+
 ```bash
 npm run docker:build
 ```
 
 Build and push to registry:
+
 ```bash
 npm run docker:build:push
 ```
@@ -136,21 +143,25 @@ docker-compose -f docker-compose.prod.yml up -d --scale api=2
 ## Services
 
 ### API Service
+
 - **Port:** 3000
 - **Health Check:** `/health`
 - **Environment:** NODE_ENV=production
 - **Resources:** 512MB limit, 256MB reservation
 
 ### Web Service
+
 - **Port:** 80 (via nginx)
 - **Technology:** Nginx serving static React build
 - **Resources:** 128MB limit, 64MB reservation
 
 ### Database
+
 - External SQL Server (MSSQL)
 - Provided and managed outside Docker Compose
 
 ### Redis Service
+
 - **Port:** 6379
 - **Persistence:** AOF enabled
 - **Memory Limit:** 256MB
@@ -161,6 +172,7 @@ docker-compose -f docker-compose.prod.yml up -d --scale api=2
 ### Health Checks
 
 All services include health checks:
+
 ```bash
 # Check all services
 docker-compose -f docker-compose.prod.yml ps
@@ -172,6 +184,7 @@ docker-compose -f docker-compose.prod.yml logs api
 ### Database Backups
 
 Automatic backups during deployment:
+
 ```bash
 # Manual backup
 ./deploy.sh backup
@@ -198,6 +211,7 @@ docker-compose -f docker-compose.prod.yml logs api
 For production with HTTPS:
 
 1. **Place SSL certificates:**
+
    ```bash
    mkdir -p nginx/ssl
    cp your-cert.pem nginx/ssl/cert.pem
@@ -218,6 +232,7 @@ For production with HTTPS:
    - Modify ports in docker-compose files if needed
 
 2. **Permission issues:**
+
    ```bash
    sudo chown -R $USER:$USER ./backups
    ```
@@ -233,6 +248,7 @@ For production with HTTPS:
 ### Debug Mode
 
 Run services with debug logging:
+
 ```bash
 docker-compose -f docker-compose.prod.yml up --build
 ```
@@ -259,6 +275,7 @@ docker-compose -f docker-compose.prod.yml up --build
 ## Support
 
 For issues:
+
 1. Check logs: `npm run deploy:logs`
 2. Verify health: `npm run deploy:health`
 3. Review configuration in .env file
