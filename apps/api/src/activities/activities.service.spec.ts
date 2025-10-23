@@ -1,18 +1,42 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Repository, SelectQueryBuilder } from "typeorm";
 import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 import { ActivitiesService } from "./activities.service";
 import { Activity, ActivityType } from "./entities/activity.entity";
-import type { Mocked } from "jest-mock";
+import { User } from "../users/entities/user.entity";
+import { Role, RoleType } from "../users/entities/role.entity";
+
 
 describe("ActivitiesService", () => {
 	let service: ActivitiesService;
-	let repository: Mocked<Repository<Activity>>;
+	let repository: jest.Mocked<Repository<Activity>>;
 
-	const mockActivity = {
+	const mockRole: Role = {
+		id: "role-id",
+		name: RoleType.USER,
+		description: "Regular user",
+		createdAt: new Date(),
+		updatedAt: new Date(),
+	};
+
+	const mockUser: User = {
+		id: "user-id",
+		username: "testuser",
+		name: "Test User",
+		password: "hashedpassword",
+		role: mockRole,
+		roleId: "role-id",
+		avatar: null,
+		isActive: true,
+		createdAt: new Date(),
+		updatedAt: new Date(),
+	};
+
+	const mockActivity: Activity = {
 		id: "activity-id",
 		ownerId: "user-id",
+		owner: mockUser,
 		type: ActivityType.LOGIN_SUCCESS,
 		message: "Successfully logged in",
 		metadata: {},
@@ -37,7 +61,7 @@ describe("ActivitiesService", () => {
 		}).compile();
 
 		service = module.get<ActivitiesService>(ActivitiesService);
-		repository = module.get(getRepositoryToken(Activity)) as unknown as Mocked<
+		repository = module.get(getRepositoryToken(Activity)) as unknown as jest.Mocked<
 			Repository<Activity>
 		>;
 	});
@@ -77,10 +101,11 @@ describe("ActivitiesService", () => {
 				addOrderBy: jest.fn().mockReturnThis(),
 				limit: jest.fn().mockReturnThis(),
 				andWhere: jest.fn().mockReturnThis(),
-				getMany: jest.fn().mockResolvedValue([mockActivity]),
-			};
+				getMany: jest.fn(),
+			} as any;
+			mockQueryBuilder.getMany.mockResolvedValue([mockActivity]);
 
-			repository.createQueryBuilder.mockReturnValue(mockQueryBuilder as any);
+			repository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
 			const result = await service.findByOwner("user-id");
 
@@ -117,10 +142,11 @@ describe("ActivitiesService", () => {
 				addOrderBy: jest.fn().mockReturnThis(),
 				limit: jest.fn().mockReturnThis(),
 				andWhere: jest.fn().mockReturnThis(),
-				getMany: jest.fn().mockResolvedValue([mockActivity]),
-			};
+				getMany: jest.fn(),
+			} as any;
+			mockQueryBuilder.getMany.mockResolvedValue([mockActivity]);
 
-			repository.createQueryBuilder.mockReturnValue(mockQueryBuilder as any);
+			repository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
 			await service.findByOwner("user-id", {
 				limit: 5,
@@ -145,10 +171,11 @@ describe("ActivitiesService", () => {
 				addOrderBy: jest.fn().mockReturnThis(),
 				limit: jest.fn().mockReturnThis(),
 				andWhere: jest.fn().mockReturnThis(),
-				getMany: jest.fn().mockResolvedValue(activities),
-			};
+				getMany: jest.fn(),
+			} as any;
+			mockQueryBuilder.getMany.mockResolvedValue(activities);
 
-			repository.createQueryBuilder.mockReturnValue(mockQueryBuilder as any);
+			repository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
 			const result = await service.findByOwner("user-id");
 
