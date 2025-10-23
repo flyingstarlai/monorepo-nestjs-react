@@ -18,9 +18,11 @@ import {
 import { AppModule } from "../src/app.module";
 import { User } from "../src/users/entities/user.entity";
 import { Role } from "../src/users/entities/role.entity";
+import { Server } from 'http';
 
 describe("Activities (e2e)", () => {
 	let app: INestApplication;
+	let server: Server;
 	let userRepository: Repository<User>;
 	let activityRepository: Repository<Activity>;
 
@@ -31,6 +33,7 @@ describe("Activities (e2e)", () => {
 
 		app = moduleFixture.createNestApplication();
 		await app.init();
+		server = app.getHttpServer() as Server;
 
 		userRepository = moduleFixture.get<Repository<User>>(
 			getRepositoryToken(User),
@@ -51,7 +54,7 @@ describe("Activities (e2e)", () => {
 
 	describe("/activities (GET)", () => {
 		it("should return 401 for unauthenticated requests", () => {
-			return request(app.getHttpServer()).get("/activities").expect(401);
+			return request(server).get("/activities").expect(401);
 		});
 
 		it("should return activities for authenticated user after login", async () => {
@@ -67,7 +70,7 @@ describe("Activities (e2e)", () => {
 			);
 
 			// Login to get JWT token
-			const loginResponse = await request(app.getHttpServer())
+			const loginResponse = await request(server)
 				.post("/auth/login")
 				.send({ username: "testuser", password: "testpassword" })
 				.expect(200);
@@ -75,7 +78,7 @@ describe("Activities (e2e)", () => {
 			const token = loginResponse.body.access_token;
 
 			// Get activities
-			const activitiesResponse = await request(app.getHttpServer())
+			const activitiesResponse = await request(server)
 				.get("/activities")
 				.set("Authorization", `Bearer ${token}`)
 				.expect(200);
@@ -115,7 +118,7 @@ describe("Activities (e2e)", () => {
 			}
 
 			// Login to get JWT token
-			const loginResponse = await request(app.getHttpServer())
+			const loginResponse = await request(server)
 				.post("/auth/login")
 				.send({ username: "testuser", password: "testpassword" })
 				.expect(200);
@@ -123,7 +126,7 @@ describe("Activities (e2e)", () => {
 			const token = loginResponse.body.access_token;
 
 			// Get activities with limit
-			const activitiesResponse = await request(app.getHttpServer())
+			const activitiesResponse = await request(server)
 				.get("/activities?limit=3")
 				.set("Authorization", `Bearer ${token}`)
 				.expect(200);
@@ -144,7 +147,7 @@ describe("Activities (e2e)", () => {
 			);
 
 			// Login to get JWT token (this creates a login activity)
-			const loginResponse = await request(app.getHttpServer())
+			const loginResponse = await request(server)
 				.post("/auth/login")
 				.send({ username: "testuser", password: "testpassword" })
 				.expect(200);
@@ -155,7 +158,7 @@ describe("Activities (e2e)", () => {
 			await activityRepository.clear();
 
 			// Get activities
-			const activitiesResponse = await request(app.getHttpServer())
+			const activitiesResponse = await request(server)
 				.get("/activities")
 				.set("Authorization", `Bearer ${token}`)
 				.expect(200);
