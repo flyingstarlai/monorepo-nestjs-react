@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { workspaceApi } from '@/features/admin/api/workspace.api';
+import { useWorkspaceActions } from '@/features/workspaces/stores/workspace.store';
 
 interface CreateWorkspaceDialogProps {
   children?: React.ReactNode;
@@ -36,12 +37,15 @@ export function CreateWorkspaceDialog({
   const [description, setDescription] = useState('');
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const queryClient = useQueryClient();
+  const { refetchWorkspaces } = useWorkspaceActions();
 
   const createWorkspaceMutation = useMutation({
     mutationFn: workspaceApi.createWorkspace,
     onSuccess: () => {
-      // Invalidate workspaces list
+      // Invalidate admin workspaces list
       queryClient.invalidateQueries({ queryKey: ['admin-workspaces'] });
+      // Refresh the workspace store to update the switcher
+      refetchWorkspaces();
       // Reset form
       setName('');
       setSlug('');
