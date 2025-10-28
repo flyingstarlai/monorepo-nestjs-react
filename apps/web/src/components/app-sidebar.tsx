@@ -34,21 +34,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const workspaceNavItems = [
     {
       title: 'Overview',
-      url: currentWorkspace ? `/c/${currentWorkspace.slug}` : '/dashboard',
+      url: currentWorkspace ? `/c/${currentWorkspace.slug}` : '/account',
       icon: LayoutDashboard,
     },
     {
       title: 'Members',
       url: currentWorkspace
         ? `/c/${currentWorkspace.slug}/members`
-        : '/dashboard',
+        : '/account',
       icon: Users,
     },
     {
       title: 'Settings',
       url: currentWorkspace
         ? `/c/${currentWorkspace.slug}/settings`
-        : '/dashboard',
+        : '/account',
       icon: Settings,
     },
   ];

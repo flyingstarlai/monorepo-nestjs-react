@@ -51,9 +51,7 @@ export function AppBreadcrumb() {
       ];
     }
 
-    if (pathname === '/dashboard') {
-      return [{ label: 'Dashboard', href: null }];
-    }
+    // No /dashboard route exists, remove this condition
 
     if (pathname === '/admin') {
       return [{ label: 'Platform Admin', href: null }];
@@ -119,7 +117,7 @@ export function AppBreadcrumb() {
     }
 
     // Default fallback
-    return [{ label: 'Dashboard', href: null }];
+    return [{ label: 'Home', href: null }];
   };
 
   const items = getBreadcrumbItems();

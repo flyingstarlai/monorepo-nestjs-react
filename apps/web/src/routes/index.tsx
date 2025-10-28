@@ -47,7 +47,7 @@ function RootRedirect() {
           <div className="flex flex-col items-center space-y-4">
             <div className="relative">
               <Building2 className="h-12 w-12 text-primary" />
-              <Loader2 className="h-6 w-6 text-primary animate-spin absolute -bottom-1 -right-1" />
+              <Loader2 className="h-6 w-6 text-primary animate-spin" />
             </div>
             <div className="space-y-2">
               <h1 className="text-xl font-semibold">Setting up your workspace</h1>
