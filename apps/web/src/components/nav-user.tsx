@@ -2,7 +2,6 @@ import { useRouter } from '@tanstack/react-router';
 import {
   BadgeCheck,
   ChevronsUpDown,
-  CreditCard,
   Lock,
   LogOut,
 } from 'lucide-react';
@@ -92,24 +91,17 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem
-                onClick={() => router.navigate({ to: '/settings/profile' })}
+                onClick={() => router.navigate({ to: '/account/profile' })}
               >
                 <BadgeCheck />
                 Profile
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                onClick={() => router.navigate({ to: '/settings/security' })}
+                onClick={() => router.navigate({ to: '/account/security' })}
               >
                 <Lock />
                 Security
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                onClick={() => router.navigate({ to: '/settings/billing' })}
-              >
-                <CreditCard />
-                Billing
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

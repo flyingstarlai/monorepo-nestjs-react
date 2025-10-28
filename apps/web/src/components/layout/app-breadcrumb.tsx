@@ -7,49 +7,46 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { useCurrentWorkspace } from '@/features/workspaces/stores/workspace.store';
+import { Home } from 'lucide-react';
 
 export function AppBreadcrumb() {
   const location = useLocation();
+  const currentWorkspace = useCurrentWorkspace();
 
   const getBreadcrumbItems = () => {
     const pathname = location.pathname;
 
     // Handle workspace routes: /c/:slug/...
-    const workspaceMatch = pathname.match(/^\/c\/([^\/]+)(.*)$/);
+    const workspaceMatch = pathname.match(/^\/c\/([^/]+)(.*)$/);
     if (workspaceMatch) {
       const slug = workspaceMatch[1];
       const restPath = workspaceMatch[2];
 
-      const capitalizedSlug = slug.toUpperCase();
+      // Use workspace name if available, otherwise fallback to slug
+      const workspaceLabel = currentWorkspace?.name || slug.toUpperCase();
 
       if (!restPath || restPath === '/') {
-        return [{ label: capitalizedSlug, href: null }];
-      }
-
-      if (restPath === '/dashboard') {
-        return [
-          { label: capitalizedSlug, href: `/c/${slug}` },
-          { label: 'Dashboard', href: null },
-        ];
+        return [{ label: workspaceLabel, href: null }];
       }
 
       if (restPath === '/members') {
         return [
-          { label: capitalizedSlug, href: `/c/${slug}` },
+          { label: workspaceLabel, href: `/c/${slug}` },
           { label: 'Members', href: null },
         ];
       }
 
       if (restPath === '/settings') {
         return [
-          { label: capitalizedSlug, href: `/c/${slug}` },
+          { label: workspaceLabel, href: `/c/${slug}` },
           { label: 'Settings', href: null },
         ];
       }
 
       // Generic workspace route
       return [
-        { label: capitalizedSlug, href: `/c/${slug}` },
+        { label: workspaceLabel, href: `/c/${slug}` },
         { label: restPath.replace(/^\//, ''), href: null },
       ];
     }
@@ -63,7 +60,7 @@ export function AppBreadcrumb() {
     }
 
     // Handle admin workspace routes: /admin/c/:slug/...
-    const adminWorkspaceMatch = pathname.match(/^\/admin\/c\/([^\/]+)(.*)$/);
+    const adminWorkspaceMatch = pathname.match(/^\/admin\/c\/([^/]+)(.*)$/);
     if (adminWorkspaceMatch) {
       const slug = adminWorkspaceMatch[1];
       const restPath = adminWorkspaceMatch[2];
@@ -91,36 +88,30 @@ export function AppBreadcrumb() {
       ];
     }
 
-    if (pathname.startsWith('/settings/')) {
-      const settingsPath = pathname.replace('/settings/', '');
+    // Handle account routes: /account/...
+    if (pathname.startsWith('/account/')) {
+      const accountPath = pathname.replace('/account/', '');
 
-      if (settingsPath === 'profile') {
+      if (accountPath === 'profile') {
         return [
-          { label: 'Settings', href: '/settings' },
+          { label: 'Account', href: '/account' },
           { label: 'Profile', href: null },
         ];
       }
 
-      if (settingsPath === 'security') {
+      if (accountPath === 'security') {
         return [
-          { label: 'Settings', href: '/settings' },
+          { label: 'Account', href: '/account' },
           { label: 'Security', href: null },
         ];
       }
 
-      if (settingsPath === 'billing') {
-        return [
-          { label: 'Settings', href: '/settings' },
-          { label: 'Billing', href: null },
-        ];
-      }
-
-      // Generic settings page
-      return [{ label: 'Settings', href: null }];
+      // Generic account page
+      return [{ label: 'Account', href: null }];
     }
 
-    if (pathname === '/settings') {
-      return [{ label: 'Settings', href: '/settings/profile' }];
+    if (pathname === '/account') {
+      return [{ label: 'Account', href: null }];
     }
 
     if (pathname === '/profile') {
@@ -133,21 +124,32 @@ export function AppBreadcrumb() {
 
   const items = getBreadcrumbItems();
 
+  // Add home breadcrumb if not already at root
+  const allItems = items.length > 0 && items[0].label !== 'Home' 
+    ? [{ label: 'Home', href: '/', icon: Home }, ...items]
+    : items;
+
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        {items.map((item, index) => (
+        {allItems.map((item, index) => (
           <div key={`${item.label}-${index}`} className="flex items-center">
             <BreadcrumbItem className={index === 0 ? 'hidden md:block' : ''}>
               {item.href ? (
                 <BreadcrumbLink asChild>
-                  <Link to={item.href}>{item.label}</Link>
+                  <Link to={item.href} className="flex items-center gap-1">
+                    {'icon' in item && item.icon && <item.icon className="w-3 h-3" />}
+                    {item.label}
+                  </Link>
                 </BreadcrumbLink>
               ) : (
-                <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                <BreadcrumbPage className="flex items-center gap-1">
+                  {'icon' in item && item.icon && <item.icon className="w-3 h-3" />}
+                  {item.label}
+                </BreadcrumbPage>
               )}
             </BreadcrumbItem>
-            {index < items.length - 1 && (
+            {index < allItems.length - 1 && (
               <BreadcrumbSeparator
                 className={index === 0 ? 'hidden md:block' : ''}
               />

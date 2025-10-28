@@ -1,26 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useWorkspace } from '@/features/workspaces';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { workspacesApi } from '@/features/workspaces';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-
+import { createFileRoute, useParams } from '@tanstack/react-router';
+import { useWorkspace, useWorkspaceMembers } from '@/features/workspaces';
 import {
   Card,
   CardContent,
@@ -28,272 +7,130 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/components/ui/avatar';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { MoreHorizontal, UserPlus, Shield, UserX } from 'lucide-react';
-import { WorkspaceRole } from '@/features/workspaces/types';
-import { AddMemberDialog } from '@/features/workspaces/components/add-member-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Building2, Users, Calendar, Mail, Shield } from 'lucide-react';
+import { useEffect } from 'react';
 
 export const Route = createFileRoute('/_dashboard/c/$slug/members')({
   component: WorkspaceMembers,
 });
 
 function WorkspaceMembers() {
-  const { currentWorkspace, canManageWorkspace } = useWorkspace();
-  const queryClient = useQueryClient();
+  const { slug } = useParams({ from: '/_dashboard/c/$slug/members' });
+  const { 
+    currentWorkspace, 
+    isLoading, 
+    workspaceProfile
+  } = useWorkspace();
+  
+  const {
+    data: members,
+    isLoading: membersLoading,
+    error: membersError,
+  } = useWorkspaceMembers(slug);
 
-  const { data: members, isLoading } = useQuery({
-    queryKey: ['workspace-members', currentWorkspace?.slug],
-    queryFn: () => workspacesApi.getWorkspaceMembers(currentWorkspace!.slug),
-    enabled: !!currentWorkspace,
-  });
-
-  const { toast } = useToast();
-
-  const toggleStatusMutation = useMutation({
-    mutationFn: ({ memberId }: { memberId: string }) =>
-      workspacesApi.updateMemberStatus(currentWorkspace!.slug, memberId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['workspace-members', currentWorkspace?.slug],
-      });
-      toast({
-        title: 'Success',
-        description: 'Member status updated successfully',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Failed to update member status',
-        variant: 'destructive',
-      });
-    },
-  });
-
-  const updateRoleMutation = useMutation({
-    mutationFn: ({
-      memberId,
-      role,
-    }: {
-      memberId: string;
-      role: WorkspaceRole;
-    }) =>
-      workspacesApi.updateMemberRole(currentWorkspace!.slug, memberId, role),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['workspace-members', currentWorkspace?.slug],
-      });
-      toast({
-        title: 'Success',
-        description: 'Member role updated successfully',
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: 'Error',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Failed to update member role',
-        variant: 'destructive',
-      });
-    },
-  });
+  if (isLoading || membersLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Skeleton className="w-8 h-8" />
+          <Skeleton className="h-8 w-48" />
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-64" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
+                  <Skeleton className="w-10 h-10 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-48" />
+                  </div>
+                  <Skeleton className="h-6 w-20" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!currentWorkspace) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center space-y-3">
-          <LoadingSpinner size="lg" />
-          <p className="text-sm text-muted-foreground">Loading workspace...</p>
+        <div className="text-center">
+          <h2 className="text-lg font-semibold mb-2">Workspace Not Found</h2>
+          <p className="text-muted-foreground">
+            The workspace &quot;{slug}&quot; does not exist or you don&apos;t have access to it.
+          </p>
         </div>
       </div>
     );
   }
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-9 w-32" />
-        </div>
-        <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Member</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead className="w-[70px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {[...Array(5)].map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="h-8 w-8 rounded-full" />
-                      <div className="space-y-1">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-3 w-16" />
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell><Skeleton className="h-6 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-8 w-8 rounded" /></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-    );
-  }
-
-  const getRoleBadgeVariant = (role: WorkspaceRole) => {
-    switch (role) {
-      case WorkspaceRole.OWNER:
-        return 'default';
-      case WorkspaceRole.AUTHOR:
-        return 'outline';
-      case WorkspaceRole.MEMBER:
-        return 'outline';
-      default:
-        return 'outline';
-    }
-  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Members</h1>
-          <p className="text-muted-foreground">
-            Manage workspace members and their permissions
-          </p>
-        </div>
-        {canManageWorkspace && (
-          <AddMemberDialog>
-            <Button>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add Member
-            </Button>
-          </AddMemberDialog>
-        )}
-      </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Workspace Members</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Workspace Members
+          </CardTitle>
           <CardDescription>
-            All members of {currentWorkspace.name} and their roles
+            Manage members and their roles in {currentWorkspace.name}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Member</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Joined</TableHead>
-                {canManageWorkspace && (
-                  <TableHead className="w-[70px]"></TableHead>
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {members?.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={member.avatar || undefined} />
-                        <AvatarFallback>
-                          {member.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{member.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          @{member.username}
-                        </div>
-                      </div>
+          {membersError ? (
+            <div className="text-center py-8 text-destructive">
+              Failed to load members: {membersError.message}
+            </div>
+          ) : members && members.length > 0 ? (
+            <div className="space-y-4">
+              {members.map((member) => (
+                <div
+                  key={member.id}
+                  className="flex items-center gap-4 p-4 border rounded-lg"
+                >
+                  <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium truncate">{member.name}</h3>
+                      <Badge variant={member.isActive ? 'default' : 'secondary'}>
+                        {member.isActive ? 'Active' : 'Inactive'}
+                      </Badge>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getRoleBadgeVariant(member.role)}>
-                      {member.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={member.isActive ? 'default' : 'secondary'}>
-                      {member.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(member.joinedAt).toLocaleDateString()}
-                  </TableCell>
-                  {canManageWorkspace && (
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() =>
-                              toggleStatusMutation.mutate({
-                                memberId: member.id,
-                              })
-                            }
-                            disabled={toggleStatusMutation.isPending}
-                          >
-                            <UserX className="mr-2 h-4 w-4" />
-                            {member.isActive ? 'Deactivate' : 'Activate'}
-                          </DropdownMenuItem>
-                          {member.role !== WorkspaceRole.OWNER && (
-                            <DropdownMenuItem
-                              onClick={() =>
-                                updateRoleMutation.mutate({
-                                  memberId: member.id,
-                                  role:
-                                    member.role === WorkspaceRole.AUTHOR
-                                      ? WorkspaceRole.MEMBER
-                                      : WorkspaceRole.AUTHOR,
-                                })
-                              }
-                              disabled={updateRoleMutation.isPending}
-                            >
-                              <Shield className="mr-2 h-4 w-4" />
-                              Change to{' '}
-                              {member.role === WorkspaceRole.AUTHOR
-                                ? 'Member'
-                                : 'Author'}
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  )}
-                </TableRow>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        {member.username}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Shield className="h-3 w-3" />
+                        {member.role}
+                      </span>
+                    </div>
+                  </div>
+                  <Badge variant="outline">
+                    {member.role}
+                  </Badge>
+                </div>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No members found in this workspace
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

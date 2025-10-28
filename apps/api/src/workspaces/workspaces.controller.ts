@@ -31,6 +31,8 @@ export class WorkspacesController {
         slug: m.workspace.slug,
         role: m.role,
         isActive: m.isActive,
+        createdAt: m.workspace.createdAt,
+        updatedAt: m.workspace.updatedAt,
       })),
     };
   }

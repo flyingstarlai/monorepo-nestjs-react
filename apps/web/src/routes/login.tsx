@@ -3,7 +3,7 @@ import { LoginForm } from '../features/auth/components';
 
 export const Route = createFileRoute('/login')({
   validateSearch: (search) => ({
-    redirect: (search.redirect as string) || '/dashboard',
+    redirect: (search.redirect as string) || '/',
   }),
   beforeLoad: ({ context, search }) => {
     // Redirect if already authenticated

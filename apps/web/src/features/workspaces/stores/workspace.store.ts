@@ -72,7 +72,7 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
       const currentState = get();
       if (!currentState.currentWorkspace && workspaces.length > 0) {
         const currentSlug =
-          window.location.pathname.match(/^\/c\/([^\/]+)/)?.[1];
+          window.location.pathname.match(/^\/c\/([^/]+)/)?.[1];
         const urlWorkspace = workspaces.find((ws) => ws.slug === currentSlug);
         set({ currentWorkspace: urlWorkspace || workspaces[0] });
       }
@@ -116,8 +116,8 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
       await get().fetchWorkspaceProfile(workspace.slug);
 
       // Navigate to new workspace
-      window.history.pushState({}, '', `/c/${workspace.slug}/dashboard`);
-      window.dispatchEvent(new PopStateEvent('popstate'));
+      // Note: This will be handled by the component that calls switchWorkspace
+      // The navigation should be done at the component level using TanStack Router
     } catch (error) {
       console.error('Failed to switch workspace:', error);
       // Don't throw error to prevent UI from breaking

@@ -1,5 +1,8 @@
-import { createFileRoute, Outlet, useParams } from '@tanstack/react-router';
+import { createFileRoute, useParams, Outlet } from '@tanstack/react-router';
 import { useWorkspace, useWorkspaceActions } from '@/features/workspaces';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Building2 } from 'lucide-react';
 import { useEffect } from 'react';
 
 export const Route = createFileRoute('/_dashboard/c/$slug')({
@@ -22,16 +25,16 @@ function WorkspaceLayout() {
     if (workspaces.length === 0 && !isLoading) {
       fetchWorkspaces();
     }
-  }, [workspaces.length, isLoading]); // Remove fetchWorkspaces from deps since it's now stable
+  }, [workspaces.length, isLoading, fetchWorkspaces]);
 
   useEffect(() => {
     // Fetch profile once per slug; avoid loops on loading state changes
     if (slug && (!workspaceProfile || currentWorkspace?.slug !== slug)) {
       fetchWorkspaceProfile(slug);
     }
-  }, [slug, workspaceProfile, currentWorkspace?.slug]); // Remove fetchWorkspaceProfile from deps since it's now stable
+  }, [slug, workspaceProfile, currentWorkspace?.slug, fetchWorkspaceProfile]);
 
-  // Check if current workspace matches the slug
+  // Check if current workspace matches slug
   const isCorrectWorkspace = currentWorkspace?.slug === slug;
 
   // Show loading state during initial load or workspace switching
@@ -82,7 +85,7 @@ function WorkspaceLayout() {
         <div className="text-center">
           <h2 className="text-lg font-semibold mb-2">Workspace Not Found</h2>
           <p className="text-muted-foreground">
-            The workspace "{slug}" does not exist or you don't have access to
+            The workspace &quot;{slug}&quot; does not exist or you don&apos;t have access to
             it. Please select a workspace from the sidebar or contact your
             administrator.
           </p>
@@ -91,5 +94,22 @@ function WorkspaceLayout() {
     );
   }
 
-  return <Outlet />;
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <div className="bg-primary/10 p-3 rounded-lg">
+          <Building2 className="h-6 w-6 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold">{currentWorkspace.name}</h1>
+          <p className="text-muted-foreground">{currentWorkspace.slug}</p>
+        </div>
+        <Badge variant="outline" className="ml-auto">
+          {workspaceProfile?.workspaceRole || 'Loading...'}
+        </Badge>
+      </div>
+
+      <Outlet />
+    </div>
+  );
 }

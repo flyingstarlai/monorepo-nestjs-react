@@ -38,7 +38,8 @@ export function LoginForm() {
       setIsLoading(true);
       try {
         await login(value);
-        router.navigate({ to: '/dashboard' });
+        // Navigate to root after login (will redirect to appropriate workspace)
+        router.navigate({ to: '/' });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Login failed');
       } finally {

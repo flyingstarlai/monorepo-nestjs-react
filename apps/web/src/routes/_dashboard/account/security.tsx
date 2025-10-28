@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card';
 import { ChangePasswordForm } from '@/features/auth/components/change-password-form';
 
-export const Route = createFileRoute('/_dashboard/settings/security')({
+export const Route = createFileRoute('/_dashboard/account/security')({
   component: SecuritySettings,
 });
 

@@ -1,4 +1,5 @@
 import { Building2, ChevronDown, Plus } from 'lucide-react';
+import { useRouter } from '@tanstack/react-router';
 
 import {
   useWorkspaceActions,
@@ -44,6 +45,7 @@ export function WorkspaceSwitcher() {
   const currentWorkspace = useCurrentWorkspace();
   const isLoading = useIsLoading();
   const { switchWorkspace } = useWorkspaceActions();
+  const router = useRouter();
 
   if (isLoading) {
     return (
@@ -124,7 +126,10 @@ export function WorkspaceSwitcher() {
             {workspaces.map((workspace) => (
               <DropdownMenuItem
                 key={workspace.id}
-                onClick={() => switchWorkspace(workspace)}
+                onClick={async () => {
+                  await switchWorkspace(workspace);
+                  router.navigate({ to: '/c/$slug', params: { slug: workspace.slug } });
+                }}
                 className="gap-2 p-2"
               >
                 <div className="flex size-6 items-center justify-center rounded-md border">

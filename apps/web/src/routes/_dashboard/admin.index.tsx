@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute, Link, redirect } from '@tanstack/react-router';
 import {
   Building2,
   Lock,
@@ -133,7 +133,7 @@ function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full">
-              <a href="/admin/users">Manage Users</a>
+              <Link to="/admin/users">Manage Users</Link>
             </Button>
           </CardContent>
         </Card>
@@ -148,7 +148,7 @@ function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full" variant="outline">
-              <a href="/admin/workspaces">Manage Workspaces</a>
+              <Link to="/admin/workspaces">Manage Workspaces</Link>
             </Button>
           </CardContent>
         </Card>

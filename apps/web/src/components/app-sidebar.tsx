@@ -6,10 +6,10 @@ import {
   Building2,
   Home,
   User,
-  CreditCard,
   Shield,
+  Activity,
 } from 'lucide-react';
-import type * as React from 'react';
+import React from 'react';
 
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -22,69 +22,63 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/features/auth';
-import { useCurrentWorkspace, useWorkspaceProfile } from '@/features/workspaces/stores/workspace.store';
-import { WorkspaceRole } from '@/features/workspaces/types';
+import { useCurrentWorkspace } from '@/features/workspaces/stores/workspace.store';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth();
   // Use individual selectors to prevent infinite loops
   const currentWorkspace = useCurrentWorkspace();
-  const workspaceProfile = useWorkspaceProfile();
-  const canManageWorkspace = workspaceProfile ? [WorkspaceRole.OWNER].includes(workspaceProfile.workspaceRole) : false;
   const location = useLocation();
 
   // Workspace navigation items
   const workspaceNavItems = [
     {
-      title: 'Dashboard',
+      title: 'Overview',
       url: currentWorkspace
-        ? `/c/${currentWorkspace.slug}/dashboard`
+        ? `/c/${currentWorkspace.slug}`
         : '/dashboard',
       icon: LayoutDashboard,
     },
+    {
+      title: 'Members',
+      url: currentWorkspace
+        ? `/c/${currentWorkspace.slug}/members`
+        : '/dashboard',
+      icon: Users,
+    },
+    {
+      title: 'Settings',
+      url: currentWorkspace
+        ? `/c/${currentWorkspace.slug}/settings`
+        : '/dashboard',
+      icon: Settings,
+    }
   ];
 
-  // Add workspace management for users with permissions
-  if (currentWorkspace && canManageWorkspace) {
-    workspaceNavItems.push({
-      title: 'Members',
-      url: `/c/${currentWorkspace.slug}/members`,
-      icon: Users,
-    });
-  }
-
-  // Add workspace settings for users with permissions
-  if (currentWorkspace && canManageWorkspace) {
-    workspaceNavItems.push({
-      title: 'Settings',
-      url: `/c/${currentWorkspace.slug}/settings`,
-      icon: Settings,
-    });
-  }
 
   // User settings items (separate from workspace)
   const userSettingsItems = [
     {
+      title: 'Overview',
+      url: '/account',
+      icon: Activity,
+    },
+    {
       title: 'Profile',
-      url: '/settings/profile',
+      url: '/account/profile',
       icon: User,
     },
     {
       title: 'Security',
-      url: '/settings/security',
+      url: '/account/security',
       icon: Shield,
-    },
-    {
-      title: 'Billing',
-      url: '/settings/billing',
-      icon: CreditCard,
     },
   ];
 
   // Admin navigation items (only for Admin users)
   const adminNavItems = [
     {
-      title: 'Dashboard',
+      title: 'Overviews',
       url: '/admin',
       icon: Home,
     },
@@ -140,7 +134,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {/* Workspace Navigation */}
         <NavMain
           items={data.navMain}
-          title={currentWorkspace ? currentWorkspace.name : 'Workspace'}
+          title={'Workspace'}
+          isLoading={!currentWorkspace && location.pathname.startsWith('/c/')}
         />
 
         {/* Account Settings - Always visible */}

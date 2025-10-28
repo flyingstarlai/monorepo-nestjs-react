@@ -19,7 +19,7 @@ import {
   useProfileUpdateMutation,
 } from '@/features/auth/hooks/use-auth-mutation';
 
-export const Route = createFileRoute('/_dashboard/settings/profile')({
+export const Route = createFileRoute('/_dashboard/account/profile')({
   component: ProfileSettings,
 });
 

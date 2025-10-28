@@ -6,6 +6,8 @@ import {
   WorkspaceMember,
   WorkspaceRole,
 } from './entities/workspace-member.entity';
+import { ActivitiesService } from '../activities/activities.service';
+import { ActivityType } from '../activities/entities/activity.entity';
 
 // Simple in-memory cache for member counts
 class MemberCountCache {
@@ -48,7 +50,8 @@ export class WorkspacesService {
     @InjectRepository(Workspace)
     private readonly workspaceRepository: Repository<Workspace>,
     @InjectRepository(WorkspaceMember)
-    private readonly memberRepository: Repository<WorkspaceMember>
+    private readonly memberRepository: Repository<WorkspaceMember>,
+    private readonly activitiesService: ActivitiesService
   ) {}
 
   async findBySlug(slug: string): Promise<Workspace | null> {
@@ -86,6 +89,19 @@ export class WorkspacesService {
     // Update member count
     await this.updateMemberCount(workspaceId);
     
+    // Get workspace details for activity message
+    const workspace = await this.workspaceRepository.findOne({
+      where: { id: workspaceId },
+    });
+    
+    // Record member addition activity
+    await this.activitiesService.record(
+      userId,
+      ActivityType.MEMBER_ADDED,
+      `Member joined workspace "${workspace?.name || 'Unknown'}"`,
+      workspaceId
+    );
+    
     return savedMember;
   }
 
@@ -95,6 +111,19 @@ export class WorkspacesService {
     role: WorkspaceRole
   ): Promise<WorkspaceMember | null> {
     await this.memberRepository.update({ workspaceId, userId }, { role });
+    
+    // Get workspace details for activity message
+    const workspace = await this.workspaceRepository.findOne({
+      where: { id: workspaceId },
+    });
+    
+    // Record role change activity
+    await this.activitiesService.record(
+      userId,
+      ActivityType.MEMBER_ROLE_CHANGED,
+      `Member role changed to "${role}" in workspace "${workspace?.name || 'Unknown'}"`,
+      workspaceId
+    );
     
     // Note: Member count doesn't change on role update, so no cache invalidation needed
     
@@ -290,6 +319,14 @@ export class WorkspacesService {
       
       // Update member count
       await this.updateMemberCount(savedWorkspace.id);
+      
+      // Record workspace creation activity
+      await this.activitiesService.record(
+        data.creatorId,
+        ActivityType.WORKSPACE_CREATED,
+        `Workspace "${workspace.name}" was created`,
+        savedWorkspace.id
+      );
     }
     
     return savedWorkspace;

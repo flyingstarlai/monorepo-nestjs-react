@@ -24,6 +24,10 @@ describe('ActivitiesService', () => {
     username: 'testuser',
     name: 'Test User',
     password: 'hashedpassword',
+    dateOfBirth: new Date('2003-08-16'),
+    email: 'test@test.id',
+    phone: '085xx',
+    bio: 'hi',
     role: mockRole,
     roleId: 'role-id',
     avatar: null,
@@ -78,7 +82,6 @@ describe('ActivitiesService', () => {
         'user-id',
         ActivityType.LOGIN_SUCCESS,
         'Successfully logged in',
-        {}
       );
 
       expect(repository.create).toHaveBeenCalledWith({

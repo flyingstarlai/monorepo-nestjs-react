@@ -4,7 +4,16 @@ export type ActivityType =
   | 'login_success'
   | 'profile_updated'
   | 'password_changed'
-  | 'avatar_updated';
+  | 'avatar_updated'
+  | 'user_created'
+  | 'workspace_created'
+  | 'workspace_updated'
+  | 'workspace_deactivated'
+  | 'workspace_activated'
+  | 'member_added'
+  | 'member_removed'
+  | 'member_role_changed'
+  | 'member_status_changed';
 
 export interface ActivityDto {
   id: string;
@@ -52,6 +61,39 @@ export async function getActivities(
 
   if (!response.ok) {
     throw new Error('Failed to fetch activities');
+  }
+
+  return response.json() as Promise<ActivitiesResponseDto>;
+}
+
+export async function getUserActivities(params?: {
+  limit?: number;
+  cursor?: string;
+}) {
+  const token = tokenStorage.getToken();
+  if (!token) {
+    throw new Error('No authentication token');
+  }
+
+  const searchParams = new URLSearchParams();
+  if (params?.limit) {
+    searchParams.set('limit', params.limit.toString());
+  }
+  if (params?.cursor) {
+    searchParams.set('cursor', params.cursor);
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/activities?${searchParams.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch user activities');
   }
 
   return response.json() as Promise<ActivitiesResponseDto>;

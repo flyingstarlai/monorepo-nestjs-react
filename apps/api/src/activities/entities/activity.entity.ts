@@ -9,7 +9,13 @@ import {
 import { User } from '../../users/entities/user.entity';
 import { Workspace } from '../../workspaces/entities/workspace.entity';
 
+export enum ActivityScope {
+  USER = 'user',
+  WORKSPACE = 'workspace',
+}
+
 export enum ActivityType {
+  // User activity types
   LOGIN_SUCCESS = 'login_success',
   PROFILE_UPDATED = 'profile_updated',
   PASSWORD_CHANGED = 'password_changed',
@@ -53,6 +59,13 @@ export class Activity {
     enum: ActivityType,
   })
   type: ActivityType;
+
+  @Column({
+    type: 'varchar',
+    enum: ActivityScope,
+    default: ActivityScope.USER,
+  })
+  scope: ActivityScope;
 
   @Column()
   message: string;

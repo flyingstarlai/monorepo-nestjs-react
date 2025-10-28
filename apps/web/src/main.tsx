@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client';
 import { Toaster } from 'sonner';
 import { useAuth } from './features/auth';
 import { LoadingScreen } from './components/ui/loading-spinner';
+import { LoadingBarProvider } from './components/providers/loading-bar-provider';
 import * as TanStackQueryProvider from './integrations/tanstack-query/root-provider.tsx';
 
 // Import generated route tree
@@ -42,7 +43,12 @@ declare module '@tanstack/react-router' {
 // Router component that uses auth context
 function RouterWithAuth() {
   const router = useRouterWithAuth();
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <LoadingBarProvider router={router} />
+      <RouterProvider router={router} />
+    </>
+  );
 }
 
 // Auth initialization component

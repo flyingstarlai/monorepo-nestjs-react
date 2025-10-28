@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useParams } from '@tanstack/react-router';
 import { useWorkspace } from '@/features/workspaces';
 import {
   Card,
@@ -9,103 +9,154 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Building2, Users, Calendar, Shield } from 'lucide-react';
+import { Building2, Settings, Calendar, Globe } from 'lucide-react';
 
 export const Route = createFileRoute('/_dashboard/c/$slug/settings')({
   component: WorkspaceSettings,
 });
 
 function WorkspaceSettings() {
-  const { currentWorkspace, workspaceProfile } = useWorkspace();
+  const { slug } = useParams({ from: '/_dashboard/c/$slug/settings' });
+  const { 
+    currentWorkspace, 
+    isLoading, 
+    workspaceProfile
+  } = useWorkspace();
 
-  if (!currentWorkspace || !workspaceProfile) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Skeleton className="h-12 w-12 rounded-lg" />
-          <div className="space-y-2 flex-1">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-          <Skeleton className="h-6 w-20" />
+          <Skeleton className="w-8 h-8" />
+          <Skeleton className="h-8 w-48" />
         </div>
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-64 w-full" />
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-24 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <div className="bg-primary/10 p-3 rounded-lg">
-          <Building2 className="h-6 w-6 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">Settings</h1>
+  if (!currentWorkspace) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold mb-2">Workspace Not Found</h2>
           <p className="text-muted-foreground">
-            Manage workspace settings and preferences
+            The workspace &quot;{slug}&quot; does not exist or you don&apos;t have access to it.
           </p>
         </div>
       </div>
+    );
+  }
 
-      <div className="grid gap-6 lg:grid-cols-2">
+return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Workspace settings</h1>
+          <p className="text-muted-foreground">{currentWorkspace.slug} configuration</p>
+        </div>
+        <Badge variant="outline" className="ml-auto">
+          {workspaceProfile?.workspaceRole || 'Loading...'}
+        </Badge>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Workspace Information</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              General Settings
+            </CardTitle>
             <CardDescription>
-              Basic information about this workspace
+              Basic workspace information and settings
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <div className="text-sm font-medium">Workspace Name</div>
-              <div className="text-sm">{currentWorkspace.name}</div>
+            <div>
+              <label className="text-sm font-medium">Workspace Name</label>
+              <div className="mt-1 p-2 border rounded-md bg-muted">
+                {currentWorkspace.name}
+              </div>
             </div>
-            <div className="grid gap-2">
-              <div className="text-sm font-medium">Workspace Slug</div>
-              <div className="text-sm font-mono">{currentWorkspace.slug}</div>
+            <div>
+              <label className="text-sm font-medium">Workspace Slug</label>
+              <div className="mt-1 p-2 border rounded-md bg-muted">
+                {currentWorkspace.slug}
+              </div>
             </div>
-            <div className="grid gap-2">
-              <div className="text-sm font-medium">Your Role</div>
-              <Badge variant="outline">{workspaceProfile.workspaceRole}</Badge>
+            <div>
+              <label className="text-sm font-medium">Description</label>
+              <div className="mt-1 p-2 border rounded-md bg-muted min-h-[60px]">
+                {currentWorkspace.description || 'No description provided'}
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Your Access</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Workspace Details
+            </CardTitle>
             <CardDescription>
-              Your permissions and access level in this workspace
+              Additional workspace information
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Shield className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <div className="text-sm font-medium">Workspace Role</div>
-                <div className="text-sm text-muted-foreground">
-                  {workspaceProfile.workspaceRole}
-                </div>
+            <div>
+              <label className="text-sm font-medium">Created</label>
+              <div className="mt-1 p-2 border rounded-md bg-muted">
+                {currentWorkspace.createdAt 
+                  ? new Date(currentWorkspace.createdAt).toLocaleDateString()
+                  : 'Unknown'
+                }
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <div className="text-sm font-medium">Global Role</div>
-                <div className="text-sm text-muted-foreground">
-                  {workspaceProfile.globalRole}
-                </div>
+            <div>
+              <label className="text-sm font-medium">Last Updated</label>
+              <div className="mt-1 p-2 border rounded-md bg-muted">
+                {currentWorkspace.updatedAt 
+                  ? new Date(currentWorkspace.updatedAt).toLocaleDateString()
+                  : 'Unknown'
+                }
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <div className="text-sm font-medium">Member Since</div>
-                <div className="text-sm text-muted-foreground">
-                  {new Date(workspaceProfile.joinedAt).toLocaleDateString()}
-                </div>
+            <div>
+              <label className="text-sm font-medium">Your Role</label>
+              <div className="mt-1 p-2 border rounded-md bg-muted">
+                {workspaceProfile?.workspaceRole || 'Loading...'}
               </div>
             </div>
           </CardContent>
@@ -114,25 +165,19 @@ function WorkspaceSettings() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Workspace Management</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            Advanced Settings
+          </CardTitle>
           <CardDescription>
-            Actions you can perform based on your role
+            Additional workspace configuration options
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-2">View Members</h4>
-              <p className="text-sm text-muted-foreground">
-                Browse all workspace members and their roles
-              </p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-2">View Activities</h4>
-              <p className="text-sm text-muted-foreground">
-                See recent activities within this workspace
-              </p>
-            </div>
+          <div className="text-center py-8 text-muted-foreground">
+            <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>Advanced workspace settings are not yet available.</p>
+            <p className="text-sm">This feature is coming in a future update.</p>
           </div>
         </CardContent>
       </Card>
