@@ -1,5 +1,6 @@
 export * from './types';
 export * from './api/workspaces.api';
+export { workspaceKeys } from './hooks/use-workspaces';
 
 // Export store selectors and actions
 export {

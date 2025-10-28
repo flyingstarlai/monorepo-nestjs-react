@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { workspacesApi } from '@/features/workspaces/api/workspaces.api';
-import { WorkspaceRole } from '@/features/workspaces';
+import { WorkspaceRole, workspaceKeys } from '@/features/workspaces';
 import { useWorkspaceOptimized } from '@/features/workspaces/stores/workspace.store';
 import { adminApi } from '@/features/admin/api';
 import { toast } from '@/hooks/use-toast';
@@ -61,7 +61,7 @@ export function AddMemberDialog({ children }: AddMemberDialogProps) {
 
   // Get current workspace members to exclude them
   const { data: currentMembers = [] } = useQuery({
-    queryKey: ['workspace-members', currentWorkspace?.slug],
+    queryKey: workspaceKeys.members(currentWorkspace?.slug || ''),
     queryFn: () =>
       currentWorkspace
         ? workspacesApi.getWorkspaceMembers(currentWorkspace.slug)
@@ -87,9 +87,21 @@ export function AddMemberDialog({ children }: AddMemberDialogProps) {
       });
     },
     onSuccess: () => {
+      // Invalidate members list
       queryClient.invalidateQueries({
-        queryKey: ['workspace-members', currentWorkspace?.slug],
+        queryKey: workspaceKeys.members(currentWorkspace?.slug || ''),
       });
+      
+      // Invalidate workspace profile to update member counts
+      queryClient.invalidateQueries({
+        queryKey: workspaceKeys.profile(currentWorkspace?.slug || ''),
+      });
+      
+      // Invalidate activities to show new member addition
+      queryClient.invalidateQueries({
+        queryKey: workspaceKeys.activities(currentWorkspace?.slug || ''),
+      });
+      
       toast({
         title: 'Success',
         description: 'Member added successfully',
