@@ -2,7 +2,6 @@ import { Building2, ChevronDown, Plus } from 'lucide-react';
 
 import {
   useWorkspaceStore,
-  useWorkspaceOptimized,
 } from '../stores/workspace.store';
 import { WorkspaceRole } from '../types';
 

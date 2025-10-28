@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { authApi, tokenStorage, AuthError } from '../api';
 import type { User, LoginCredentials } from '../types';
 
-interface AuthStore {
+export interface AuthStore {
   // State
   user: User | null;
   isAuthenticated: boolean;

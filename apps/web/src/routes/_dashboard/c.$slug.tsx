@@ -1,7 +1,6 @@
 import { createFileRoute, Outlet, useParams } from '@tanstack/react-router';
 import { useWorkspace } from '@/features/workspaces';
 import { useEffect } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export const Route = createFileRoute('/_dashboard/c/$slug')({
   component: WorkspaceLayout,
