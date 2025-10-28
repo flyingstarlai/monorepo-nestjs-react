@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import type { ColumnDef, ColumnFiltersState } from '@tanstack/react-table';
 import {
   flexRender,
@@ -8,7 +8,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Building2, Users, ToggleLeft, ToggleRight, Plus } from 'lucide-react';
+import { Building2, Users, ToggleLeft, ToggleRight, Plus, Settings } from 'lucide-react';
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
@@ -102,6 +102,7 @@ function DebouncedInput({
 
 function AdminWorkspaces() {
   const {} = useAuth();
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
   const [search, setSearch] = useState('');
@@ -217,6 +218,25 @@ function AdminWorkspaces() {
         cell: ({ row }) => {
           const date = row.getValue('updatedAt') as string;
           return date ? new Date(date).toLocaleDateString() : 'N/A';
+        },
+      },
+      {
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row }) => {
+          const workspace = row.original;
+          return (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate({ to: '/admin/c/$slug', params: { slug: workspace.slug } })}
+              >
+                <Settings className="h-4 w-4" />
+                Manage
+              </Button>
+            </div>
+          );
         },
       },
     ],
