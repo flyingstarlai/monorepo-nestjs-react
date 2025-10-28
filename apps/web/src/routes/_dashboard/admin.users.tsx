@@ -1,18 +1,9 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import type { ColumnDef, ColumnFiltersState } from '@tanstack/react-table';
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import type { ColumnDef } from '@tanstack/react-table';
 import { Lock, Shield, UserCheck, UserPlus, Users } from 'lucide-react';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Card,
   CardContent,
@@ -20,7 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -28,14 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { DataTable } from '@/components/ui/data-table';
 
 import { AddUserDialog } from '@/features/admin/components/add-user-dialog';
 import {
@@ -67,39 +50,7 @@ export const Route = createFileRoute('/_dashboard/admin/users')({
   component: AdminUsers,
 });
 
-// Debounced input component for search
-function DebouncedInput({
-  value: initialValue,
-  onChange,
-  debounce = 500,
-  ...props
-}: {
-  value: string | number;
-  onChange: (value: string | number) => void;
-  debounce?: number;
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>) {
-  const [value, setValue] = React.useState(initialValue);
 
-  React.useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
-
-  React.useEffect(() => {
-    const timeout = setTimeout(() => {
-      onChange(value);
-    }, debounce);
-
-    return () => clearTimeout(timeout);
-  }, [value, onChange, debounce]);
-
-  return (
-    <Input
-      {...props}
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-    />
-  );
-}
 
 function AdminUsers() {
   const { user } = useAuth();
@@ -107,10 +58,9 @@ function AdminUsers() {
   const setUserActiveMutation = useSetUserActiveMutation();
   const setUserRoleMutation = useSetUserRoleMutation();
 
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [globalFilter, setGlobalFilter] = React.useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState('');
 
   const handleToggleActive = useCallback(
     (userId: string, isActive: boolean) => {
@@ -173,14 +123,7 @@ function AdminUsers() {
             </div>
           );
         },
-        filterFn: (row, _id, value) => {
-          const user = row.original;
-          const searchValue = value.toLowerCase();
-          return (
-            user.role.toLowerCase().includes(searchValue) ||
-            (user.isActive ? 'active' : 'disabled').includes(searchValue)
-          );
-        },
+
       },
       {
         accessorKey: 'createdAt',
@@ -230,25 +173,7 @@ function AdminUsers() {
     [user, handleToggleActive, handleRoleChange]
   );
 
-  const table = useReactTable({
-    data: users,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
-    state: {
-      columnFilters,
-      globalFilter,
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    },
-  });
+
 
   return (
     <div className="flex-1 space-y-6">
@@ -341,160 +266,25 @@ function AdminUsers() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Search Input */}
-          <div className="mb-4">
-            <DebouncedInput
-              value={globalFilter ?? ''}
-              onChange={(value) => setGlobalFilter(String(value))}
-              placeholder="Search users by name, username, role, or status..."
-              className="w-full"
-            />
-          </div>
-
-          {/* Table */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  [...Array(5)].map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Skeleton className="h-8 w-8 rounded-full" />
-                          <div className="space-y-1">
-                            <Skeleton className="h-4 w-24" />
-                            <Skeleton className="h-3 w-16" />
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-32" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-16" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-24" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-8 w-8 rounded" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : error ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="text-center text-destructive"
-                    >
-                      Failed to load users
-                    </TableCell>
-                  </TableRow>
-                ) : table.getRowModel().rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="text-center text-muted-foreground"
-                    >
-                      No users found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && 'selected'}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Pagination Controls */}
-          <div className="flex items-center justify-between space-x-2 py-4">
-            <div className="text-sm text-muted-foreground">
-              {table.getFilteredSelectedRowModel().rows.length} of{' '}
-              {table.getFilteredRowModel().rows.length} row(s) selected.
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-
-          {/* Page Size Selector and Page Info */}
-          <div className="flex items-center justify-between space-x-2 py-2">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-muted-foreground">
-                Items per page
-              </span>
-              <Select
-                value={table.getState().pagination.pageSize.toString()}
-                onValueChange={(value) => {
-                  table.setPageSize(Number(value));
-                }}
-              >
-                <SelectTrigger className="h-8 w-[70px]">
-                  <SelectValue
-                    placeholder={table.getState().pagination.pageSize}
-                  />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[10, 20, 30, 40, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={pageSize.toString()}>
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-muted-foreground">
-                Page {table.getState().pagination.pageIndex + 1} of{' '}
-                {table.getPageCount()}
-              </span>
-            </div>
-          </div>
+          <DataTable
+            columns={columns}
+            data={users}
+            isLoading={isLoading}
+            error={error ? "Failed to load users" : undefined}
+            pagination={{
+              page,
+              totalPages: Math.ceil(users.length / pageSize),
+              onPageChange: setPage,
+              pageSize,
+              onPageSizeChange: setPageSize,
+            }}
+            searchPlaceholder="Search users by name, username, role, or status..."
+            searchValue={search}
+            onSearchChange={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+          />
         </CardContent>
       </Card>
     </div>

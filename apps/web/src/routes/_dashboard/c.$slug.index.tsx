@@ -1,4 +1,5 @@
 import { createFileRoute, useParams } from '@tanstack/react-router';
+import type { ColumnDef } from '@tanstack/react-table';
 import { useWorkspace, useWorkspaceActions } from '@/features/workspaces';
 import { useWorkspaceActivities } from '@/features/activities/hooks/use-workspace-activities';
 import {
@@ -8,9 +9,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { DataTable } from '@/components/ui/data-table';
 import { Users, Calendar, Clock, Activity } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import React from 'react';
 
 export const Route = createFileRoute('/_dashboard/c/$slug/')({
   component: WorkspaceDashboard,
@@ -31,6 +33,33 @@ function WorkspaceDashboard() {
     isLoading: activitiesLoading,
     error: activitiesError,
   } = useWorkspaceActivities({ limit: 5 });
+  const [search, setSearch] = useState('');
+
+  const activityColumns = React.useMemo<ColumnDef<any>[]>(
+    () => [
+      {
+        accessorKey: 'message',
+        header: 'Activity',
+        cell: ({ row }) => {
+          const activity = row.original;
+          return (
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-blue-50 text-blue-600 flex-shrink-0">
+                <Activity className="h-4 w-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{activity.message}</p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(activity.createdAt).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          );
+        },
+      },
+    ],
+    []
+  );
 
   useEffect(() => {
     // Fetch workspaces if not loaded yet
@@ -199,46 +228,16 @@ function WorkspaceDashboard() {
           <CardDescription>Recent activities in this workspace</CardDescription>
         </CardHeader>
         <CardContent>
-          {activitiesLoading ? (
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center gap-3 pb-3 border-b">
-                  <Skeleton className="h-8 w-8 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-3 w-32" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : activitiesError ? (
-            <div className="text-center py-4 text-destructive">
-              Failed to load activities
-            </div>
-          ) : activitiesData?.items && activitiesData.items.length > 0 ? (
-            <div className="space-y-4">
-              {activitiesData.items.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-center gap-3 pb-3 border-b last:border-b-0"
-                >
-                  <div className="p-2 rounded-full bg-blue-50 text-blue-600 flex-shrink-0">
-                    <Activity className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{activity.message}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(activity.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-4 text-muted-foreground">
-              No recent activities
-            </div>
-          )}
+          <DataTable
+            columns={activityColumns}
+            data={activitiesData?.items || []}
+            isLoading={activitiesLoading}
+            error={activitiesError ? "Failed to load activities" : undefined}
+            searchPlaceholder="Search activities..."
+            searchValue={search}
+            onSearchChange={setSearch}
+            emptyStateMessage="No recent activities"
+          />
         </CardContent>
       </Card>
     </div>
