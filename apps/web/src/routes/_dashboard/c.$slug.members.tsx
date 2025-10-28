@@ -9,8 +9,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Building2, Users, Calendar, Mail, Shield } from 'lucide-react';
-import { useEffect } from 'react';
+import { Users, Mail, Shield } from 'lucide-react';
 
 export const Route = createFileRoute('/_dashboard/c/$slug/members')({
   component: WorkspaceMembers,
@@ -20,8 +19,7 @@ function WorkspaceMembers() {
   const { slug } = useParams({ from: '/_dashboard/c/$slug/members' });
   const { 
     currentWorkspace, 
-    isLoading, 
-    workspaceProfile
+    isLoading
   } = useWorkspace();
   
   const {

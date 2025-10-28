@@ -8,9 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Building2, Users, Calendar, Clock, Activity } from 'lucide-react';
+import { Users, Calendar, Clock, Activity } from 'lucide-react';
 import { useEffect } from 'react';
 
 export const Route = createFileRoute('/_dashboard/c/$slug/')({

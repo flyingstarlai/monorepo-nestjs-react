@@ -23,6 +23,8 @@ export interface WorkspaceMembership {
   slug: string;
   role: WorkspaceRole;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export enum WorkspaceRole {

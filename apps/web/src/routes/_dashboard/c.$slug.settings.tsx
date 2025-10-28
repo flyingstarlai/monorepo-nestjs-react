@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Building2, Settings, Calendar, Globe } from 'lucide-react';
+import { Settings, Calendar, Globe } from 'lucide-react';
 
 export const Route = createFileRoute('/_dashboard/c/$slug/settings')({
   component: WorkspaceSettings,
@@ -115,12 +115,7 @@ return (
                 {currentWorkspace.slug}
               </div>
             </div>
-            <div>
-              <label className="text-sm font-medium">Description</label>
-              <div className="mt-1 p-2 border rounded-md bg-muted min-h-[60px]">
-                {currentWorkspace.description || 'No description provided'}
-              </div>
-            </div>
+
           </CardContent>
         </Card>
 

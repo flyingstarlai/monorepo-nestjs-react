@@ -1,7 +1,6 @@
 import { createFileRoute, useParams, Outlet } from '@tanstack/react-router';
 import { useWorkspace, useWorkspaceActions } from '@/features/workspaces';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Building2 } from 'lucide-react';
 import { useEffect } from 'react';
 
