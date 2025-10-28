@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from '@tanstack/react-router';
 import {
   adminApi,
   type CreateWorkspaceDto,
@@ -58,6 +59,7 @@ export function useAdminWorkspaceStats(id: string) {
 // Mutations
 export function useCreateWorkspace() {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: async (data: CreateWorkspaceDto) => {
@@ -67,9 +69,17 @@ export function useCreateWorkspace() {
         throw new Error('Failed to create workspace');
       }
     },
-    onSuccess: () => {
+    onSuccess: (workspace) => {
       // Invalidate workspaces list
       queryClient.invalidateQueries({ queryKey: adminWorkspaceKeys.lists() });
+      
+      // Navigate to newly created workspace
+      if (workspace?.slug) {
+        router.navigate({ 
+          to: '/c/$slug', 
+          params: { slug: workspace.slug } 
+        });
+      }
     },
     onError: (error) => {
       console.error('Failed to create workspace:', error);
