@@ -1,5 +1,7 @@
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import { useWorkspace, useWorkspaceMembers } from '@/features/workspaces';
+import { useWorkspaceOptimized } from '@/features/workspaces/stores/workspace.store';
+import { AddMemberDialog } from '@/features/workspaces/components/add-member-dialog';
 import {
   Card,
   CardContent,
@@ -8,8 +10,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, Mail, Shield } from 'lucide-react';
+import { Users, Mail, Shield, UserPlus } from 'lucide-react';
 
 export const Route = createFileRoute('/_dashboard/c/$slug/members')({
   component: WorkspaceMembers,
@@ -18,6 +21,7 @@ export const Route = createFileRoute('/_dashboard/c/$slug/members')({
 function WorkspaceMembers() {
   const { slug } = useParams({ from: '/_dashboard/c/$slug/members' });
   const { currentWorkspace, isLoading } = useWorkspace();
+  const { canManageWorkspace } = useWorkspaceOptimized();
 
   const {
     data: members,
@@ -77,13 +81,25 @@ function WorkspaceMembers() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Workspace Members
-          </CardTitle>
-          <CardDescription>
-            Manage members and their roles in {currentWorkspace.name}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Workspace Members
+              </CardTitle>
+              <CardDescription>
+                Manage members and their roles in {currentWorkspace.name}
+              </CardDescription>
+            </div>
+              {canManageWorkspace && (
+              <AddMemberDialog>
+                <Button>
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Add Member
+                </Button>
+              </AddMemberDialog>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {membersError ? (
@@ -125,8 +141,18 @@ function WorkspaceMembers() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No members found in this workspace
+            <div className="text-center py-8">
+              <div className="text-muted-foreground mb-4">
+                No members found in this workspace
+              </div>
+            {canManageWorkspace && (
+                <AddMemberDialog>
+                  <Button variant="outline">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Add First Member
+                  </Button>
+                </AddMemberDialog>
+              )}
             </div>
           )}
         </CardContent>
