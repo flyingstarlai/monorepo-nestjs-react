@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Building2, Plus } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -38,14 +39,24 @@ export function CreateWorkspaceDialog({
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const queryClient = useQueryClient();
   const { refetchWorkspaces } = useWorkspaceActions();
+  const router = useRouter();
 
   const createWorkspaceMutation = useMutation({
     mutationFn: workspaceApi.createWorkspace,
-    onSuccess: () => {
+    onSuccess: async (data) => {
       // Invalidate admin workspaces list
       queryClient.invalidateQueries({ queryKey: ['admin-workspaces'] });
       // Refresh the workspace store to update the switcher
-      refetchWorkspaces();
+      await refetchWorkspaces();
+      
+      // Navigate to the newly created workspace
+      if (data?.slug) {
+        router.navigate({ 
+          to: '/c/$slug', 
+          params: { slug: data.slug } 
+        });
+      }
+      
       // Reset form
       setName('');
       setSlug('');
