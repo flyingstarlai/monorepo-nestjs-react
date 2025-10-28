@@ -57,10 +57,10 @@ export class Activity {
   @Column()
   message: string;
 
-  // Use simple-json for cross-dialect compatibility (MSSQL has no native JSON type)
-  @Column({ type: 'simple-json', nullable: true })
+  // Use jsonb for PostgreSQL, simple-json for MSSQL
+  @Column({ type: 'jsonb', nullable: true })
   metadata?: Record<string, any>;
 
-  @Column({ name: 'created_at', type: 'datetime2', default: () => 'SYSDATETIME()' })
+  @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 }

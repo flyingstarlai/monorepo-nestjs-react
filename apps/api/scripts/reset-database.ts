@@ -14,22 +14,37 @@ async function resetDatabase() {
   const seedsService = app.get(SeedsService);
 
   try {
-    console.log('🗑️  Clearing database objects (MSSQL)...');
-    await dataSource.query(`
-      DECLARE @sql NVARCHAR(MAX) = N'';
-      -- Drop all foreign keys
-      SELECT @sql += N'ALTER TABLE ' + QUOTENAME(SCHEMA_NAME(tab.schema_id)) + '.' + QUOTENAME(tab.name) + ' DROP CONSTRAINT ' + QUOTENAME(fk.name) + ';'
-      FROM sys.foreign_keys fk
-      JOIN sys.tables tab ON fk.parent_object_id = tab.object_id;
-      IF LEN(@sql) > 0 EXEC sp_executesql @sql;
+    const dbType = process.env.DB_TYPE?.toLowerCase() || 'mssql';
+    
+    if (dbType === 'postgres') {
+      console.log('🗑️  Clearing database objects (PostgreSQL)...');
+      await dataSource.query(`
+        -- Drop all tables in correct order to handle foreign key constraints
+        DROP TABLE IF EXISTS "activities" CASCADE;
+        DROP TABLE IF EXISTS "workspace_members" CASCADE;
+        DROP TABLE IF EXISTS "workspaces" CASCADE;
+        DROP TABLE IF EXISTS "users" CASCADE;
+        DROP TABLE IF EXISTS "roles" CASCADE;
+      `);
+      console.log('🏗️  Schema cleared successfully (PostgreSQL)');
+    } else {
+      console.log('🗑️  Clearing database objects (MSSQL)...');
+      await dataSource.query(`
+        DECLARE @sql NVARCHAR(MAX) = N'';
+        -- Drop all foreign keys
+        SELECT @sql += N'ALTER TABLE ' + QUOTENAME(SCHEMA_NAME(tab.schema_id)) + '.' + QUOTENAME(tab.name) + ' DROP CONSTRAINT ' + QUOTENAME(fk.name) + ';'
+        FROM sys.foreign_keys fk
+        JOIN sys.tables tab ON fk.parent_object_id = tab.object_id;
+        IF LEN(@sql) > 0 EXEC sp_executesql @sql;
 
-      -- Drop all tables
-      SET @sql = N'';
-      SELECT @sql += N'DROP TABLE ' + QUOTENAME(SCHEMA_NAME(schema_id)) + '.' + QUOTENAME(name) + ';'
-      FROM sys.tables;
-      IF LEN(@sql) > 0 EXEC sp_executesql @sql;
-    `);
-    console.log('🏗️  Schema cleared successfully (MSSQL)');
+        -- Drop all tables
+        SET @sql = N'';
+        SELECT @sql += N'DROP TABLE ' + QUOTENAME(SCHEMA_NAME(schema_id)) + '.' + QUOTENAME(name) + ';'
+        FROM sys.tables;
+        IF LEN(@sql) > 0 EXEC sp_executesql @sql;
+      `);
+      console.log('🏗️  Schema cleared successfully (MSSQL)');
+    }
 
     console.log('🔁 Running migrations...');
     await dataSource.runMigrations();

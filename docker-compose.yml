@@ -51,6 +51,28 @@ services:
 
 
 
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: dashboard-postgres-dev
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: dashboard
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - dashboard-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Redis (optional, for caching/sessions)
   redis:
     image: redis:7-alpine
@@ -108,6 +130,7 @@ services:
       - observability  # Only start with --profile observability
 
 volumes:
+  postgres_data:
   redis_data:
   prometheus_data:
   grafana_data:
