@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { workspaceApi } from '@/features/admin/api/workspace.api';
-import { useWorkspaceActions } from '@/features/workspaces/stores/workspace.store';
+import { useWorkspaceActions, useWorkspaceStore } from '@/features/workspaces/stores/workspace.store';
 
 interface CreateWorkspaceDialogProps {
   children?: React.ReactNode;
@@ -38,7 +38,7 @@ export function CreateWorkspaceDialog({
   const [description, setDescription] = useState('');
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const queryClient = useQueryClient();
-  const { refetchWorkspaces } = useWorkspaceActions();
+  const { refetchWorkspaces, switchWorkspace } = useWorkspaceActions();
   const router = useRouter();
 
   const createWorkspaceMutation = useMutation({
@@ -49,12 +49,17 @@ export function CreateWorkspaceDialog({
       // Refresh the workspace store to update the switcher
       await refetchWorkspaces();
       
-      // Navigate to the newly created workspace
+      // Switch to newly created workspace and navigate
       if (data?.slug) {
-        router.navigate({ 
-          to: '/c/$slug', 
-          params: { slug: data.slug } 
-        });
+        const workspaces = useWorkspaceStore.getState().workspaces;
+        const newWorkspace = workspaces.find(ws => ws.slug === data.slug);
+        if (newWorkspace) {
+          await switchWorkspace(newWorkspace);
+          router.navigate({ 
+            to: '/c/$slug', 
+            params: { slug: data.slug } 
+          });
+        }
       }
       
       // Reset form

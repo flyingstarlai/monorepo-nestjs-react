@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { Settings, Calendar, Globe } from 'lucide-react';
 
@@ -86,9 +86,6 @@ return (
           <h1 className="text-2xl font-bold">Workspace settings</h1>
           <p className="text-muted-foreground">{currentWorkspace.slug} configuration</p>
         </div>
-        <Badge variant="outline" className="ml-auto">
-          {workspaceProfile?.workspaceRole || 'Loading...'}
-        </Badge>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

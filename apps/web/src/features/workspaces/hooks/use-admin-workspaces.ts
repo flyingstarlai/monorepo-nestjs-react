@@ -5,6 +5,7 @@ import {
   type CreateWorkspaceDto,
   type UpdateWorkspaceDto,
 } from '@/features/admin/api/admin.api';
+import { useWorkspaceActions, useWorkspaceStore } from '@/features/workspaces/stores/workspace.store';
 
 // Query keys
 export const adminWorkspaceKeys = {
@@ -60,6 +61,7 @@ export function useAdminWorkspaceStats(id: string) {
 export function useCreateWorkspace() {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { switchWorkspace } = useWorkspaceActions();
 
   return useMutation({
     mutationFn: async (data: CreateWorkspaceDto) => {
@@ -69,16 +71,24 @@ export function useCreateWorkspace() {
         throw new Error('Failed to create workspace');
       }
     },
-    onSuccess: (workspace) => {
+    onSuccess: async (workspace) => {
       // Invalidate workspaces list
       queryClient.invalidateQueries({ queryKey: adminWorkspaceKeys.lists() });
       
-      // Navigate to newly created workspace
+      // Wait a moment for workspace store to be updated
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Switch to newly created workspace and navigate
       if (workspace?.slug) {
-        router.navigate({ 
-          to: '/c/$slug', 
-          params: { slug: workspace.slug } 
-        });
+        const workspaces = useWorkspaceStore.getState().workspaces;
+        const newWorkspace = workspaces.find(ws => ws.slug === workspace.slug);
+        if (newWorkspace) {
+          await switchWorkspace(newWorkspace);
+          router.navigate({ 
+            to: '/c/$slug', 
+            params: { slug: workspace.slug } 
+          });
+        }
       }
     },
     onError: (error) => {
