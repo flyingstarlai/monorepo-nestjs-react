@@ -17,15 +17,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { workspaceApi } from '@/features/admin/api/workspace.api';
 
 interface CreateWorkspaceDialogProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onSubmit?: (data: { name: string; slug: string }) => void;
+  isLoading?: boolean;
 }
 
 export function CreateWorkspaceDialog({
   children,
   open,
   onOpenChange,
+  onSubmit,
+  isLoading,
 }: CreateWorkspaceDialogProps) {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
@@ -53,13 +57,23 @@ export function CreateWorkspaceDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !slug.trim()) return;
 
-    createWorkspaceMutation.mutate({
-      name: name.trim(),
-      slug: slug.trim(),
-      description: description.trim() || undefined,
-    });
+    if (!name.trim() || !slug.trim()) {
+      return;
+    }
+
+    if (onSubmit) {
+      onSubmit({
+        name: name.trim(),
+        slug: slug.trim(),
+      });
+    } else {
+      createWorkspaceMutation.mutate({
+        name: name.trim(),
+        slug: slug.trim(),
+        description: description.trim() || undefined,
+      });
+    }
   };
 
   // Auto-generate slug from name
@@ -148,9 +162,13 @@ export function CreateWorkspaceDialog({
             </Button>
             <Button
               type="submit"
-              disabled={createWorkspaceMutation.isPending || !name.trim() || !slug.trim()}
+              disabled={
+                createWorkspaceMutation.isPending ||
+                !name.trim() ||
+                !slug.trim()
+              }
             >
-              {createWorkspaceMutation.isPending ? (
+              {createWorkspaceMutation.isPending || isLoading ? (
                 <>Creating...</>
               ) : (
                 <>

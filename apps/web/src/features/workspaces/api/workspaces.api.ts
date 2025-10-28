@@ -30,7 +30,11 @@ export const workspacesApi = {
     });
 
     if (!response.ok) {
-      throw new WorkspaceError('Failed to fetch workspaces');
+      const errorText = await response.text();
+      console.error('Failed to fetch workspaces:', response.status, errorText);
+      throw new WorkspaceError(
+        `Failed to fetch workspaces: ${response.status} ${errorText}`
+      );
     }
 
     return response.json();
@@ -189,6 +193,31 @@ export const workspacesApi = {
 
     if (!response.ok) {
       throw new WorkspaceError('Failed to fetch workspace activities');
+    }
+
+    return response.json();
+  },
+
+  async getWorkspaceStats(): Promise<{
+    totalWorkspaces: number;
+    activeWorkspaces: number;
+    totalMembers: number;
+    activeMembers: number;
+    totalActivities: number;
+  }> {
+    const token = tokenStorage.getToken();
+    if (!token) {
+      throw new WorkspaceError('No authentication token');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/workspaces/stats`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new WorkspaceError('Failed to fetch workspace stats');
     }
 
     return response.json();

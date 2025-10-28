@@ -8,20 +8,12 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import {
-  Building2,
-  Settings,
-  Users,
-  Eye,
-  Trash2,
-  ToggleLeft,
-  ToggleRight,
-  Plus,
-} from 'lucide-react';
-import React, { useCallback, useState } from 'react';
+import { Building2, Users, ToggleLeft, ToggleRight, Plus } from 'lucide-react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Card,
   CardContent,
@@ -119,7 +111,7 @@ function AdminWorkspaces() {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
-  
+
   // Check for create action in URL
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -134,7 +126,6 @@ function AdminWorkspaces() {
     data: workspacesData,
     isLoading,
     error,
-    refetch,
   } = useQuery({
     queryKey: ['admin-workspaces', page, limit, search, isActiveFilter],
     queryFn: () =>
@@ -153,40 +144,6 @@ function AdminWorkspaces() {
     total: 0,
     totalPages: 0,
   };
-
-  const handleToggleWorkspaceStatus = useCallback(
-    async (workspace: Workspace) => {
-      try {
-        await workspaceApi.updateWorkspace(workspace.slug, {
-          isActive: !workspace.isActive,
-        });
-        refetch();
-      } catch (error) {
-        console.error('Failed to toggle workspace status:', error);
-      }
-    },
-    [refetch]
-  );
-
-  const handleDeleteWorkspace = useCallback(
-    async (workspace: Workspace) => {
-      if (
-        !confirm(
-          `Are you sure you want to delete workspace "${workspace.name}"? This action cannot be undone.`
-        )
-      ) {
-        return;
-      }
-
-      try {
-        await workspaceApi.deleteWorkspace(workspace.slug);
-        refetch();
-      } catch (error) {
-        console.error('Failed to delete workspace:', error);
-      }
-    },
-    [refetch]
-  );
 
   const columns = React.useMemo<ColumnDef<Workspace>[]>(
     () => [
@@ -262,56 +219,8 @@ function AdminWorkspaces() {
           return date ? new Date(date).toLocaleDateString() : 'N/A';
         },
       },
-      {
-        id: 'actions',
-        header: () => <div className="text-right">Actions</div>,
-        cell: ({ row }) => {
-          const workspace = row.original;
-          return (
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  (window.location.href = `/admin/c/${workspace.slug}`)
-                }
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  (window.location.href = `/admin/c/${workspace.slug}/settings`)
-                }
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleToggleWorkspaceStatus(workspace)}
-              >
-                {workspace.isActive ? (
-                  <ToggleLeft className="h-4 w-4" />
-                ) : (
-                  <ToggleRight className="h-4 w-4" />
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleDeleteWorkspace(workspace)}
-                disabled={workspace.memberCount > 0}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          );
-        },
-      },
     ],
-    [handleToggleWorkspaceStatus, handleDeleteWorkspace]
+    []
   );
 
   const table = useReactTable({
@@ -341,8 +250,8 @@ function AdminWorkspaces() {
             Manage all workspaces in the platform
           </p>
         </div>
-        <CreateWorkspaceDialog 
-          open={isCreateDialogOpen} 
+        <CreateWorkspaceDialog
+          open={isCreateDialogOpen}
           onOpenChange={setIsCreateDialogOpen}
         >
           <Button>
@@ -492,11 +401,23 @@ function AdminWorkspaces() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center">
-                      Loading workspaces...
-                    </TableCell>
-                  </TableRow>
+                  [...Array(5)].map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-8 w-8 rounded" />
+                          <div className="space-y-1">
+                            <Skeleton className="h-4 w-32" />
+                            <Skeleton className="h-3 w-20" />
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                      <TableCell><Skeleton className="h-8 w-8 rounded" /></TableCell>
+                    </TableRow>
+                  ))
                 ) : error ? (
                   <TableRow>
                     <TableCell
@@ -566,8 +487,8 @@ function AdminWorkspaces() {
       </Card>
 
       {/* Create Workspace Dialog */}
-      <CreateWorkspaceDialog 
-        open={isCreateDialogOpen} 
+      <CreateWorkspaceDialog
+        open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
       >
         <div style={{ display: 'none' }} />

@@ -29,7 +29,6 @@ import { Route as DashboardCSlugDashboardRouteImport } from './routes/_dashboard
 import { Route as DashboardCSlugActivitiesRouteImport } from './routes/_dashboard/c.$slug.activities'
 import { Route as DashboardAdminCSlugRouteImport } from './routes/_dashboard/admin.c.$slug'
 import { Route as DashboardAdminCSlugUsersRouteImport } from './routes/_dashboard/admin.c.$slug.users'
-import { Route as DashboardAdminCSlugSettingsRouteImport } from './routes/_dashboard/admin.c.$slug.settings'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -136,12 +135,6 @@ const DashboardAdminCSlugUsersRoute =
     path: '/users',
     getParentRoute: () => DashboardAdminCSlugRoute,
   } as any)
-const DashboardAdminCSlugSettingsRoute =
-  DashboardAdminCSlugSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => DashboardAdminCSlugRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -162,7 +155,6 @@ export interface FileRoutesByFullPath {
   '/c/$slug/dashboard': typeof DashboardCSlugDashboardRoute
   '/c/$slug/members': typeof DashboardCSlugMembersRoute
   '/c/$slug/settings': typeof DashboardCSlugSettingsRoute
-  '/admin/c/$slug/settings': typeof DashboardAdminCSlugSettingsRoute
   '/admin/c/$slug/users': typeof DashboardAdminCSlugUsersRoute
 }
 export interface FileRoutesByTo {
@@ -183,7 +175,6 @@ export interface FileRoutesByTo {
   '/c/$slug/dashboard': typeof DashboardCSlugDashboardRoute
   '/c/$slug/members': typeof DashboardCSlugMembersRoute
   '/c/$slug/settings': typeof DashboardCSlugSettingsRoute
-  '/admin/c/$slug/settings': typeof DashboardAdminCSlugSettingsRoute
   '/admin/c/$slug/users': typeof DashboardAdminCSlugUsersRoute
 }
 export interface FileRoutesById {
@@ -207,7 +198,6 @@ export interface FileRoutesById {
   '/_dashboard/c/$slug/dashboard': typeof DashboardCSlugDashboardRoute
   '/_dashboard/c/$slug/members': typeof DashboardCSlugMembersRoute
   '/_dashboard/c/$slug/settings': typeof DashboardCSlugSettingsRoute
-  '/_dashboard/admin/c/$slug/settings': typeof DashboardAdminCSlugSettingsRoute
   '/_dashboard/admin/c/$slug/users': typeof DashboardAdminCSlugUsersRoute
 }
 export interface FileRouteTypes {
@@ -231,7 +221,6 @@ export interface FileRouteTypes {
     | '/c/$slug/dashboard'
     | '/c/$slug/members'
     | '/c/$slug/settings'
-    | '/admin/c/$slug/settings'
     | '/admin/c/$slug/users'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -252,7 +241,6 @@ export interface FileRouteTypes {
     | '/c/$slug/dashboard'
     | '/c/$slug/members'
     | '/c/$slug/settings'
-    | '/admin/c/$slug/settings'
     | '/admin/c/$slug/users'
   id:
     | '__root__'
@@ -275,7 +263,6 @@ export interface FileRouteTypes {
     | '/_dashboard/c/$slug/dashboard'
     | '/_dashboard/c/$slug/members'
     | '/_dashboard/c/$slug/settings'
-    | '/_dashboard/admin/c/$slug/settings'
     | '/_dashboard/admin/c/$slug/users'
   fileRoutesById: FileRoutesById
 }
@@ -427,13 +414,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAdminCSlugUsersRouteImport
       parentRoute: typeof DashboardAdminCSlugRoute
     }
-    '/_dashboard/admin/c/$slug/settings': {
-      id: '/_dashboard/admin/c/$slug/settings'
-      path: '/settings'
-      fullPath: '/admin/c/$slug/settings'
-      preLoaderRoute: typeof DashboardAdminCSlugSettingsRouteImport
-      parentRoute: typeof DashboardAdminCSlugRoute
-    }
   }
 }
 
@@ -473,12 +453,10 @@ const DashboardCSlugRouteWithChildren = DashboardCSlugRoute._addFileChildren(
 )
 
 interface DashboardAdminCSlugRouteChildren {
-  DashboardAdminCSlugSettingsRoute: typeof DashboardAdminCSlugSettingsRoute
   DashboardAdminCSlugUsersRoute: typeof DashboardAdminCSlugUsersRoute
 }
 
 const DashboardAdminCSlugRouteChildren: DashboardAdminCSlugRouteChildren = {
-  DashboardAdminCSlugSettingsRoute: DashboardAdminCSlugSettingsRoute,
   DashboardAdminCSlugUsersRoute: DashboardAdminCSlugUsersRoute,
 }
 

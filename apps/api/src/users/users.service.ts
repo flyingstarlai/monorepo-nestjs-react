@@ -23,7 +23,7 @@ export class UsersService {
   }
 
   async findAll(): Promise<User[]> {
-    return await this.usersRepository.find({ relations: ['role'] });
+    return await this.usersRepository.find();
   }
 
   async findOne(id: string): Promise<User | null> {

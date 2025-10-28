@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -35,11 +36,38 @@ function WorkspaceActivities() {
   });
 
   if (!currentWorkspace) {
-    return <div>Loading...</div>;
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <div className="space-y-4">
+          {[...Array(10)].map((_, i) => (
+            <div key={i} className="flex items-center gap-3 pb-3 border-b">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (isLoading) {
-    return <div>Loading activities...</div>;
+    return (
+      <div className="space-y-4">
+        {[...Array(10)].map((_, i) => (
+          <div key={i} className="flex items-center gap-3 pb-3 border-b">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
   const getActivityIcon = (type: string) => {

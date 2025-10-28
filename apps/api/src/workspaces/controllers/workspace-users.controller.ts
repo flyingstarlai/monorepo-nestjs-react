@@ -19,6 +19,8 @@ import { WorkspaceRolesGuard } from '../guards/workspace-roles.guard';
 import { WorkspaceRole } from '../entities/workspace-member.entity';
 import { WorkspacesService } from '../workspaces.service';
 import { UsersService } from '../../users/users.service';
+import { ActivitiesService } from '../../activities/activities.service';
+import { ActivityType } from '../../activities/entities/activity.entity';
 import { User } from '../../users/entities/user.entity';
 
 interface CreateUserData {
@@ -36,7 +38,8 @@ interface UpdateRoleData {
 export class WorkspaceUsersController {
   constructor(
     private readonly workspacesService: WorkspacesService,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly activitiesService: ActivitiesService
   ) {}
 
   @Get()
@@ -84,6 +87,23 @@ export class WorkspaceUsersController {
       role
     );
 
+    // Record member addition activity
+    await this.activitiesService.record(
+      req.user.id,
+      ActivityType.MEMBER_ADDED,
+      `Added ${user.username} to workspace as ${membership.role}`,
+      req.workspace.id,
+      {
+        workspaceId: req.workspace.id,
+        workspaceName: req.workspace.name,
+        memberId: user.id,
+        memberUsername: user.username,
+        memberName: user.name,
+        role: membership.role,
+        actorId: req.user.id,
+      }
+    );
+
     return {
       id: user.id,
       username: user.username,
@@ -121,6 +141,24 @@ export class WorkspaceUsersController {
     if (!membership) {
       throw new NotFoundException('Member not found');
     }
+
+    // Record member status change activity
+    await this.activitiesService.record(
+      req.user.id,
+      ActivityType.MEMBER_STATUS_CHANGED,
+      `${membership.isActive ? 'Activated' : 'Deactivated'} ${membership.user.username} in workspace`,
+      req.workspace.id,
+      {
+        workspaceId: req.workspace.id,
+        workspaceName: req.workspace.name,
+        memberId: membership.user.id,
+        memberUsername: membership.user.username,
+        memberName: membership.user.name,
+        oldStatus: !membership.isActive,
+        newStatus: membership.isActive,
+        actorId: req.user.id,
+      }
+    );
 
     return {
       id: membership.user.id,
@@ -161,6 +199,24 @@ export class WorkspaceUsersController {
       req.workspace.id,
       memberId,
       role
+    );
+
+    // Record member role change activity
+    await this.activitiesService.record(
+      req.user.id,
+      ActivityType.MEMBER_ROLE_CHANGED,
+      `Changed ${updatedMembership.user.username}'s role from ${currentMembership.role} to ${updatedMembership.role}`,
+      req.workspace.id,
+      {
+        workspaceId: req.workspace.id,
+        workspaceName: req.workspace.name,
+        memberId: updatedMembership.user.id,
+        memberUsername: updatedMembership.user.username,
+        memberName: updatedMembership.user.name,
+        oldRole: currentMembership.role,
+        newRole: updatedMembership.role,
+        actorId: req.user.id,
+      }
     );
 
     return {

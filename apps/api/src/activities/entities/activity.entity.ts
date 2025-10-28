@@ -15,6 +15,16 @@ export enum ActivityType {
   PASSWORD_CHANGED = 'password_changed',
   AVATAR_UPDATED = 'avatar_updated',
   USER_CREATED = 'user_created',
+  // Workspace lifecycle events
+  WORKSPACE_CREATED = 'workspace_created',
+  WORKSPACE_UPDATED = 'workspace_updated',
+  WORKSPACE_DEACTIVATED = 'workspace_deactivated',
+  WORKSPACE_ACTIVATED = 'workspace_activated',
+  // Membership lifecycle events
+  MEMBER_ADDED = 'member_added',
+  MEMBER_REMOVED = 'member_removed',
+  MEMBER_ROLE_CHANGED = 'member_role_changed',
+  MEMBER_STATUS_CHANGED = 'member_status_changed',
 }
 
 @Entity('activities')

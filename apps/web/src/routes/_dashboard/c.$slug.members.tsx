@@ -1,19 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useWorkspace } from '@/features/workspaces';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { workspacesApi } from '@/features/workspaces';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-
-import { WorkspaceRole } from '@/features/workspaces';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 import {
   Table,
   TableBody,
@@ -28,8 +20,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, UserX, Shield } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { MoreHorizontal, UserPlus, Shield, UserX } from 'lucide-react';
+import { WorkspaceRole } from '@/features/workspaces/types';
+import { AddMemberDialog } from '@/features/workspaces/components/add-member-dialog';
 
 export const Route = createFileRoute('/_dashboard/c/$slug/members')({
   component: WorkspaceMembers,
@@ -44,6 +58,8 @@ function WorkspaceMembers() {
     queryFn: () => workspacesApi.getWorkspaceMembers(currentWorkspace!.slug),
     enabled: !!currentWorkspace,
   });
+
+  const { toast } = useToast();
 
   const toggleStatusMutation = useMutation({
     mutationFn: ({ memberId }: { memberId: string }) =>
@@ -100,11 +116,57 @@ function WorkspaceMembers() {
   });
 
   if (!currentWorkspace) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center space-y-3">
+          <LoadingSpinner size="lg" />
+          <p className="text-sm text-muted-foreground">Loading workspace...</p>
+        </div>
+      </div>
+    );
   }
 
   if (isLoading) {
-    return <div>Loading members...</div>;
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-9 w-32" />
+        </div>
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Member</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Joined</TableHead>
+                <TableHead className="w-[70px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[...Array(5)].map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <div className="space-y-1">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-8 w-8 rounded" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    );
   }
 
   const getRoleBadgeVariant = (role: WorkspaceRole) => {
@@ -129,6 +191,14 @@ function WorkspaceMembers() {
             Manage workspace members and their permissions
           </p>
         </div>
+        {canManageWorkspace && (
+          <AddMemberDialog>
+            <Button>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add Member
+            </Button>
+          </AddMemberDialog>
+        )}
       </div>
 
       <Card>
@@ -146,7 +216,7 @@ function WorkspaceMembers() {
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Joined</TableHead>
-                {canManageWorkspace() && (
+                {canManageWorkspace && (
                   <TableHead className="w-[70px]"></TableHead>
                 )}
               </TableRow>
@@ -183,7 +253,7 @@ function WorkspaceMembers() {
                   <TableCell>
                     {new Date(member.joinedAt).toLocaleDateString()}
                   </TableCell>
-                  {canManageWorkspace() && (
+                  {canManageWorkspace && (
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

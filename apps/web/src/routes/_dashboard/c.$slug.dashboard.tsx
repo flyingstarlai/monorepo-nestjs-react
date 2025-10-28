@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Building2, Users, Calendar, Clock, Activity } from 'lucide-react';
 
 export const Route = createFileRoute('/_dashboard/c/$slug/dashboard')({
@@ -24,7 +25,25 @@ function WorkspaceDashboard() {
   } = useRecentActivities({ limit: 5 });
 
   if (!currentWorkspace || !workspaceProfile) {
-    return <div>Loading...</div>;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-12 w-12 rounded-lg" />
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+          <Skeleton className="h-6 w-20" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
   }
 
   return (
@@ -131,7 +150,17 @@ function WorkspaceDashboard() {
         </CardHeader>
         <CardContent>
           {activitiesLoading ? (
-            <div className="text-center py-4">Loading activities...</div>
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3 pb-3 border-b">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : activitiesError ? (
             <div className="text-center py-4 text-destructive">
               Failed to load activities

@@ -1,11 +1,12 @@
 import { createRouter, RouterProvider } from '@tanstack/react-router';
-import { StrictMode } from 'react';
+import { StrictMode, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { Toaster } from 'sonner';
-import { AuthProvider, useAuth } from './features/auth';
+import { useAuth } from './features/auth';
+import { LoadingScreen } from './components/ui/loading-spinner';
 import * as TanStackQueryProvider from './integrations/tanstack-query/root-provider.tsx';
 
-// Import the generated route tree
+// Import generated route tree
 import { routeTree } from './routeTree.gen';
 
 import './styles.css';
@@ -14,7 +15,7 @@ import reportWebVitals from './report-web-vitals.ts';
 // Create a new router instance with authentication context
 const TanStackQueryProviderContext = TanStackQueryProvider.getContext();
 
-// Create a router that will get its auth context from the AuthProvider
+// Create a router that will get its auth context from Zustand store
 function useRouterWithAuth() {
   const auth = useAuth();
 
@@ -31,32 +32,53 @@ function useRouterWithAuth() {
   });
 }
 
-// Register the router instance for type safety
+// Register router instance for type safety
 declare module '@tanstack/react-router' {
   interface Register {
     router: ReturnType<typeof useRouterWithAuth>;
   }
 }
 
-// Router component that uses the auth context
+// Router component that uses auth context
 function RouterWithAuth() {
   const router = useRouterWithAuth();
   return <RouterProvider router={router} />;
 }
 
-// Wrapper component to provide auth context to router
+// Auth initialization component
+function AuthInitializer({ children }: { children: React.ReactNode }) {
+  const { initializeAuth, isLoading } = useAuth();
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <LoadingScreen 
+        message="Authenticating..." 
+        submessage="Verifying your credentials and preparing your workspace"
+      />
+    );
+  }
+
+  return <>{children}</>;
+}
+
+// Wrapper component to provide query context and initialize auth
 function AppWithProviders() {
   return (
-    <AuthProvider>
-      <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
+    <TanStackQueryProvider.Provider {...TanStackQueryProviderContext}>
+      <AuthInitializer>
         <RouterWithAuth />
         <Toaster />
-      </TanStackQueryProvider.Provider>
-    </AuthProvider>
+      </AuthInitializer>
+    </TanStackQueryProvider.Provider>
   );
 }
 
-// Render the app
+// Render app
 const rootElement = document.getElementById('app');
 if (rootElement && !rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);

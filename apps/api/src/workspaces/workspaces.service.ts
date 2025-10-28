@@ -394,43 +394,32 @@ export class WorkspacesService {
     members: number;
     recentlyActive: number;
   }> {
-    const [total, active, owners, authors, members] = await Promise.all([
-      this.memberRepository.count({
-        where: { workspaceId },
-      }),
-      this.memberRepository.count({
-        where: { workspaceId, isActive: true },
-      }),
-      this.memberRepository.count({
-        where: { workspaceId, role: WorkspaceRole.OWNER, isActive: true },
-      }),
-      this.memberRepository.count({
-        where: { workspaceId, role: WorkspaceRole.AUTHOR, isActive: true },
-      }),
-      this.memberRepository.count({
-        where: { workspaceId, role: WorkspaceRole.MEMBER, isActive: true },
-      }),
-    ]);
-
-    // Calculate recently active (last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const recentlyActive = await this.memberRepository
+    // Use a single optimized query with GROUP BY and CASE statements
+    const stats = await this.memberRepository
       .createQueryBuilder('member')
       .leftJoin('member.user', 'user')
-      .where('member.workspaceId = :workspaceId', { workspaceId })
-      .andWhere('member.isActive = :isActive', { isActive: true })
-      .andWhere('user.lastLoginAt >= :date', { date: thirtyDaysAgo })
-      .getCount();
+      .select('COUNT(*)', 'totalMembers')
+      .addSelect('COUNT(CASE WHEN member.isActive = true THEN 1 END)', 'activeMembers')
+      .addSelect('COUNT(CASE WHEN member.role = :owner AND member.isActive = true THEN 1 END)', 'owners')
+      .addSelect('COUNT(CASE WHEN member.role = :author AND member.isActive = true THEN 1 END)', 'authors')
+      .addSelect('COUNT(CASE WHEN member.role = :member AND member.isActive = true THEN 1 END)', 'members')
+      .addSelect('COUNT(CASE WHEN member.isActive = true AND user.lastLoginAt >= :date THEN 1 END)', 'recentlyActive')
+      .where('member.workspaceId = :workspaceId', { 
+        workspaceId,
+        owner: WorkspaceRole.OWNER,
+        author: WorkspaceRole.AUTHOR,
+        member: WorkspaceRole.MEMBER,
+        date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 days ago
+      })
+      .getRawOne();
 
     return {
-      totalMembers: total,
-      activeMembers: active,
-      owners,
-      authors,
-      members,
-      recentlyActive,
+      totalMembers: parseInt(stats.totalMembers) || 0,
+      activeMembers: parseInt(stats.activeMembers) || 0,
+      owners: parseInt(stats.owners) || 0,
+      authors: parseInt(stats.authors) || 0,
+      members: parseInt(stats.members) || 0,
+      recentlyActive: parseInt(stats.recentlyActive) || 0,
     };
   }
 }

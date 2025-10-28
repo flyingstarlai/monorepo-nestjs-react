@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Card,
   CardContent,
@@ -143,9 +144,7 @@ function AdminDashboard() {
               <Building2 className="h-5 w-5" />
               Workspace Management
             </CardTitle>
-            <CardDescription>
-              Create and manage workspaces
-            </CardDescription>
+            <CardDescription>Create and manage workspaces</CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full" variant="outline">
@@ -160,9 +159,7 @@ function AdminDashboard() {
               <Activity className="h-5 w-5" />
               System Activity
             </CardTitle>
-            <CardDescription>
-              View system logs and activity
-            </CardDescription>
+            <CardDescription>View system logs and activity</CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" variant="outline" disabled>
@@ -185,7 +182,20 @@ function AdminDashboard() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-4">Loading users...</div>
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-6 w-16" />
+                </div>
+              ))}
+            </div>
           ) : users.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
               No users found
@@ -194,10 +204,17 @@ function AdminDashboard() {
             <div className="space-y-3">
               {users
                 .slice()
-                .sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime())
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt || '').getTime() -
+                    new Date(a.createdAt || '').getTime()
+                )
                 .slice(0, 5)
                 .map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div
+                    key={user.id}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                         <span className="text-sm font-medium">
@@ -206,7 +223,9 @@ function AdminDashboard() {
                       </div>
                       <div>
                         <div className="font-medium">{user.name}</div>
-                        <div className="text-sm text-muted-foreground">@{user.username}</div>
+                        <div className="text-sm text-muted-foreground">
+                          @{user.username}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

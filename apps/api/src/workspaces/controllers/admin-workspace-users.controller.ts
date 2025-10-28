@@ -17,6 +17,8 @@ import { PlatformAdminGuard } from '../../auth/guards/platform-admin.guard';
 import { WorkspaceResolverGuard } from '../guards/workspace-resolver.guard';
 import { WorkspacesService } from '../workspaces.service';
 import { UsersService } from '../../users/users.service';
+import { ActivitiesService } from '../../activities/activities.service';
+import { ActivityType } from '../../activities/entities/activity.entity';
 import { User } from '../../users/entities/user.entity';
 import { WorkspaceRole } from '../entities/workspace-member.entity';
 import {
@@ -42,7 +44,8 @@ interface UpdateRoleData {
 export class AdminWorkspaceUsersController {
   constructor(
     private readonly workspacesService: WorkspacesService,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly activitiesService: ActivitiesService
   ) {}
 
   @Get()
@@ -89,6 +92,23 @@ export class AdminWorkspaceUsersController {
       role as WorkspaceRole
     );
 
+    // Record member addition activity
+    await this.activitiesService.record(
+      req.user.id,
+      ActivityType.MEMBER_ADDED,
+      `Added ${user.username} to workspace as ${membership.role}`,
+      req.workspace.id,
+      {
+        workspaceId: req.workspace.id,
+        workspaceName: req.workspace.name,
+        memberId: user.id,
+        memberUsername: user.username,
+        memberName: user.name,
+        role: membership.role,
+        actorId: req.user.id,
+      }
+    );
+
     return {
       id: user.id,
       username: user.username,
@@ -132,6 +152,24 @@ export class AdminWorkspaceUsersController {
       memberId
     );
 
+    // Record member status change activity
+    await this.activitiesService.record(
+      req.user.id,
+      ActivityType.MEMBER_STATUS_CHANGED,
+      `${updatedMembership.isActive ? 'Activated' : 'Deactivated'} ${updatedMembership.user.username} in workspace`,
+      req.workspace.id,
+      {
+        workspaceId: req.workspace.id,
+        workspaceName: req.workspace.name,
+        memberId: updatedMembership.user.id,
+        memberUsername: updatedMembership.user.username,
+        memberName: updatedMembership.user.name,
+        oldStatus: !updatedMembership.isActive,
+        newStatus: updatedMembership.isActive,
+        actorId: req.user.id,
+      }
+    );
+
     return {
       id: updatedMembership.user.id,
       username: updatedMembership.user.username,
@@ -173,6 +211,24 @@ export class AdminWorkspaceUsersController {
       req.workspace.id,
       memberId,
       role as WorkspaceRole
+    );
+
+    // Record member role change activity
+    await this.activitiesService.record(
+      req.user.id,
+      ActivityType.MEMBER_ROLE_CHANGED,
+      `Changed ${updatedMembership.user.username}'s role from ${currentMembership.role} to ${updatedMembership.role}`,
+      req.workspace.id,
+      {
+        workspaceId: req.workspace.id,
+        workspaceName: req.workspace.name,
+        memberId: updatedMembership.user.id,
+        memberUsername: updatedMembership.user.username,
+        memberName: updatedMembership.user.name,
+        oldRole: currentMembership.role,
+        newRole: updatedMembership.role,
+        actorId: req.user.id,
+      }
     );
 
     return {
@@ -230,6 +286,27 @@ export class AdminWorkspaceUsersController {
       }
     }
 
+    // Record owner replacement activity
+    await this.activitiesService.record(
+      req.user.id,
+      ActivityType.MEMBER_ROLE_CHANGED,
+      `Replaced workspace owner: ${newOwnerMembership.user.username} is now the owner`,
+      req.workspace.id,
+      {
+        workspaceId: req.workspace.id,
+        workspaceName: req.workspace.name,
+        newOwnerId: newOwnerMembership.user.id,
+        newOwnerUsername: newOwnerMembership.user.username,
+        newOwnerName: newOwnerMembership.user.name,
+        previousOwners: currentOwners.map(owner => ({
+          id: owner.user.id,
+          username: owner.user.username,
+          name: owner.user.name,
+        })),
+        actorId: req.user.id,
+      }
+    );
+
     return {
       message: 'Owner replacement completed successfully',
       newOwner: {
@@ -270,6 +347,23 @@ export class AdminWorkspaceUsersController {
       req.workspace.id,
       memberId,
       false
+    );
+
+    // Record member removal activity
+    await this.activitiesService.record(
+      req.user.id,
+      ActivityType.MEMBER_REMOVED,
+      `Removed ${membership.user.username} from workspace`,
+      req.workspace.id,
+      {
+        workspaceId: req.workspace.id,
+        workspaceName: req.workspace.name,
+        memberId: membership.user.id,
+        memberUsername: membership.user.username,
+        memberName: membership.user.name,
+        memberRole: membership.role,
+        actorId: req.user.id,
+      }
     );
 
     return {

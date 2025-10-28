@@ -1,6 +1,9 @@
 import { Building2, ChevronDown, Plus } from 'lucide-react';
 
-import { useWorkspace } from '../contexts/workspace.context';
+import {
+  useWorkspaceStore,
+  useWorkspaceOptimized,
+} from '../stores/workspace.store';
 import { WorkspaceRole } from '../types';
 
 import {
@@ -34,8 +37,11 @@ function getRoleBadgeVariant(role: WorkspaceRole) {
 
 export function WorkspaceSwitcher() {
   const { isMobile } = useSidebar();
-  const { workspaces, currentWorkspace, switchWorkspace, isLoading } =
-    useWorkspace();
+  // Use individual selectors to prevent infinite loops
+  const workspaces = useWorkspaceStore((state) => state.workspaces);
+  const currentWorkspace = useWorkspaceStore((state) => state.currentWorkspace);
+  const isLoading = useWorkspaceStore((state) => state.isLoading);
+  const switchWorkspace = useWorkspaceStore((state) => state.switchWorkspace);
 
   if (isLoading) {
     return (

@@ -83,14 +83,6 @@ export function AppBreadcrumb() {
         ];
       }
 
-      if (restPath === '/settings') {
-        return [
-          { label: 'Platform Admin', href: '/admin' },
-          { label: `Workspace ${slug}`, href: `/admin/c/${slug}` },
-          { label: 'Settings', href: null },
-        ];
-      }
-
       // Generic admin workspace route
       return [
         { label: 'Platform Admin', href: '/admin' },

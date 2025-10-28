@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Building2, Users, Calendar, Shield } from 'lucide-react';
 
 export const Route = createFileRoute('/_dashboard/c/$slug/settings')({
@@ -18,7 +19,20 @@ function WorkspaceSettings() {
   const { currentWorkspace, workspaceProfile } = useWorkspace();
 
   if (!currentWorkspace || !workspaceProfile) {
-    return <div>Loading...</div>;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-12 w-12 rounded-lg" />
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+          <Skeleton className="h-6 w-20" />
+        </div>
+        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
   }
 
   return (

@@ -20,14 +20,7 @@ export interface AuthResponse {
   user: User;
 }
 
-export interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  logout: () => void;
-  updateUser: (user: User) => void;
-}
+
 
 export interface AuthState {
   user: User | null;

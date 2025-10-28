@@ -49,9 +49,10 @@ function SettingsLayout() {
     },
   ];
 
-  const activeTab = settingsTabs.find(tab => 
-    location.pathname === tab.path || 
-    (tab.path === '/settings/profile' && location.pathname === '/settings')
+  const activeTab = settingsTabs.find(
+    (tab) =>
+      location.pathname === tab.path ||
+      (tab.path === '/settings/profile' && location.pathname === '/settings')
   );
 
   return (
@@ -79,7 +80,7 @@ function SettingsLayout() {
               {settingsTabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab?.id === tab.id;
-                
+
                 return (
                   <Button
                     key={tab.id}

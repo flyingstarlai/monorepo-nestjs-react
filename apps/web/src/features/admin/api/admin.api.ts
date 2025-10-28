@@ -1,6 +1,36 @@
 import { tokenStorage } from '../../auth/api';
 import type { User } from '../../auth/types';
 
+// Workspace types
+export interface Workspace {
+  id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+  memberCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateWorkspaceDto {
+  name: string;
+  slug: string;
+}
+
+export interface UpdateWorkspaceDto {
+  name?: string;
+  isActive?: boolean;
+}
+
+export interface WorkspaceStats {
+  totalMembers: number;
+  activeMembers: number;
+  owners: number;
+  authors: number;
+  members: number;
+  recentlyActive: number;
+}
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
@@ -152,6 +182,137 @@ export const adminApi = {
     if (!response.ok) {
       const error = await response.json();
       throw new AdminApiError(error.message || 'Failed to update user role');
+    }
+
+    return response.json();
+  },
+
+  // Workspace management methods
+  async getAllWorkspaces(filters?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    isActive?: boolean;
+  }): Promise<{
+    items: Workspace[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const token = tokenStorage.getToken();
+    if (!token) {
+      throw new AdminApiError('No authentication token');
+    }
+
+    const params = new URLSearchParams();
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.isActive !== undefined)
+      params.append('isActive', filters.isActive.toString());
+
+    const response = await fetch(
+      `${API_BASE_URL}/admin/workspaces?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new AdminApiError('Failed to fetch workspaces');
+    }
+
+    return response.json();
+  },
+
+  async createWorkspace(data: CreateWorkspaceDto): Promise<Workspace> {
+    const token = tokenStorage.getToken();
+    if (!token) {
+      throw new AdminApiError('No authentication token');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/admin/workspaces`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new AdminApiError(error.message || 'Failed to create workspace');
+    }
+
+    return response.json();
+  },
+
+  async updateWorkspace(
+    id: string,
+    data: UpdateWorkspaceDto
+  ): Promise<Workspace> {
+    const token = tokenStorage.getToken();
+    if (!token) {
+      throw new AdminApiError('No authentication token');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/admin/workspaces/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new AdminApiError(error.message || 'Failed to update workspace');
+    }
+
+    return response.json();
+  },
+
+  async deleteWorkspace(id: string): Promise<void> {
+    const token = tokenStorage.getToken();
+    if (!token) {
+      throw new AdminApiError('No authentication token');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/admin/workspaces/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new AdminApiError(error.message || 'Failed to delete workspace');
+    }
+  },
+
+  async getWorkspaceStats(id: string): Promise<WorkspaceStats> {
+    const token = tokenStorage.getToken();
+    if (!token) {
+      throw new AdminApiError('No authentication token');
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/admin/workspaces/${id}/stats`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new AdminApiError('Failed to fetch workspace stats');
     }
 
     return response.json();

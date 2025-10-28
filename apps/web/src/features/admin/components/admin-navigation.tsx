@@ -64,12 +64,6 @@ export function AdminNavigation({
           icon: Users,
           description: 'Manage workspace members',
         },
-        {
-          label: 'Settings',
-          href: `/admin/c/${workspaceSlug}/settings`,
-          icon: Settings,
-          description: 'Workspace settings',
-        },
       ]
     : [];
 

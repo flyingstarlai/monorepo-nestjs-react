@@ -22,11 +22,15 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/features/auth';
-import { useWorkspace } from '@/features/workspaces';
+import { useWorkspaceStore } from '@/features/workspaces/stores/workspace.store';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth();
-  const { currentWorkspace, canManageWorkspace } = useWorkspace();
+  // Use individual selectors to prevent infinite loops
+  const currentWorkspace = useWorkspaceStore((state) => state.currentWorkspace);
+  const canManageWorkspace = useWorkspaceStore((state) =>
+    state.canManageWorkspace()
+  );
   const location = useLocation();
 
   // Workspace navigation items
@@ -41,7 +45,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   ];
 
   // Add workspace management for users with permissions
-  if (currentWorkspace && canManageWorkspace()) {
+  if (currentWorkspace && canManageWorkspace) {
     workspaceNavItems.push({
       title: 'Members',
       url: `/c/${currentWorkspace.slug}/members`,
@@ -50,9 +54,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }
 
   // Add workspace settings for users with permissions
-  if (currentWorkspace && canManageWorkspace()) {
+  if (currentWorkspace && canManageWorkspace) {
     workspaceNavItems.push({
-      title: 'Workspace Settings',
+      title: 'Settings',
       url: `/c/${currentWorkspace.slug}/settings`,
       icon: Settings,
     });
@@ -139,8 +143,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           title={currentWorkspace ? currentWorkspace.name : 'Workspace'}
         />
 
-        {/* User Settings - Always visible */}
-        <NavMain items={data.userSettingsItems} title="Settings" />
+        {/* Account Settings - Always visible */}
+        <NavMain items={data.userSettingsItems} title="Account" />
 
         {/* Admin Navigation - Only for Admin users */}
         {data.hasAdminAccess && (

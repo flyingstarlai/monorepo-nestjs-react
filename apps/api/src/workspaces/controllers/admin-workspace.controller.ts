@@ -25,13 +25,16 @@ import {
   ListWorkspacesDto,
   ReplaceWorkspaceOwnerDto,
 } from '../dto/workspace.dto';
+import { ActivitiesService } from '../../activities/activities.service';
+import { ActivityType } from '../../activities/entities/activity.entity';
 
 @Controller('admin/c/:slug')
 @UseGuards(JwtAuthGuard, PlatformAdminGuard, WorkspaceResolverGuard)
 export class AdminWorkspaceController {
   constructor(
     private readonly workspacesService: WorkspacesService,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly activitiesService: ActivitiesService
   ) {}
 
   @Get()
@@ -63,6 +66,7 @@ export class AdminWorkspaceController {
     const { name, isActive } = data;
     const workspaceId = req.workspace.id;
     const userId = req.user.id;
+    const workspace = req.workspace;
 
     // Validate that if deactivating, there are no active members
     if (isActive === false) {
@@ -76,17 +80,45 @@ export class AdminWorkspaceController {
       }
     }
 
+    // Record activity before update
+    const changes: Record<string, any> = {};
+    if (name && name !== workspace.name) {
+      changes.name = { old: workspace.name, new: name };
+    }
+    if (isActive !== undefined && isActive !== workspace.isActive) {
+      changes.isActive = { old: workspace.isActive, new: isActive };
+    }
+
     // Update workspace using service method
-    return this.workspacesService.updateWorkspace(workspaceId, {
+    const updatedWorkspace = await this.workspacesService.updateWorkspace(workspaceId, {
       name,
       isActive,
       updatedBy: userId,
     });
+
+    // Record workspace update activity
+    await this.activitiesService.record(
+      userId,
+      ActivityType.WORKSPACE_UPDATED,
+      `Updated workspace '${updatedWorkspace.name}' (${updatedWorkspace.slug})`,
+      workspaceId,
+      {
+        workspaceId,
+        workspaceName: updatedWorkspace.name,
+        workspaceSlug: updatedWorkspace.slug,
+        changes,
+        actorId: userId,
+      }
+    );
+
+    return updatedWorkspace;
   }
 
   @Delete()
   async deleteWorkspace(@Request() req: { workspace: any; user: User }) {
     const workspaceId = req.workspace.id;
+    const userId = req.user.id;
+    const workspaceName = req.workspace.name;
 
     // Check if there are any active members
     const activeMembers = await this.workspacesService.getWorkspaceMembers(workspaceId)
@@ -100,6 +132,19 @@ export class AdminWorkspaceController {
 
     // Soft delete using service method
     await this.workspacesService.deleteWorkspace(workspaceId);
+
+    // Record workspace deletion activity
+    await this.activitiesService.record(
+      userId,
+      ActivityType.WORKSPACE_DEACTIVATED,
+      `Deactivated workspace '${workspaceName}'`,
+      workspaceId,
+      {
+        workspaceId,
+        workspaceName,
+        actorId: userId,
+      }
+    );
     
     return {
       message: 'Workspace deleted successfully',
@@ -121,7 +166,8 @@ export class AdminWorkspaceController {
 export class AdminWorkspacesListController {
   constructor(
     private readonly workspacesService: WorkspacesService,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly activitiesService: ActivitiesService
   ) {}
 
   @Get()
@@ -163,6 +209,20 @@ export class AdminWorkspacesListController {
       slug,
       creatorId,
     });
+
+    // Record workspace creation activity
+    await this.activitiesService.record(
+      creatorId,
+      ActivityType.WORKSPACE_CREATED,
+      `Created workspace '${workspace.name}' (${workspace.slug})`,
+      workspace.id,
+      {
+        workspaceId: workspace.id,
+        workspaceName: workspace.name,
+        workspaceSlug: workspace.slug,
+        actorId: creatorId,
+      }
+    );
 
     return {
       id: workspace.id,

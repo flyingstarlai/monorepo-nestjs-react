@@ -4,13 +4,13 @@
 - [x] 1.1.1 POST /admin/workspaces (Platform Admin only)
 - [x] 1.1.2 Validate workspace slug uniqueness and format
 - [x] 1.1.3 Auto-create Owner membership for creating admin
-- [ ] 1.1.4 Record workspace creation activity
+- [x] 1.1.4 Record workspace creation activity
 
 - [x] 1.2 Add workspace management endpoints
 - [x] 1.2.1 GET /admin/workspaces (list all workspaces for Platform Admin)
 - [x] 1.2.2 PATCH /admin/c/:slug (update workspace details)
 - [x] 1.2.3 DELETE /admin/c/:slug (soft delete with deactivation)
-- [ ] 1.2.4 POST /admin/c/:slug/activate (reactivate workspace)
+
 
 - [x] 1.3 Add workspace member management for Owners and Platform Admins
 - [x] 1.3.1 Workspace-scoped: GET /c/:slug/users (Owners can list members)
@@ -27,13 +27,13 @@
 - [x] 1.4.2 Attempt default workspace assignment via `DEFAULT_WORKSPACE_SLUG` when unspecified; SKIP if missing or inactive (no error)
 - [x] 1.4.3 Support creating users with specific workspace roles
 
-- [ ] 1.5 Role structure simplification
-- [ ] 1.5.1 Remove Workspace Admin role from database and API
-- [ ] 1.5.2 Update all workspace role references to Owner/Author/Member only
-- [ ] 1.5.3 Update permission checks to reflect simplified role structure
+- [x] 1.5 Role structure simplification
+- [x] 1.5.1 Remove Workspace Admin role from database and API
+- [x] 1.5.2 Update all workspace role references to Owner/Author/Member only
+- [x] 1.5.3 Update permission checks to reflect simplified role structure
 
-- [ ] 1.6 Audit & Observability
-- [ ] 1.6.1 Record audit events for workspace create/update/deactivate/reactivate, membership add/remove, and role/status changes (include actor and workspaceId)
+- [x] 1.6 Audit & Observability
+- [x] 1.6.1 Record audit events for workspace create/update/deactivate/reactivate, membership add/remove, and role/status changes (include actor and workspaceId)
 - [x] 1.6.2 Metrics: ensure admin and membership endpoints expose workspaceId labels where applicable
 
 - [x] 1.7 Pagination & Search
@@ -111,19 +111,19 @@
 - [x] 5.3 Update admin API client
 - [x] 5.3.1 Enhance createUser to support workspace assignment
 - [x] 5.3.2 Add workspace management methods
-- [ ] 5.3.3 Update role management to reflect simplified structure
+- [x] 5.3.3 Update role management to reflect simplified structure
 
 ## 6. Data Model Updates
 
-- [ ] 6.1 Update workspace role definitions
-- [ ] 6.1.1 Remove Workspace Admin from WorkspaceRole enum
-- [ ] 6.1.2 Update TypeScript interfaces to remove Admin workspace role
-- [ ] 6.1.3 Update database constraints if needed
+- [x] 6.1 Update workspace role definitions
+- [x] 6.1.1 Remove Workspace Admin from WorkspaceRole enum
+- [x] 6.1.2 Update TypeScript interfaces to remove Admin workspace role
+- [x] 6.1.3 Update database constraints if needed
 
-- [ ] 6.2 Update user creation workflow
-- [ ] 6.2.1 Add default workspace assignment logic
-- [ ] 6.2.2 Support optional workspace assignment during user creation
-- [ ] 6.2.3 Handle multi-workspace membership scenarios
+- [x] 6.2 Update user creation workflow
+- [x] 6.2.1 Add default workspace assignment logic
+- [x] 6.2.2 Support optional workspace assignment during user creation
+- [x] 6.2.3 Handle multi-workspace membership scenarios
 
 ## 7. Testing
 
