@@ -16,6 +16,8 @@ async function resetDatabase() {
   try {
     const dbType = process.env.DB_TYPE?.toLowerCase() || 'mssql';
     
+    console.log(`🔍 Database type detected: ${dbType}`);
+    
     if (dbType === 'postgres') {
       console.log('🗑️  Clearing database objects (PostgreSQL)...');
       await dataSource.query(`

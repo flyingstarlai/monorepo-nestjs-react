@@ -70,11 +70,22 @@ export class SeedsService implements OnModuleInit {
   private async seedWorkspaceMemberships() {
     console.log('🏢 Seeding workspace memberships...');
 
-    // Find default workspace 'twsbp'
-    const defaultWorkspace = await this.workspacesService.findBySlug('twsbp');
+    // Find or create default workspace 'twsbp'
+    let defaultWorkspace = await this.workspacesService.findBySlug('twsbp');
     if (!defaultWorkspace) {
-      console.log('❌ Default workspace "twsbp" not found');
-      return;
+      console.log('📝 Creating default workspace "twsbp"...');
+      const adminUser = await this.usersService.findByUsername('admin');
+      if (adminUser) {
+        defaultWorkspace = await this.workspacesService.createWorkspace({
+          name: 'TWSBP',
+          slug: 'twsbp',
+          creatorId: adminUser.id,
+        });
+        console.log('✅ Default workspace "twsbp" created successfully');
+      } else {
+        console.log('❌ Admin user not found, cannot create default workspace');
+        return;
+      }
     }
 
     // Find admin and regular users

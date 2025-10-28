@@ -54,13 +54,13 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: dashboard-postgres-dev
+    container_name: tcstudio-postgres-dev
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: dashboard
+      POSTGRES_DB: tc_studio
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
+      POSTGRES_PASSWORD: postgres101
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql

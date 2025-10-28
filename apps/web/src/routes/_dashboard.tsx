@@ -7,7 +7,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { useWorkspaceStore } from '@/features/workspaces/stores/workspace.store';
+import { useWorkspaceActions, useWorkspaces } from '@/features/workspaces/stores/workspace.store';
 import { useEffect } from 'react';
 
 export const Route = createFileRoute('/_dashboard')({
@@ -25,15 +25,15 @@ export const Route = createFileRoute('/_dashboard')({
 });
 
 function DashboardLayout() {
-  const fetchWorkspaces = useWorkspaceStore((state) => state.fetchWorkspaces);
-  const workspaces = useWorkspaceStore((state) => state.workspaces);
+  const { fetchWorkspaces } = useWorkspaceActions();
+  const workspaces = useWorkspaces();
 
   useEffect(() => {
     // Initialize workspace store on app load
     if (workspaces.length === 0) {
       fetchWorkspaces();
     }
-  }, [fetchWorkspaces, workspaces.length]);
+  }, [workspaces.length]); // Remove fetchWorkspaces from deps since it's now stable
 
   return (
     <SidebarProvider>

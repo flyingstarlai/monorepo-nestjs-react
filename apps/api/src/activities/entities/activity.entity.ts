@@ -41,12 +41,12 @@ export class Activity {
   @JoinColumn({ name: 'owner_id' })
   owner: User;
 
-  @Column({ name: 'workspace_id' })
-  workspaceId: string;
+  @Column({ name: 'workspace_id', nullable: true })
+  workspaceId?: string;
 
-  @ManyToOne(() => Workspace, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Workspace, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'workspace_id' })
-  workspace: Workspace;
+  workspace?: Workspace;
 
   @Column({
     type: 'varchar',

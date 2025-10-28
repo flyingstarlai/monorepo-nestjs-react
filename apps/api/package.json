@@ -9,8 +9,8 @@
 		"start:debug": "nest start --debug --watch",
 		"start:prod": "node dist/main",
 		"migration:generate": "ts-node --transpile-only -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d ./data-source.ts",
-		"migration:run": "node ./dist/scripts/migrations.js run",
-		"migration:revert": "node ./dist/scripts/migrations.js revert",
+		"migration:run": "ts-node -r tsconfig-paths/register ./scripts/migrations.ts run",
+		"migration:revert": "ts-node -r tsconfig-paths/register ./scripts/migrations.ts revert",
 		"migration:run:dev": "ts-node -r tsconfig-paths/register ./scripts/migrations.ts run",
 		"migration:revert:dev": "ts-node -r tsconfig-paths/register ./scripts/migrations.ts revert",
 		"test": "jest",
@@ -19,7 +19,8 @@
 		"test:e2e": "jest --config ./test/jest-e2e.json",
 		"lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
 		"lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-		"db:reset": "ts-node scripts/reset-database.ts"
+		"db:reset": "ts-node scripts/reset-database.ts",
+		"db:seed": "ts-node scripts/seed-only.ts"
 	},
 	"dependencies": {
 		"@nestjs/common": "^11.0.0",

@@ -38,8 +38,8 @@ const buildDatabaseOptions = (): TypeOrmModuleOptions => {
         host: 'localhost',
         port: 5432,
         username: 'postgres',
-        password: 'postgres123',
-        database: 'dashboard',
+        password: 'postgres101',
+        database: 'tc_studio',
       }
     : {
         host: 'localhost',
@@ -59,7 +59,7 @@ const buildDatabaseOptions = (): TypeOrmModuleOptions => {
     entities: [User, Role, Activity, Workspace, WorkspaceMember],
     synchronize: false,
     migrations: getMigrationsPath(),
-    migrationsRun: true,
+    migrationsRun: false,
     logging,
   };
 

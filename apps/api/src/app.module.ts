@@ -21,6 +21,7 @@ import { SeedsModule } from './seeds/seeds.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '../.env',
     }),
     TypeOrmModule.forRootAsync({
       useFactory: () => databaseConfig,

@@ -22,15 +22,15 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/features/auth';
-import { useWorkspaceStore } from '@/features/workspaces/stores/workspace.store';
+import { useCurrentWorkspace, useWorkspaceProfile } from '@/features/workspaces/stores/workspace.store';
+import { WorkspaceRole } from '@/features/workspaces/types';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth();
   // Use individual selectors to prevent infinite loops
-  const currentWorkspace = useWorkspaceStore((state) => state.currentWorkspace);
-  const canManageWorkspace = useWorkspaceStore((state) =>
-    state.canManageWorkspace()
-  );
+  const currentWorkspace = useCurrentWorkspace();
+  const workspaceProfile = useWorkspaceProfile();
+  const canManageWorkspace = workspaceProfile ? [WorkspaceRole.OWNER].includes(workspaceProfile.workspaceRole) : false;
   const location = useLocation();
 
   // Workspace navigation items

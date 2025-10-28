@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useParams } from '@tanstack/react-router';
-import { useWorkspace } from '@/features/workspaces';
+import { useWorkspace, useWorkspaceActions } from '@/features/workspaces';
 import { useEffect } from 'react';
 
 export const Route = createFileRoute('/_dashboard/c/$slug')({
@@ -13,25 +13,23 @@ function WorkspaceLayout() {
     isLoading, 
     isSwitchingWorkspace,
     workspaces, 
-    workspaceProfile,
-    fetchWorkspaces,
-    fetchWorkspaceProfile 
+    workspaceProfile
   } = useWorkspace();
+  const { fetchWorkspaces, fetchWorkspaceProfile } = useWorkspaceActions();
 
   useEffect(() => {
     // Fetch workspaces if not loaded yet
     if (workspaces.length === 0 && !isLoading) {
       fetchWorkspaces();
     }
-  }, [workspaces.length, isLoading, fetchWorkspaces]);
+  }, [workspaces.length, isLoading]); // Remove fetchWorkspaces from deps since it's now stable
 
   useEffect(() => {
     // Fetch profile once per slug; avoid loops on loading state changes
     if (slug && (!workspaceProfile || currentWorkspace?.slug !== slug)) {
       fetchWorkspaceProfile(slug);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug, workspaceProfile, currentWorkspace?.slug]);
+  }, [slug, workspaceProfile, currentWorkspace?.slug]); // Remove fetchWorkspaceProfile from deps since it's now stable
 
   // Check if current workspace matches the slug
   const isCorrectWorkspace = currentWorkspace?.slug === slug;

@@ -158,24 +158,35 @@ export const useCurrentWorkspace = () =>
   useWorkspaceStore((state) => state.currentWorkspace);
 export const useWorkspaceProfile = () =>
   useWorkspaceStore((state) => state.workspaceProfile);
-export const useWorkspaceLoading = () =>
-  useWorkspaceStore((state) => ({
-    isLoading: state.isLoading,
-    isProfileLoading: state.isProfileLoading,
-    isSwitchingWorkspace: state.isSwitchingWorkspace,
-  }));
+export const useIsLoading = () => useWorkspaceStore((state) => state.isLoading);
+export const useIsProfileLoading = () => useWorkspaceStore((state) => state.isProfileLoading);
+export const useIsSwitchingWorkspace = () => useWorkspaceStore((state) => state.isSwitchingWorkspace);
+
+// Combined loading hook for convenience
+export const useWorkspaceLoading = () => {
+  const isLoading = useIsLoading();
+  const isProfileLoading = useIsProfileLoading();
+  const isSwitchingWorkspace = useIsSwitchingWorkspace();
+  
+  return {
+    isLoading,
+    isProfileLoading,
+    isSwitchingWorkspace,
+  };
+};
 export const useWorkspaceErrors = () =>
   useWorkspaceStore((state) => ({
     error: state.error,
     profileError: state.profileError,
   }));
 
-// Action selectors for stable references
+// Action selectors for stable references - use getState to avoid unstable references
 export const useWorkspaceActions = () => ({
-  fetchWorkspaces: useWorkspaceStore((state) => state.fetchWorkspaces),
-  switchWorkspace: useWorkspaceStore((state) => state.switchWorkspace),
-  refreshWorkspaceProfile: useWorkspaceStore((state) => state.refreshWorkspaceProfile),
-  refetchWorkspaces: useWorkspaceStore((state) => state.refetchWorkspaces),
+  fetchWorkspaces: () => useWorkspaceStore.getState().fetchWorkspaces(),
+  switchWorkspace: (workspace: WorkspaceMembership) => useWorkspaceStore.getState().switchWorkspace(workspace),
+  refreshWorkspaceProfile: () => useWorkspaceStore.getState().refreshWorkspaceProfile(),
+  refetchWorkspaces: () => useWorkspaceStore.getState().refetchWorkspaces(),
+  fetchWorkspaceProfile: (slug: string) => useWorkspaceStore.getState().fetchWorkspaceProfile(slug),
 });
 
 // Combined hook for backward compatibility - uses individual selectors to prevent infinite loops
@@ -188,18 +199,9 @@ export function useWorkspaceOptimized() {
   const isSwitchingWorkspace = useWorkspaceStore((state) => state.isSwitchingWorkspace);
   const error = useWorkspaceStore((state) => state.error);
   const profileError = useWorkspaceStore((state) => state.profileError);
-  const switchWorkspace = useWorkspaceStore((state) => state.switchWorkspace);
-  const refreshWorkspaceProfile = useWorkspaceStore(
-    (state) => state.refreshWorkspaceProfile
-  );
-  const refetchWorkspaces = useWorkspaceStore(
-    (state) => state.refetchWorkspaces
-  );
-  const fetchWorkspaces = useWorkspaceStore((state) => state.fetchWorkspaces);
-  const fetchWorkspaceProfile = useWorkspaceStore((state) => state.fetchWorkspaceProfile);
-  const canManageWorkspace = useWorkspaceStore((state) =>
-    state.canManageWorkspace()
-  );
+  
+  // Use getState for stable function references
+  const store = useWorkspaceStore.getState();
 
   return {
     workspaces,
@@ -210,12 +212,12 @@ export function useWorkspaceOptimized() {
     isSwitchingWorkspace,
     error,
     profileError,
-    switchWorkspace,
-    refreshWorkspaceProfile,
-    refetchWorkspaces,
-    fetchWorkspaces,
-    fetchWorkspaceProfile,
-    canManageWorkspace,
+    switchWorkspace: store.switchWorkspace,
+    refreshWorkspaceProfile: store.refreshWorkspaceProfile,
+    refetchWorkspaces: store.refetchWorkspaces,
+    fetchWorkspaces: store.fetchWorkspaces,
+    fetchWorkspaceProfile: store.fetchWorkspaceProfile,
+    canManageWorkspace: store.canManageWorkspace(),
   };
 }
 

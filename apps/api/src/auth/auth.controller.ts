@@ -36,22 +36,31 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    const user = await this.authService.validateUser(
-      loginDto.username,
-      loginDto.password
-    );
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+    try {
+      console.log('Login attempt for username:', loginDto.username);
+      const user = await this.authService.validateUser(
+        loginDto.username,
+        loginDto.password
+      );
+      if (!user) {
+        console.log('User validation failed');
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      console.log('User validated successfully, recording activity');
+      // Record login success activity
+      await this.activitiesService.record(
+        user.id,
+        ActivityType.LOGIN_SUCCESS,
+        'Successfully logged in'
+      );
+
+      console.log('Activity recorded, generating token');
+      return this.authService.login(user);
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
-
-    // Record login success activity
-    await this.activitiesService.record(
-      user.id,
-      ActivityType.LOGIN_SUCCESS,
-      'Successfully logged in'
-    );
-
-    return this.authService.login(user);
   }
 
   @Get('profile')
