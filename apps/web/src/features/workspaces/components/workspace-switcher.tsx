@@ -172,11 +172,18 @@ export function WorkspaceSwitcher() {
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 p-2" disabled>
+            <DropdownMenuItem 
+              className="gap-2 p-2"
+              onClick={() => {
+                router.navigate({
+                  to: '/admin/workspaces',
+                });
+              }}
+            >
               <div className="flex size-6 items-center justify-center rounded-md border bg-muted">
                 <Plus className="size-4" />
               </div>
-              <div className="text-muted-foreground font-medium">
+              <div className="font-medium">
                 Create workspace
               </div>
             </DropdownMenuItem>
