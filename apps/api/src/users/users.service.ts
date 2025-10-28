@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, forwardRef, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import { Role } from './entities/role.entity';
 import { User } from './entities/user.entity';
+import { WorkspacesService } from '../workspaces/workspaces.service';
+import { WorkspaceRole } from '../workspaces/entities/workspace-member.entity';
 
 @Injectable()
 export class UsersService {
@@ -10,7 +12,9 @@ export class UsersService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     @InjectRepository(Role)
-    private rolesRepository: Repository<Role>
+    private rolesRepository: Repository<Role>,
+    @Inject(forwardRef(() => WorkspacesService))
+    private workspacesService: WorkspacesService
   ) {}
 
   async create(userData: Partial<User>): Promise<User> {
@@ -120,8 +124,10 @@ export class UsersService {
     name: string;
     password: string;
     roleName: string;
+    workspaceId?: string;
+    workspaceRole?: string;
   }): Promise<User> {
-    const { username, name, password, roleName } = userData;
+    const { username, name, password, roleName, workspaceId, workspaceRole } = userData;
 
     // Check if username already exists
     const existingUser = await this.findByUsername(username);
@@ -147,7 +153,48 @@ export class UsersService {
       isActive: true,
     });
 
-    return this.usersRepository.save(user);
+    const createdUser = await this.usersRepository.save(user);
+
+    // Handle workspace assignment
+    if (workspaceId && workspaceRole) {
+      try {
+        await this.workspacesService.addOrUpdateMember(
+          workspaceId,
+          createdUser.id,
+          workspaceRole as WorkspaceRole
+        );
+      } catch (error) {
+        // If workspace assignment fails, we don't want to roll back user creation
+        // Log the error but continue with user creation
+        console.error(`Failed to assign user to workspace: ${error}`);
+      }
+    } else if (!workspaceId && workspaceRole) {
+      // Attempt default workspace assignment
+      await this.assignDefaultWorkspace(createdUser.id, workspaceRole as WorkspaceRole);
+    }
+
+    return createdUser;
+  }
+
+  private async assignDefaultWorkspace(userId: string, role: WorkspaceRole): Promise<void> {
+    const defaultWorkspaceSlug = process.env.DEFAULT_WORKSPACE_SLUG;
+    if (!defaultWorkspaceSlug) {
+      return; // No default workspace configured, skip assignment
+    }
+
+    try {
+      const defaultWorkspace = await this.workspacesService.findBySlug(defaultWorkspaceSlug);
+      if (defaultWorkspace && defaultWorkspace.isActive) {
+        await this.workspacesService.addOrUpdateMember(
+          defaultWorkspace.id,
+          userId,
+          role
+        );
+      }
+    } catch (error) {
+      // Default workspace assignment is optional, don't fail user creation
+      console.error(`Failed to assign default workspace: ${error}`);
+    }
   }
 
   private async hashPassword(password: string): Promise<string> {

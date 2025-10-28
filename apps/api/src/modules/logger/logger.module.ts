@@ -24,9 +24,13 @@ import { LoggerModule } from 'nestjs-pino';
             headers: {
               'user-agent': req.headers['user-agent'],
               'x-request-id': req.headers['x-request-id'],
+              'x-workspace-id': req.headers['x-workspace-id'],
+              'x-workspace-slug': req.headers['x-workspace-slug'],
             },
             remoteAddress: req.remoteAddress,
             remotePort: req.remotePort,
+            workspaceId: req.headers['x-workspace-id'] || null,
+            workspaceSlug: req.headers['x-workspace-slug'] || null,
           }),
           res: (res) => ({
             statusCode: res.statusCode,

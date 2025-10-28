@@ -4,6 +4,8 @@ import { DataSource, type DataSourceOptions } from 'typeorm';
 import { Activity } from '../activities/entities/activity.entity';
 import { Role } from '../users/entities/role.entity';
 import { User } from '../users/entities/user.entity';
+import { Workspace } from '../workspaces/entities/workspace.entity';
+import { WorkspaceMember } from '../workspaces/entities/workspace-member.entity';
 
 const getMigrationsPath = () => {
   const isProduction = process.env.NODE_ENV === 'production';
@@ -33,7 +35,7 @@ const buildDatabaseOptions = (): TypeOrmModuleOptions => {
     username,
     password,
     database,
-    entities: [User, Role, Activity],
+    entities: [User, Role, Activity, Workspace, WorkspaceMember],
     synchronize: false,
     migrations: getMigrationsPath(),
     migrationsRun: true,

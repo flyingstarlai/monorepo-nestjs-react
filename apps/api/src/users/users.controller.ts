@@ -43,6 +43,14 @@ export class UsersController {
   async create(@Body() createUserDto: CreateUserDto) {
     try {
       const user = await this.usersService.createUserWithRole(createUserDto);
+      
+      // Record user creation activity
+      await this.activitiesService.record(
+        user.id,
+        ActivityType.USER_CREATED,
+        `User ${user.username} created${createUserDto.workspaceId ? ' and assigned to workspace' : ''}`
+      );
+
       return this.sanitizeUser(user);
     } catch (error) {
       if (

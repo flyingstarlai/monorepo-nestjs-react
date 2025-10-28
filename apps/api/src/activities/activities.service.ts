@@ -15,12 +15,14 @@ export class ActivitiesService {
     ownerId: string,
     type: ActivityType,
     message: string,
+    workspaceId?: string,
     metadata?: Record<string, any>
   ): Promise<Activity> {
     const activity = this.activityRepository.create({
       ownerId,
       type,
       message,
+      workspaceId,
       metadata,
     });
     return await this.activityRepository.save(activity);
@@ -56,6 +58,32 @@ export class ActivitiesService {
     return {
       items: items.map(this.toDto),
       nextCursor,
+    };
+  }
+
+  async findByWorkspaceAndOwner(
+    workspaceId: string,
+    ownerId: string,
+    page: number = 1,
+    limit: number = 20
+  ): Promise<ActivitiesResponseDto> {
+    const skip = (page - 1) * limit;
+
+    const [activities, total] = await this.activityRepository.findAndCount({
+      where: { workspaceId, ownerId },
+      order: { createdAt: 'DESC' },
+      skip,
+      take: limit,
+    });
+
+    return {
+      items: activities.map(this.toDto),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 

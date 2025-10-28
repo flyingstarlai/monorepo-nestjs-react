@@ -9,6 +9,8 @@ export interface CreateUserPayload {
   name: string;
   password: string;
   roleName: 'Admin' | 'User';
+  workspaceId?: string;
+  workspaceRole?: 'OWNER' | 'ADMIN' | 'MEMBER';
 }
 
 export interface Role {
@@ -64,6 +66,29 @@ export const adminApi = {
   },
 
   async createUser(payload: CreateUserPayload): Promise<User> {
+    const token = tokenStorage.getToken();
+    if (!token) {
+      throw new AdminApiError('No authentication token');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new AdminApiError(error.message || 'Failed to create user');
+    }
+
+    return response.json();
+  },
+
+  async createUserWithWorkspace(payload: CreateUserPayload): Promise<User> {
     const token = tokenStorage.getToken();
     if (!token) {
       throw new AdminApiError('No authentication token');

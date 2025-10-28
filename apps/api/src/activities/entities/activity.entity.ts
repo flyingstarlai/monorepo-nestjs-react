@@ -7,16 +7,19 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Workspace } from '../../workspaces/entities/workspace.entity';
 
 export enum ActivityType {
   LOGIN_SUCCESS = 'login_success',
   PROFILE_UPDATED = 'profile_updated',
   PASSWORD_CHANGED = 'password_changed',
   AVATAR_UPDATED = 'avatar_updated',
+  USER_CREATED = 'user_created',
 }
 
 @Entity('activities')
 @Index(['ownerId', 'createdAt'])
+@Index(['workspaceId', 'createdAt'])
 export class Activity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -27,6 +30,13 @@ export class Activity {
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'owner_id' })
   owner: User;
+
+  @Column({ name: 'workspace_id' })
+  workspaceId: string;
+
+  @ManyToOne(() => Workspace, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'workspace_id' })
+  workspace: Workspace;
 
   @Column({
     type: 'varchar',
@@ -41,6 +51,6 @@ export class Activity {
   @Column({ type: 'simple-json', nullable: true })
   metadata?: Record<string, any>;
 
-  @Column({ type: 'datetime2', default: () => 'SYSDATETIME()' })
+  @Column({ name: 'created_at', type: 'datetime2', default: () => 'SYSDATETIME()' })
   createdAt: Date;
 }

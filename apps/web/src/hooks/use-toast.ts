@@ -21,3 +21,19 @@ export function useToast() {
 
   return { toast };
 }
+
+export const toast = ({
+  title,
+  description,
+  variant = 'default',
+}: ToastOptions) => {
+  if (variant === 'destructive') {
+    sonnerToast.error(title, {
+      description,
+    });
+  } else {
+    sonnerToast.success(title, {
+      description,
+    });
+  }
+};

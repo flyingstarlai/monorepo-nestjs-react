@@ -15,11 +15,21 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardSettingsRouteImport } from './routes/_dashboard/settings'
 import { Route as DashboardProfileRouteImport } from './routes/_dashboard/profile'
 import { Route as DashboardDashboardRouteImport } from './routes/_dashboard/dashboard'
-import { Route as DashboardAdminRouteImport } from './routes/_dashboard/admin'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/_dashboard/settings/index'
+import { Route as DashboardAdminIndexRouteImport } from './routes/_dashboard/admin.index'
 import { Route as DashboardSettingsSecurityRouteImport } from './routes/_dashboard/settings/security'
 import { Route as DashboardSettingsProfileRouteImport } from './routes/_dashboard/settings/profile'
 import { Route as DashboardSettingsBillingRouteImport } from './routes/_dashboard/settings/billing'
+import { Route as DashboardCSlugRouteImport } from './routes/_dashboard/c.$slug'
+import { Route as DashboardAdminWorkspacesRouteImport } from './routes/_dashboard/admin.workspaces'
+import { Route as DashboardAdminUsersRouteImport } from './routes/_dashboard/admin.users'
+import { Route as DashboardCSlugSettingsRouteImport } from './routes/_dashboard/c.$slug.settings'
+import { Route as DashboardCSlugMembersRouteImport } from './routes/_dashboard/c.$slug.members'
+import { Route as DashboardCSlugDashboardRouteImport } from './routes/_dashboard/c.$slug.dashboard'
+import { Route as DashboardCSlugActivitiesRouteImport } from './routes/_dashboard/c.$slug.activities'
+import { Route as DashboardAdminCSlugRouteImport } from './routes/_dashboard/admin.c.$slug'
+import { Route as DashboardAdminCSlugUsersRouteImport } from './routes/_dashboard/admin.c.$slug.users'
+import { Route as DashboardAdminCSlugSettingsRouteImport } from './routes/_dashboard/admin.c.$slug.settings'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -50,15 +60,15 @@ const DashboardDashboardRoute = DashboardDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardAdminRoute = DashboardAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardSettingsRoute,
+} as any)
+const DashboardAdminIndexRoute = DashboardAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardSettingsSecurityRoute =
   DashboardSettingsSecurityRouteImport.update({
@@ -78,81 +88,195 @@ const DashboardSettingsBillingRoute =
     path: '/billing',
     getParentRoute: () => DashboardSettingsRoute,
   } as any)
+const DashboardCSlugRoute = DashboardCSlugRouteImport.update({
+  id: '/c/$slug',
+  path: '/c/$slug',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAdminWorkspacesRoute =
+  DashboardAdminWorkspacesRouteImport.update({
+    id: '/admin/workspaces',
+    path: '/admin/workspaces',
+    getParentRoute: () => DashboardRoute,
+  } as any)
+const DashboardAdminUsersRoute = DashboardAdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardCSlugSettingsRoute = DashboardCSlugSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DashboardCSlugRoute,
+} as any)
+const DashboardCSlugMembersRoute = DashboardCSlugMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => DashboardCSlugRoute,
+} as any)
+const DashboardCSlugDashboardRoute = DashboardCSlugDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => DashboardCSlugRoute,
+} as any)
+const DashboardCSlugActivitiesRoute =
+  DashboardCSlugActivitiesRouteImport.update({
+    id: '/activities',
+    path: '/activities',
+    getParentRoute: () => DashboardCSlugRoute,
+  } as any)
+const DashboardAdminCSlugRoute = DashboardAdminCSlugRouteImport.update({
+  id: '/admin/c/$slug',
+  path: '/admin/c/$slug',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAdminCSlugUsersRoute =
+  DashboardAdminCSlugUsersRouteImport.update({
+    id: '/users',
+    path: '/users',
+    getParentRoute: () => DashboardAdminCSlugRoute,
+  } as any)
+const DashboardAdminCSlugSettingsRoute =
+  DashboardAdminCSlugSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => DashboardAdminCSlugRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/admin': typeof DashboardAdminRoute
   '/dashboard': typeof DashboardDashboardRoute
   '/profile': typeof DashboardProfileRoute
   '/settings': typeof DashboardSettingsRouteWithChildren
+  '/admin/users': typeof DashboardAdminUsersRoute
+  '/admin/workspaces': typeof DashboardAdminWorkspacesRoute
+  '/c/$slug': typeof DashboardCSlugRouteWithChildren
   '/settings/billing': typeof DashboardSettingsBillingRoute
   '/settings/profile': typeof DashboardSettingsProfileRoute
   '/settings/security': typeof DashboardSettingsSecurityRoute
+  '/admin': typeof DashboardAdminIndexRoute
   '/settings/': typeof DashboardSettingsIndexRoute
+  '/admin/c/$slug': typeof DashboardAdminCSlugRouteWithChildren
+  '/c/$slug/activities': typeof DashboardCSlugActivitiesRoute
+  '/c/$slug/dashboard': typeof DashboardCSlugDashboardRoute
+  '/c/$slug/members': typeof DashboardCSlugMembersRoute
+  '/c/$slug/settings': typeof DashboardCSlugSettingsRoute
+  '/admin/c/$slug/settings': typeof DashboardAdminCSlugSettingsRoute
+  '/admin/c/$slug/users': typeof DashboardAdminCSlugUsersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/admin': typeof DashboardAdminRoute
   '/dashboard': typeof DashboardDashboardRoute
   '/profile': typeof DashboardProfileRoute
+  '/admin/users': typeof DashboardAdminUsersRoute
+  '/admin/workspaces': typeof DashboardAdminWorkspacesRoute
+  '/c/$slug': typeof DashboardCSlugRouteWithChildren
   '/settings/billing': typeof DashboardSettingsBillingRoute
   '/settings/profile': typeof DashboardSettingsProfileRoute
   '/settings/security': typeof DashboardSettingsSecurityRoute
+  '/admin': typeof DashboardAdminIndexRoute
   '/settings': typeof DashboardSettingsIndexRoute
+  '/admin/c/$slug': typeof DashboardAdminCSlugRouteWithChildren
+  '/c/$slug/activities': typeof DashboardCSlugActivitiesRoute
+  '/c/$slug/dashboard': typeof DashboardCSlugDashboardRoute
+  '/c/$slug/members': typeof DashboardCSlugMembersRoute
+  '/c/$slug/settings': typeof DashboardCSlugSettingsRoute
+  '/admin/c/$slug/settings': typeof DashboardAdminCSlugSettingsRoute
+  '/admin/c/$slug/users': typeof DashboardAdminCSlugUsersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
-  '/_dashboard/admin': typeof DashboardAdminRoute
   '/_dashboard/dashboard': typeof DashboardDashboardRoute
   '/_dashboard/profile': typeof DashboardProfileRoute
   '/_dashboard/settings': typeof DashboardSettingsRouteWithChildren
+  '/_dashboard/admin/users': typeof DashboardAdminUsersRoute
+  '/_dashboard/admin/workspaces': typeof DashboardAdminWorkspacesRoute
+  '/_dashboard/c/$slug': typeof DashboardCSlugRouteWithChildren
   '/_dashboard/settings/billing': typeof DashboardSettingsBillingRoute
   '/_dashboard/settings/profile': typeof DashboardSettingsProfileRoute
   '/_dashboard/settings/security': typeof DashboardSettingsSecurityRoute
+  '/_dashboard/admin/': typeof DashboardAdminIndexRoute
   '/_dashboard/settings/': typeof DashboardSettingsIndexRoute
+  '/_dashboard/admin/c/$slug': typeof DashboardAdminCSlugRouteWithChildren
+  '/_dashboard/c/$slug/activities': typeof DashboardCSlugActivitiesRoute
+  '/_dashboard/c/$slug/dashboard': typeof DashboardCSlugDashboardRoute
+  '/_dashboard/c/$slug/members': typeof DashboardCSlugMembersRoute
+  '/_dashboard/c/$slug/settings': typeof DashboardCSlugSettingsRoute
+  '/_dashboard/admin/c/$slug/settings': typeof DashboardAdminCSlugSettingsRoute
+  '/_dashboard/admin/c/$slug/users': typeof DashboardAdminCSlugUsersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
-    | '/admin'
     | '/dashboard'
     | '/profile'
     | '/settings'
+    | '/admin/users'
+    | '/admin/workspaces'
+    | '/c/$slug'
     | '/settings/billing'
     | '/settings/profile'
     | '/settings/security'
+    | '/admin'
     | '/settings/'
+    | '/admin/c/$slug'
+    | '/c/$slug/activities'
+    | '/c/$slug/dashboard'
+    | '/c/$slug/members'
+    | '/c/$slug/settings'
+    | '/admin/c/$slug/settings'
+    | '/admin/c/$slug/users'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
-    | '/admin'
     | '/dashboard'
     | '/profile'
+    | '/admin/users'
+    | '/admin/workspaces'
+    | '/c/$slug'
     | '/settings/billing'
     | '/settings/profile'
     | '/settings/security'
+    | '/admin'
     | '/settings'
+    | '/admin/c/$slug'
+    | '/c/$slug/activities'
+    | '/c/$slug/dashboard'
+    | '/c/$slug/members'
+    | '/c/$slug/settings'
+    | '/admin/c/$slug/settings'
+    | '/admin/c/$slug/users'
   id:
     | '__root__'
     | '/'
     | '/_dashboard'
     | '/login'
-    | '/_dashboard/admin'
     | '/_dashboard/dashboard'
     | '/_dashboard/profile'
     | '/_dashboard/settings'
+    | '/_dashboard/admin/users'
+    | '/_dashboard/admin/workspaces'
+    | '/_dashboard/c/$slug'
     | '/_dashboard/settings/billing'
     | '/_dashboard/settings/profile'
     | '/_dashboard/settings/security'
+    | '/_dashboard/admin/'
     | '/_dashboard/settings/'
+    | '/_dashboard/admin/c/$slug'
+    | '/_dashboard/c/$slug/activities'
+    | '/_dashboard/c/$slug/dashboard'
+    | '/_dashboard/c/$slug/members'
+    | '/_dashboard/c/$slug/settings'
+    | '/_dashboard/admin/c/$slug/settings'
+    | '/_dashboard/admin/c/$slug/users'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -205,19 +329,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardDashboardRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/_dashboard/admin': {
-      id: '/_dashboard/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof DashboardAdminRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/_dashboard/settings/': {
       id: '/_dashboard/settings/'
       path: '/'
       fullPath: '/settings/'
       preLoaderRoute: typeof DashboardSettingsIndexRouteImport
       parentRoute: typeof DashboardSettingsRoute
+    }
+    '/_dashboard/admin/': {
+      id: '/_dashboard/admin/'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof DashboardAdminIndexRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/_dashboard/settings/security': {
       id: '/_dashboard/settings/security'
@@ -240,6 +364,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsBillingRouteImport
       parentRoute: typeof DashboardSettingsRoute
     }
+    '/_dashboard/c/$slug': {
+      id: '/_dashboard/c/$slug'
+      path: '/c/$slug'
+      fullPath: '/c/$slug'
+      preLoaderRoute: typeof DashboardCSlugRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/admin/workspaces': {
+      id: '/_dashboard/admin/workspaces'
+      path: '/admin/workspaces'
+      fullPath: '/admin/workspaces'
+      preLoaderRoute: typeof DashboardAdminWorkspacesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/admin/users': {
+      id: '/_dashboard/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof DashboardAdminUsersRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/c/$slug/settings': {
+      id: '/_dashboard/c/$slug/settings'
+      path: '/settings'
+      fullPath: '/c/$slug/settings'
+      preLoaderRoute: typeof DashboardCSlugSettingsRouteImport
+      parentRoute: typeof DashboardCSlugRoute
+    }
+    '/_dashboard/c/$slug/members': {
+      id: '/_dashboard/c/$slug/members'
+      path: '/members'
+      fullPath: '/c/$slug/members'
+      preLoaderRoute: typeof DashboardCSlugMembersRouteImport
+      parentRoute: typeof DashboardCSlugRoute
+    }
+    '/_dashboard/c/$slug/dashboard': {
+      id: '/_dashboard/c/$slug/dashboard'
+      path: '/dashboard'
+      fullPath: '/c/$slug/dashboard'
+      preLoaderRoute: typeof DashboardCSlugDashboardRouteImport
+      parentRoute: typeof DashboardCSlugRoute
+    }
+    '/_dashboard/c/$slug/activities': {
+      id: '/_dashboard/c/$slug/activities'
+      path: '/activities'
+      fullPath: '/c/$slug/activities'
+      preLoaderRoute: typeof DashboardCSlugActivitiesRouteImport
+      parentRoute: typeof DashboardCSlugRoute
+    }
+    '/_dashboard/admin/c/$slug': {
+      id: '/_dashboard/admin/c/$slug'
+      path: '/admin/c/$slug'
+      fullPath: '/admin/c/$slug'
+      preLoaderRoute: typeof DashboardAdminCSlugRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/admin/c/$slug/users': {
+      id: '/_dashboard/admin/c/$slug/users'
+      path: '/users'
+      fullPath: '/admin/c/$slug/users'
+      preLoaderRoute: typeof DashboardAdminCSlugUsersRouteImport
+      parentRoute: typeof DashboardAdminCSlugRoute
+    }
+    '/_dashboard/admin/c/$slug/settings': {
+      id: '/_dashboard/admin/c/$slug/settings'
+      path: '/settings'
+      fullPath: '/admin/c/$slug/settings'
+      preLoaderRoute: typeof DashboardAdminCSlugSettingsRouteImport
+      parentRoute: typeof DashboardAdminCSlugRoute
+    }
   }
 }
 
@@ -260,18 +454,57 @@ const DashboardSettingsRouteChildren: DashboardSettingsRouteChildren = {
 const DashboardSettingsRouteWithChildren =
   DashboardSettingsRoute._addFileChildren(DashboardSettingsRouteChildren)
 
+interface DashboardCSlugRouteChildren {
+  DashboardCSlugActivitiesRoute: typeof DashboardCSlugActivitiesRoute
+  DashboardCSlugDashboardRoute: typeof DashboardCSlugDashboardRoute
+  DashboardCSlugMembersRoute: typeof DashboardCSlugMembersRoute
+  DashboardCSlugSettingsRoute: typeof DashboardCSlugSettingsRoute
+}
+
+const DashboardCSlugRouteChildren: DashboardCSlugRouteChildren = {
+  DashboardCSlugActivitiesRoute: DashboardCSlugActivitiesRoute,
+  DashboardCSlugDashboardRoute: DashboardCSlugDashboardRoute,
+  DashboardCSlugMembersRoute: DashboardCSlugMembersRoute,
+  DashboardCSlugSettingsRoute: DashboardCSlugSettingsRoute,
+}
+
+const DashboardCSlugRouteWithChildren = DashboardCSlugRoute._addFileChildren(
+  DashboardCSlugRouteChildren,
+)
+
+interface DashboardAdminCSlugRouteChildren {
+  DashboardAdminCSlugSettingsRoute: typeof DashboardAdminCSlugSettingsRoute
+  DashboardAdminCSlugUsersRoute: typeof DashboardAdminCSlugUsersRoute
+}
+
+const DashboardAdminCSlugRouteChildren: DashboardAdminCSlugRouteChildren = {
+  DashboardAdminCSlugSettingsRoute: DashboardAdminCSlugSettingsRoute,
+  DashboardAdminCSlugUsersRoute: DashboardAdminCSlugUsersRoute,
+}
+
+const DashboardAdminCSlugRouteWithChildren =
+  DashboardAdminCSlugRoute._addFileChildren(DashboardAdminCSlugRouteChildren)
+
 interface DashboardRouteChildren {
-  DashboardAdminRoute: typeof DashboardAdminRoute
   DashboardDashboardRoute: typeof DashboardDashboardRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardSettingsRoute: typeof DashboardSettingsRouteWithChildren
+  DashboardAdminUsersRoute: typeof DashboardAdminUsersRoute
+  DashboardAdminWorkspacesRoute: typeof DashboardAdminWorkspacesRoute
+  DashboardCSlugRoute: typeof DashboardCSlugRouteWithChildren
+  DashboardAdminIndexRoute: typeof DashboardAdminIndexRoute
+  DashboardAdminCSlugRoute: typeof DashboardAdminCSlugRouteWithChildren
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardAdminRoute: DashboardAdminRoute,
   DashboardDashboardRoute: DashboardDashboardRoute,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardSettingsRoute: DashboardSettingsRouteWithChildren,
+  DashboardAdminUsersRoute: DashboardAdminUsersRoute,
+  DashboardAdminWorkspacesRoute: DashboardAdminWorkspacesRoute,
+  DashboardCSlugRoute: DashboardCSlugRouteWithChildren,
+  DashboardAdminIndexRoute: DashboardAdminIndexRoute,
+  DashboardAdminCSlugRoute: DashboardAdminCSlugRouteWithChildren,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(

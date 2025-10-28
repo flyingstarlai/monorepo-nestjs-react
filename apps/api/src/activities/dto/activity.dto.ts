@@ -18,7 +18,15 @@ export class ActivitiesQueryDto {
   limit?: string;
 }
 
+export class PaginationDto {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export class ActivitiesResponseDto {
   items: ActivityDto[];
   nextCursor?: string;
+  pagination?: PaginationDto;
 }

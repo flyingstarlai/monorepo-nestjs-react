@@ -10,7 +10,6 @@ import {
 } from '@tanstack/react-table';
 import {
   Lock,
-  Settings,
   Shield,
   UserCheck,
   UserPlus,
@@ -42,6 +41,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+
 import { AddUserDialog } from '@/features/admin/components/add-user-dialog';
 import {
   useSetUserActiveMutation,
@@ -51,7 +51,7 @@ import {
 import { useAuth } from '@/features/auth';
 import type { User } from '@/features/auth/types';
 
-export const Route = createFileRoute('/_dashboard/admin')({
+export const Route = createFileRoute('/_dashboard/admin/users')({
   beforeLoad: ({ context }) => {
     if (!context.auth.isAuthenticated) {
       throw redirect({
@@ -65,11 +65,11 @@ export const Route = createFileRoute('/_dashboard/admin')({
     // Check if user has admin role
     if (context.auth.user?.role !== 'Admin') {
       throw redirect({
-        to: '/dashboard',
+        to: '/',
       });
     }
   },
-  component: AdminPanel,
+  component: AdminUsers,
 });
 
 // Debounced input component for search
@@ -106,7 +106,7 @@ function DebouncedInput({
   );
 }
 
-function AdminPanel() {
+function AdminUsers() {
   const { user } = useAuth();
   const { data: users = [], isLoading, error } = useUsersQuery();
   const setUserActiveMutation = useSetUserActiveMutation();
@@ -256,19 +256,19 @@ function AdminPanel() {
   });
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
+    <div className="flex-1 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Shield className="h-8 w-8" />
-            Admin Panel
+            <Users className="h-8 w-8" />
+            User Management
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Manage users and system administration
+            Manage users and their permissions
           </p>
         </div>
         <AddUserDialog>
-          <Button>
+          <Button id="add-user-button">
             <UserPlus className="mr-2 h-4 w-4" />
             Add User
           </Button>
@@ -334,35 +334,6 @@ function AdminPanel() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Quick Actions */}
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Quick Actions
-          </CardTitle>
-          <CardDescription>Frequently used admin functions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            <AddUserDialog>
-              <Button className="w-full justify-start">
-                <UserPlus className="mr-2 h-4 w-4" />
-                Add New User
-              </Button>
-            </AddUserDialog>
-            <Button variant="outline" className="w-full justify-start">
-              <Users className="mr-2 h-4 w-4" />
-              View All Users
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Shield className="mr-2 h-4 w-4" />
-              System Settings
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       <Card className="w-full">
         <CardHeader>

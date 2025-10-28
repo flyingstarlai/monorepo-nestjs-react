@@ -30,10 +30,10 @@
 
 ## Migration Plan
 
-1) Ship schema + entities + guards behind feature flag if needed
-2) Add new routes under `/c/:slug/…`; keep old routes as temporary proxies to a default workspace
-3) Update frontend to use new routes and add workspace selector
-4) Backfill data and remove old routes after deprecation window
+1. Ship schema + entities + guards behind feature flag if needed
+2. Add new routes under `/c/:slug/…`; keep old routes as temporary proxies to a default workspace
+3. Update frontend to use new routes and add workspace selector
+4. Backfill data and remove old routes after deprecation window
 
 ## Open Questions
 

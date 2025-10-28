@@ -41,6 +41,25 @@ export const authApi = {
     return response.json();
   },
 
+  async getWorkspaceProfile(slug: string): Promise<User> {
+    const token = tokenStorage.getToken();
+    if (!token) {
+      throw new AuthError('No authentication token');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/c/${slug}/auth/profile`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new AuthError('Failed to fetch workspace profile');
+    }
+
+    return response.json();
+  },
+
   async uploadAvatar(file: File): Promise<User> {
     const token = tokenStorage.getToken();
     if (!token) {

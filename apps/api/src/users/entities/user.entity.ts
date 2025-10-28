@@ -24,21 +24,33 @@ export class User {
   password: string;
 
   @ManyToOne(() => Role, { eager: true })
-  @JoinColumn({ name: 'roleId' })
+  @JoinColumn({ name: 'role_id' })
   role: Role;
 
-  @Column({ nullable: true })
+  @Column({ name: 'role_id', nullable: true })
   roleId: string;
 
   @Column({ nullable: true, type: 'text' })
   avatar: string;
 
-  @Column({ default: true })
+  @Column({ nullable: true, length: 255 })
+  email: string;
+
+  @Column({ nullable: true, length: 50 })
+  phone: string;
+
+  @Column({ nullable: true, type: 'text' })
+  bio: string;
+
+  @Column({ name: 'date_of_birth', nullable: true, type: 'date' })
+  dateOfBirth: Date;
+
+  @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

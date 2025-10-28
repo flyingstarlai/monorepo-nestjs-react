@@ -14,8 +14,8 @@ export class InitializeDatabaseMSSQL20251022000000
           [id] uniqueidentifier NOT NULL DEFAULT NEWID(),
           [name] nvarchar(255) NOT NULL,
           [description] nvarchar(255) NULL,
-          [createdAt] datetime2 NOT NULL DEFAULT SYSDATETIME(),
-          [updatedAt] datetime2 NOT NULL DEFAULT SYSDATETIME(),
+          [created_at] datetime2 NOT NULL DEFAULT SYSDATETIME(),
+          [updated_at] datetime2 NOT NULL DEFAULT SYSDATETIME(),
           CONSTRAINT [PK_roles_id] PRIMARY KEY ([id]),
           CONSTRAINT [UQ_roles_name] UNIQUE ([name])
         )
@@ -31,11 +31,11 @@ export class InitializeDatabaseMSSQL20251022000000
           [username] nvarchar(255) NOT NULL,
           [name] nvarchar(255) NOT NULL,
           [password] nvarchar(255) NOT NULL,
-          [roleId] uniqueidentifier NULL,
+          [role_id] uniqueidentifier NULL,
           [avatar] nvarchar(max) NULL,
-          [isActive] bit NOT NULL DEFAULT 1,
-          [createdAt] datetime2 NOT NULL DEFAULT SYSDATETIME(),
-          [updatedAt] datetime2 NOT NULL DEFAULT SYSDATETIME(),
+          [is_active] bit NOT NULL DEFAULT 1,
+          [created_at] datetime2 NOT NULL DEFAULT SYSDATETIME(),
+          [updated_at] datetime2 NOT NULL DEFAULT SYSDATETIME(),
           CONSTRAINT [PK_users_id] PRIMARY KEY ([id]),
           CONSTRAINT [UQ_users_username] UNIQUE ([username])
         )
@@ -52,7 +52,7 @@ export class InitializeDatabaseMSSQL20251022000000
           [type] nvarchar(255) NOT NULL,
           [message] nvarchar(255) NOT NULL,
           [metadata] nvarchar(max) NULL,
-          [createdAt] datetime2 NOT NULL DEFAULT SYSDATETIME(),
+          [created_at] datetime2 NOT NULL DEFAULT SYSDATETIME(),
           CONSTRAINT [PK_activities_id] PRIMARY KEY ([id])
         )
       END
@@ -66,7 +66,7 @@ export class InitializeDatabaseMSSQL20251022000000
       BEGIN
         ALTER TABLE [dbo].[users]
         ADD CONSTRAINT [FK_users_role]
-        FOREIGN KEY ([roleId]) REFERENCES [dbo].[roles]([id])
+        FOREIGN KEY ([role_id]) REFERENCES [dbo].[roles]([id])
         ON DELETE SET NULL ON UPDATE NO ACTION;
       END
     `);
@@ -91,7 +91,7 @@ export class InitializeDatabaseMSSQL20251022000000
       )
       BEGIN
         CREATE INDEX [IDX_activities_owner_created]
-        ON [dbo].[activities] ([owner_id], [createdAt]);
+        ON [dbo].[activities] ([owner_id], [created_at]);
       END
     `);
   }

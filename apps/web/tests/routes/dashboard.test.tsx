@@ -4,12 +4,12 @@ import { vi, describe, beforeEach, it, expect } from 'vitest';
 import '@testing-library/jest-dom';
 import * as activitiesHooks from '../../src/features/activities';
 import * as authHooks from '../../src/features/auth';
-import { DashboardComponent } from '../../src/routes/_dashboard/dashboard';
+import { DashboardRedirect } from '../../src/routes/_dashboard/dashboard';
 
 // Mock the route component
 vi.mock('@tanstack/react-router', () => ({
   createFileRoute: () => ({
-    component: DashboardComponent,
+    component: DashboardRedirect,
   }),
 }));
 
@@ -76,7 +76,7 @@ describe('DashboardComponent', () => {
       refetch: vi.fn(),
     } as any);
 
-    renderWithProviders(<DashboardComponent />);
+    renderWithProviders(<DashboardRedirect />);
 
     expect(screen.getByText('Welcome back, Test User!')).toBeInTheDocument();
     expect(screen.getAllByRole('generic', { name: '' })).toHaveLength(
@@ -95,7 +95,7 @@ describe('DashboardComponent', () => {
       refetch: vi.fn(),
     } as any);
 
-    renderWithProviders(<DashboardComponent />);
+    renderWithProviders(<DashboardRedirect />);
 
     await waitFor(() => {
       expect(screen.getByText('Successfully logged in')).toBeInTheDocument();
@@ -118,7 +118,7 @@ describe('DashboardComponent', () => {
       refetch: vi.fn(),
     } as any);
 
-    renderWithProviders(<DashboardComponent />);
+    renderWithProviders(<DashboardRedirect />);
 
     expect(screen.getByText('No recent activities')).toBeInTheDocument();
     expect(
@@ -134,7 +134,7 @@ describe('DashboardComponent', () => {
       refetch: vi.fn(),
     } as any);
 
-    renderWithProviders(<DashboardComponent />);
+    renderWithProviders(<DashboardRedirect />);
 
     expect(
       screen.getByText('Failed to load recent activities')
@@ -151,7 +151,7 @@ describe('DashboardComponent', () => {
       refetch: mockRefetch,
     } as any);
 
-    renderWithProviders(<DashboardComponent />);
+    renderWithProviders(<DashboardRedirect />);
 
     const retryButton = screen.getByText('Retry');
     retryButton.click();
@@ -167,7 +167,7 @@ describe('DashboardComponent', () => {
       refetch: vi.fn(),
     } as any);
 
-    renderWithProviders(<DashboardComponent />);
+    renderWithProviders(<DashboardRedirect />);
 
     expect(screen.getByText('Welcome back, Test User!')).toBeInTheDocument();
     expect(screen.getByText('@testuser')).toBeInTheDocument();
@@ -187,7 +187,7 @@ describe('DashboardComponent', () => {
       refetch: vi.fn(),
     } as any);
 
-    renderWithProviders(<DashboardComponent />);
+    renderWithProviders(<DashboardRedirect />);
 
     expect(screen.getByText('Admin Panel')).toBeInTheDocument();
   });
@@ -222,7 +222,7 @@ describe('DashboardComponent', () => {
       refetch: vi.fn(),
     } as any);
 
-    renderWithProviders(<DashboardComponent />);
+    renderWithProviders(<DashboardRedirect />);
 
     expect(screen.getByText('1 hour ago')).toBeInTheDocument();
     expect(screen.getByText('2 days ago')).toBeInTheDocument();

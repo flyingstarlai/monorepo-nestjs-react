@@ -1,4 +1,4 @@
-import { IsIn, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsIn, IsNotEmpty, IsString, MinLength, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -18,4 +18,13 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsIn(['Admin', 'User'])
   roleName: string;
+
+  @IsOptional()
+  @IsUUID()
+  workspaceId?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['OWNER', 'ADMIN', 'MEMBER'])
+  workspaceRole?: string;
 }
