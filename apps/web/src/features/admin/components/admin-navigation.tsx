@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import {
   Building2,
   Home,
@@ -22,6 +22,7 @@ export function AdminNavigation({
   workspaceSlug,
 }: AdminNavigationProps) {
   const isWorkspaceAdmin = !!workspaceSlug;
+  const navigate = useNavigate();
 
   const mainNavItems = [
     {
@@ -142,15 +143,18 @@ export function AdminNavigation({
             const Icon = action.icon;
             return (
               <Button
-                key={action.action}
+                key={item.action}
                 variant="outline"
                 className="w-full justify-start"
                 onClick={() => {
-                  // This will be handled by parent component
-                  const event = new CustomEvent('adminQuickAction', {
-                    detail: { action: action.action },
-                  });
-                  window.dispatchEvent(event);
+                  // Handle navigation actions
+                  if (item.action === 'create-workspace') {
+                    navigate('/admin/workspaces?action=create');
+                  } else if (item.action === 'add-user') {
+                    navigate('/admin/users?action=add');
+                  } else if (item.action === 'add-member' && workspaceSlug) {
+                    navigate(`/admin/c/${workspaceSlug}/users?action=add`);
+                  }
                 }}
               >
                 <Icon className="mr-2 h-4 w-4" />

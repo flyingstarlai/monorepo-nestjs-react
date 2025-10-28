@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import {
   BarChart3,
   Users,
@@ -58,6 +58,7 @@ function AdminWorkspaceOverview() {
   useAuth();
   const { slug } = Route.useParams();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch workspace details and stats
   const { data: workspace, isLoading: workspaceLoading } = useQuery({
@@ -111,7 +112,7 @@ function AdminWorkspaceOverview() {
     mutationFn: () => workspaceApi.deleteWorkspace(slug),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-workspaces'] });
-      window.location.href = '/admin/workspaces';
+      navigate({ to: '/admin/workspaces' });
     },
     onError: (error) => {
       console.error('Failed to delete workspace:', error);
@@ -236,7 +237,7 @@ function AdminWorkspaceOverview() {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={() => (window.location.href = `/admin/c/${slug}/users`)}
+            onClick={() => navigate({ to: '/admin/c/$slug/users', params: { slug } })}
           >
             <Users className="mr-2 h-4 w-4" />
             Manage Members
@@ -539,7 +540,7 @@ function AdminWorkspaceOverview() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
             <Button
               className="w-full justify-start"
-              onClick={() => (window.location.href = `/admin/c/${slug}/users`)}
+              onClick={() => navigate({ to: '/admin/c/$slug/users', params: { slug } })}
             >
               <Users className="mr-2 h-4 w-4" />
               Manage Members
