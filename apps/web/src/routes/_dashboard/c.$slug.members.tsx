@@ -3,6 +3,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { useWorkspace, useWorkspaceMembers } from '@/features/workspaces';
 import { useWorkspaceOptimized } from '@/features/workspaces/stores/workspace.store';
 import { AddMemberDialog } from '@/features/workspaces/components/add-member-dialog';
+import type { WorkspaceMember } from '@/features/workspaces/types';
 import {
   Card,
   CardContent,
@@ -32,7 +33,7 @@ function WorkspaceMembers() {
     error: membersError,
   } = useWorkspaceMembers(slug);
 
-  const columns = React.useMemo<ColumnDef<any>[]>(
+  const columns = React.useMemo<ColumnDef<WorkspaceMember>[]>(
     () => [
       {
         accessorKey: 'name',
@@ -150,22 +151,10 @@ function WorkspaceMembers() {
             searchPlaceholder="Search members..."
             searchValue={search}
             onSearchChange={setSearch}
-            emptyState={
-              !members || members.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-muted-foreground mb-4">
-                    No members found in this workspace
-                  </div>
-                  {canManageWorkspace && (
-                    <AddMemberDialog>
-                      <Button variant="outline">
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Add First Member
-                      </Button>
-                    </AddMemberDialog>
-                  )}
-                </div>
-              ) : undefined
+            emptyStateMessage={
+              !members || members.length === 0 
+                ? "No members found in this workspace" 
+                : undefined
             }
           />
         </CardContent>

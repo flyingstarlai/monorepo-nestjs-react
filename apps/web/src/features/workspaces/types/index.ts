@@ -44,6 +44,13 @@ export interface WorkspaceProfile {
   joinedAt: string;
 }
 
+export interface Activity {
+  id: string;
+  type: string;
+  message: string;
+  createdAt: string;
+}
+
 export interface WorkspacesResponse {
   items: WorkspaceMembership[];
 }

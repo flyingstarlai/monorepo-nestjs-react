@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Activity, Clock, User } from 'lucide-react';
 import { useUserActivities } from '@/features/activities/hooks/use-user-activities';
+import type { Activity as ActivityType } from '@/features/workspaces/types';
 import {
   Card,
   CardContent,
@@ -34,7 +35,7 @@ function AccountOverview() {
   } = useUserActivities({ limit: 10 });
   const [search, setSearch] = useState('');
 
-  const activityColumns = React.useMemo<ColumnDef<any>[]>(
+  const activityColumns = React.useMemo<ColumnDef<ActivityType>[]>(
     () => [
       {
         accessorKey: 'message',

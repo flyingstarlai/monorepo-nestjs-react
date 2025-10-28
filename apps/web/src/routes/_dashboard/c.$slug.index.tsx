@@ -2,6 +2,7 @@ import { createFileRoute, useParams } from '@tanstack/react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useWorkspace, useWorkspaceActions } from '@/features/workspaces';
 import { useWorkspaceActivities } from '@/features/activities/hooks/use-workspace-activities';
+import type { Activity as ActivityType } from '@/features/workspaces/types';
 import {
   Card,
   CardContent,
@@ -35,13 +36,13 @@ function WorkspaceDashboard() {
   } = useWorkspaceActivities({ limit: 5 });
   const [search, setSearch] = useState('');
 
-  const activityColumns = React.useMemo<ColumnDef<any>[]>(
+  const activityColumns = React.useMemo<ColumnDef<ActivityType>[]>(
     () => [
       {
         accessorKey: 'message',
         header: 'Activity',
         cell: ({ row }) => {
-          const activity = row.original;
+          const activity = row.original as ActivityType;
           return (
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-full bg-blue-50 text-blue-600 flex-shrink-0">

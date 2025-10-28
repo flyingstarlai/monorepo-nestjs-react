@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   useReactTable,
   type ColumnDef,
