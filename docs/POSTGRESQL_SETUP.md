@@ -44,8 +44,8 @@ DB_TYPE=postgres
 DB_HOST=localhost
 DB_PORT=5432
 DB_USERNAME=postgres
-DB_PASSWORD=postgres123
-DB_DATABASE=dashboard
+DB_PASSWORD=postgres101
+DB_DATABASE=tc_studio
 ```
 
 ### 3. Run Database Setup
@@ -89,11 +89,11 @@ Download and install from [postgresql.org](https://www.postgresql.org/download/w
 sudo -u postgres psql
 
 # Create database
-CREATE DATABASE dashboard;
+CREATE DATABASE tc_studio;
 
 # Create user (optional, if not using default postgres user)
-CREATE USER dashboard_user WITH PASSWORD 'your_secure_password';
-GRANT ALL PRIVILEGES ON DATABASE dashboard TO dashboard_user;
+CREATE USER tc_studio_user WITH PASSWORD 'your_secure_password';
+GRANT ALL PRIVILEGES ON DATABASE tc_studio TO tc_studio_user;
 
 # Exit psql
 \q
@@ -107,9 +107,9 @@ Update `.env` file:
 DB_TYPE=postgres
 DB_HOST=localhost
 DB_PORT=5432
-DB_USERNAME=dashboard_user  # or postgres
+DB_USERNAME=tc_studio_user  # or postgres
 DB_PASSWORD=your_secure_password
-DB_DATABASE=dashboard
+DB_DATABASE=tc_studio
 ```
 
 ## Migration from MSSQL
@@ -241,13 +241,13 @@ Connect to PostgreSQL and check status:
 
 ```bash
 # Connect to database
-psql -h localhost -U postgres -d dashboard
+psql -h localhost -U postgres -d tc_studio
 
 # Check connections
 SELECT count(*) FROM pg_stat_activity;
 
 # Check database size
-SELECT pg_size_pretty(pg_database_size('dashboard'));
+SELECT pg_size_pretty(pg_database_size('tc_studio'));
 
 # Check table sizes
 SELECT 
@@ -279,7 +279,7 @@ cat > backup-postgres.sh << 'EOF'
 #!/bin/bash
 BACKUP_DIR="/path/to/backups"
 DATE=$(date +%Y%m%d_%H%M%S)
-docker exec dashboard-postgres-dev pg_dump -U postgres dashboard > "$BACKUP_DIR/dashboard_$DATE.sql"
+docker exec tcstudio-postgres-dev pg_dump -U postgres tc_studio > "$BACKUP_DIR/tc_studio_$DATE.sql"
 EOF
 
 chmod +x backup-postgres.sh
@@ -292,10 +292,10 @@ chmod +x backup-postgres.sh
 
 ```bash
 # Backup from Docker container
-docker exec dashboard-postgres-dev pg_dump -U postgres dashboard > backup.sql
+docker exec tcstudio-postgres-dev pg_dump -U postgres tc_studio > backup.sql
 
 # Restore from backup
-docker exec -i dashboard-postgres-dev psql -U postgres dashboard < backup.sql
+docker exec -i tcstudio-postgres-dev psql -U postgres tc_studio < backup.sql
 ```
 
 ## Security Considerations

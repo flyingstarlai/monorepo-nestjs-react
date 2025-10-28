@@ -30,7 +30,7 @@ The system SHALL provide a workspace‑scoped profile endpoint that returns the 
 #### Scenario: Fetch profile for workspace
 
 - WHEN `GET /c/:slug/auth/profile` is called with a valid JWT by a workspace member
-- THEN the system returns the user profile including `{ username, name, avatar?, workspaceRole: 'Owner'|'Admin'|'Author'|'Member' }`
+- THEN the system returns the user profile including `{ username, name, avatar?, workspaceRole: 'Owner'|'Author'|'Member' }`
 
 #### Scenario: Not a member
 

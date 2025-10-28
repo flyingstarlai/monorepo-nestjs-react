@@ -6,7 +6,7 @@ Workspace Owners/Admins SHALL be able to add existing users or create new users 
 
 #### Scenario: Add existing user by username
 
-- WHEN `POST /c/:slug/users` is called with an existing `username` and a valid `role` (Owner/Admin/Author/Member)
+- WHEN `POST /c/:slug/users` is called with an existing `username` and a valid `role` (Owner/Author/Member)
 - THEN the system creates a membership for that user in the workspace
 
 #### Scenario: Create new user and add to workspace
@@ -16,7 +16,7 @@ Workspace Owners/Admins SHALL be able to add existing users or create new users 
 
 #### Scenario: Reject invalid role
 
-- WHEN `POST /c/:slug/users` is called with a role outside Owner/Admin/Author/Member
+- WHEN `POST /c/:slug/users` is called with a role outside Owner/Author/Member
 - THEN the system rejects the request with 400 Bad Request
 
 #### Scenario: Non‑admin forbidden
@@ -30,7 +30,7 @@ Owners/Admins SHALL be able to update a member's workspace role via `PATCH /c/:s
 
 #### Scenario: Update role success
 
-- WHEN updating a member role to Admin/Author/Member by an Owner/Admin
+- WHEN updating a member role to Owner/Author/Member by an Owner
 - THEN the system updates the membership role
 
 #### Scenario: Prevent demoting last Owner

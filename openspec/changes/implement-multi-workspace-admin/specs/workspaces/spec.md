@@ -171,5 +171,38 @@ The system SHALL provide an improved workspace selector that supports multiple w
 #### Scenario: Platform Admin sees all workspaces
 
 - WHEN a Platform Admin uses workspace selector
-- THEN they see all workspaces in the system
+- THEN they see all workspaces in system
 - AND can switch to any workspace regardless of membership
+
+### Requirement: Database Seeding
+
+The system SHALL provide automated database seeding with default users, workspaces, and memberships for development and testing.
+
+#### Scenario: Default user creation
+
+- WHEN database seeding is run via `pnpm run db:seed`
+- THEN system creates admin user with username 'admin' and Admin role
+- AND system creates regular user with username 'user' and User role
+- AND both users have active status
+
+#### Scenario: Default workspace creation
+
+- WHEN database seeding is run and default workspace 'twsbp' does not exist
+- THEN system creates workspace with name 'TWSBP' and slug 'twsbp'
+- AND admin user is assigned as Owner of the workspace
+- AND workspace is created with active status
+
+#### Scenario: Workspace membership seeding
+
+- WHEN database seeding is run with existing users and workspace
+- THEN system adds admin user as Owner to default workspace
+- AND system adds regular user as Member to default workspace
+- AND memberships are created with active status
+
+#### Scenario: Idempotent seeding
+
+- WHEN database seeding is run multiple times
+- THEN system does not create duplicate users
+- AND system does not create duplicate workspaces
+- AND system does not create duplicate memberships
+- AND existing data remains unchanged

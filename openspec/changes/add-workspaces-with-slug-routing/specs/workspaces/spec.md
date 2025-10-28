@@ -45,11 +45,11 @@ The system SHALL support a Workspace entity with unique `slug` and active status
 
 ### Requirement: Workspace Membership and Roles
 
-The system SHALL support membership between a User and a Workspace with roles `Owner` | `Admin` | `Author` | `Member` and a per‑membership active flag.
+The system SHALL support membership between a User and a Workspace with roles `Owner` | `Author` | `Member` and a per‑membership active flag. The `Admin` role has been removed from workspace memberships.
 
 #### Scenario: Add existing user to workspace
 
-- WHEN an Owner/Admin adds an existing username to the workspace
+- WHEN an Owner adds an existing username to the workspace
 - THEN the system creates a membership with the specified role (default `Member` if unspecified)
 
 #### Scenario: Create new user and add to workspace
