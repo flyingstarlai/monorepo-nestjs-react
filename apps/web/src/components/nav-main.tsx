@@ -34,7 +34,7 @@ export function NavMain({
   isLoading?: boolean;
 }) {
   const location = useLocation();
-  
+
   if (isLoading) {
     return (
       <SidebarGroup>
@@ -85,9 +85,9 @@ export function NavMain({
                 asChild
                 isActive={item.isActive}
                 className={cn(
-                  "transition-all duration-200",
-                  "hover:bg-accent/50",
-                  "data-[active=true]:bg-accent"
+                  'transition-all duration-200',
+                  'hover:bg-accent/50',
+                  'data-[active=true]:bg-accent'
                 )}
               >
                 <Link to={item.url}>

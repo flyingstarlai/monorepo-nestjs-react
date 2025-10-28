@@ -128,7 +128,10 @@ export function WorkspaceSwitcher() {
                 key={workspace.id}
                 onClick={async () => {
                   await switchWorkspace(workspace);
-                  router.navigate({ to: '/c/$slug', params: { slug: workspace.slug } });
+                  router.navigate({
+                    to: '/c/$slug',
+                    params: { slug: workspace.slug },
+                  });
                 }}
                 className="gap-2 p-2"
               >

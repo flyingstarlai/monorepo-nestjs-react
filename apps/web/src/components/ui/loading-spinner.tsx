@@ -1,21 +1,24 @@
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 interface LoadingSpinnerProps {
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: 'sm' | 'md' | 'lg';
 }
 
-export function LoadingSpinner({ className, size = "md" }: LoadingSpinnerProps) {
+export function LoadingSpinner({
+  className,
+  size = 'md',
+}: LoadingSpinnerProps) {
   const sizeClasses = {
-    sm: "w-4 h-4",
-    md: "w-6 h-6", 
-    lg: "w-8 h-8"
+    sm: 'w-4 h-4',
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8',
   };
 
   return (
     <div
       className={cn(
-        "animate-spin rounded-full border-2 border-current border-t-transparent",
+        'animate-spin rounded-full border-2 border-current border-t-transparent',
         sizeClasses[size],
         className
       )}
@@ -28,9 +31,9 @@ interface LoadingScreenProps {
   submessage?: string;
 }
 
-export function LoadingScreen({ 
-  message = "Loading...", 
-  submessage = "Please wait while we prepare your workspace" 
+export function LoadingScreen({
+  message = 'Loading...',
+  submessage = 'Please wait while we prepare your workspace',
 }: LoadingScreenProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">

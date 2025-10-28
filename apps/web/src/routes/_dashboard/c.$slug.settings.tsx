@@ -17,11 +17,7 @@ export const Route = createFileRoute('/_dashboard/c/$slug/settings')({
 
 function WorkspaceSettings() {
   const { slug } = useParams({ from: '/_dashboard/c/$slug/settings' });
-  const { 
-    currentWorkspace, 
-    isLoading, 
-    workspaceProfile
-  } = useWorkspace();
+  const { currentWorkspace, isLoading, workspaceProfile } = useWorkspace();
 
   if (isLoading) {
     return (
@@ -72,19 +68,22 @@ function WorkspaceSettings() {
         <div className="text-center">
           <h2 className="text-lg font-semibold mb-2">Workspace Not Found</h2>
           <p className="text-muted-foreground">
-            The workspace &quot;{slug}&quot; does not exist or you don&apos;t have access to it.
+            The workspace &quot;{slug}&quot; does not exist or you don&apos;t
+            have access to it.
           </p>
         </div>
       </div>
     );
   }
 
-return (
+  return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold">Workspace settings</h1>
-          <p className="text-muted-foreground">{currentWorkspace.slug} configuration</p>
+          <p className="text-muted-foreground">
+            {currentWorkspace.slug} configuration
+          </p>
         </div>
       </div>
 
@@ -112,7 +111,6 @@ return (
                 {currentWorkspace.slug}
               </div>
             </div>
-
           </CardContent>
         </Card>
 
@@ -122,27 +120,23 @@ return (
               <Calendar className="h-5 w-5" />
               Workspace Details
             </CardTitle>
-            <CardDescription>
-              Additional workspace information
-            </CardDescription>
+            <CardDescription>Additional workspace information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <label className="text-sm font-medium">Created</label>
               <div className="mt-1 p-2 border rounded-md bg-muted">
-                {currentWorkspace.createdAt 
+                {currentWorkspace.createdAt
                   ? new Date(currentWorkspace.createdAt).toLocaleDateString()
-                  : 'Unknown'
-                }
+                  : 'Unknown'}
               </div>
             </div>
             <div>
               <label className="text-sm font-medium">Last Updated</label>
               <div className="mt-1 p-2 border rounded-md bg-muted">
-                {currentWorkspace.updatedAt 
+                {currentWorkspace.updatedAt
                   ? new Date(currentWorkspace.updatedAt).toLocaleDateString()
-                  : 'Unknown'
-                }
+                  : 'Unknown'}
               </div>
             </div>
             <div>
@@ -169,7 +163,9 @@ return (
           <div className="text-center py-8 text-muted-foreground">
             <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>Advanced workspace settings are not yet available.</p>
-            <p className="text-sm">This feature is coming in a future update.</p>
+            <p className="text-sm">
+              This feature is coming in a future update.
+            </p>
           </div>
         </CardContent>
       </Card>

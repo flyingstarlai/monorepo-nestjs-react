@@ -34,9 +34,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const workspaceNavItems = [
     {
       title: 'Overview',
-      url: currentWorkspace
-        ? `/c/${currentWorkspace.slug}`
-        : '/dashboard',
+      url: currentWorkspace ? `/c/${currentWorkspace.slug}` : '/dashboard',
       icon: LayoutDashboard,
     },
     {
@@ -52,9 +50,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         ? `/c/${currentWorkspace.slug}/settings`
         : '/dashboard',
       icon: Settings,
-    }
+    },
   ];
-
 
   // User settings items (separate from workspace)
   const userSettingsItems = [

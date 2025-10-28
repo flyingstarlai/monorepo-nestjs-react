@@ -5,4 +5,9 @@ export function useAuth() {
 }
 
 // Re-export individual selectors for optimized re-renders
-export { useUser, useIsAuthenticated, useAuthLoading, useAuthActions } from '../stores/auth.store';
+export {
+  useUser,
+  useIsAuthenticated,
+  useAuthLoading,
+  useAuthActions,
+} from '../stores/auth.store';

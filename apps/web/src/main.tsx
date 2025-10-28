@@ -62,8 +62,8 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
   // Show loading state while checking auth
   if (isLoading) {
     return (
-      <LoadingScreen 
-        message="Authenticating..." 
+      <LoadingScreen
+        message="Authenticating..."
         submessage="Verifying your credentials and preparing your workspace"
       />
     );

@@ -125,9 +125,10 @@ export function AppBreadcrumb() {
   const items = getBreadcrumbItems();
 
   // Add home breadcrumb if not already at root
-  const allItems = items.length > 0 && items[0].label !== 'Home' 
-    ? [{ label: 'Home', href: '/', icon: Home }, ...items]
-    : items;
+  const allItems =
+    items.length > 0 && items[0].label !== 'Home'
+      ? [{ label: 'Home', href: '/', icon: Home }, ...items]
+      : items;
 
   return (
     <Breadcrumb>
@@ -138,13 +139,17 @@ export function AppBreadcrumb() {
               {item.href ? (
                 <BreadcrumbLink asChild>
                   <Link to={item.href} className="flex items-center gap-1">
-                    {'icon' in item && item.icon && <item.icon className="w-3 h-3" />}
+                    {'icon' in item && item.icon && (
+                      <item.icon className="w-3 h-3" />
+                    )}
                     {item.label}
                   </Link>
                 </BreadcrumbLink>
               ) : (
                 <BreadcrumbPage className="flex items-center gap-1">
-                  {'icon' in item && item.icon && <item.icon className="w-3 h-3" />}
+                  {'icon' in item && item.icon && (
+                    <item.icon className="w-3 h-3" />
+                  )}
                   {item.label}
                 </BreadcrumbPage>
               )}

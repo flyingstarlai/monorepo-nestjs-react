@@ -39,7 +39,9 @@ function AccountOverview() {
         </div>
         <div>
           <h1 className="text-2xl font-bold">Account Overview</h1>
-          <p className="text-muted-foreground">Your activities across all workspaces</p>
+          <p className="text-muted-foreground">
+            Your activities across all workspaces
+          </p>
         </div>
       </div>
 
@@ -47,7 +49,9 @@ function AccountOverview() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Activities</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Activities
+            </CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -62,7 +66,9 @@ function AccountOverview() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Account Status</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Account Status
+            </CardTitle>
             <User className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -81,7 +87,9 @@ function AccountOverview() {
             <Clock className="h-5 w-5" />
             Your Recent Activities
           </CardTitle>
-          <CardDescription>Your activities across all workspaces</CardDescription>
+          <CardDescription>
+            Your activities across all workspaces
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {activitiesLoading ? (

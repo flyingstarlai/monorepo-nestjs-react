@@ -25,8 +25,6 @@ export interface AuthResponse {
   user: User;
 }
 
-
-
 export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;

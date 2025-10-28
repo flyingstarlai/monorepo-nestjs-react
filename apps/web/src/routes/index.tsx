@@ -27,7 +27,10 @@ function RootRedirect() {
     if (!isLoading) {
       const targetWorkspace = currentWorkspace || workspaces?.items?.[0];
       if (targetWorkspace) {
-        router.navigate({ to: '/c/$slug', params: { slug: targetWorkspace.slug } });
+        router.navigate({
+          to: '/c/$slug',
+          params: { slug: targetWorkspace.slug },
+        });
       } else {
         // Fallback if no workspaces - go to account overview
         router.navigate({ to: '/account' });

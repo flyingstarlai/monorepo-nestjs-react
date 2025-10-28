@@ -16,7 +16,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { workspaceApi } from '@/features/admin/api/workspace.api';
-import { useWorkspaceActions, useWorkspaceStore } from '@/features/workspaces/stores/workspace.store';
+import {
+  useWorkspaceActions,
+  useWorkspaceStore,
+} from '@/features/workspaces/stores/workspace.store';
 
 interface CreateWorkspaceDialogProps {
   children?: React.ReactNode;
@@ -48,20 +51,20 @@ export function CreateWorkspaceDialog({
       queryClient.invalidateQueries({ queryKey: ['admin-workspaces'] });
       // Refresh the workspace store to update the switcher
       await refetchWorkspaces();
-      
+
       // Switch to newly created workspace and navigate
       if (data?.slug) {
         const workspaces = useWorkspaceStore.getState().workspaces;
-        const newWorkspace = workspaces.find(ws => ws.slug === data.slug);
+        const newWorkspace = workspaces.find((ws) => ws.slug === data.slug);
         if (newWorkspace) {
           await switchWorkspace(newWorkspace);
-          router.navigate({ 
-            to: '/c/$slug', 
-            params: { slug: data.slug } 
+          router.navigate({
+            to: '/c/$slug',
+            params: { slug: data.slug },
           });
         }
       }
-      
+
       // Reset form
       setName('');
       setSlug('');

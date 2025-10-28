@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { tokenStorage } from '@/features/auth/api/auth.api';
 import type { ActivityDto, ActivitiesResponseDto } from '../api/activities.api';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 export function useGlobalActivities({ limit = 10 }: { limit?: number } = {}) {
   return useQuery({
@@ -13,11 +14,14 @@ export function useGlobalActivities({ limit = 10 }: { limit?: number } = {}) {
         throw new Error('No authentication token');
       }
 
-      const response = await fetch(`${API_BASE_URL}/activities?limit=${limit}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/activities?limit=${limit}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to fetch global activities');

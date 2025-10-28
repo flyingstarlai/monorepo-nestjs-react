@@ -8,7 +8,10 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { LoadingScreen } from '@/components/ui/loading-spinner';
-import { useWorkspaceActions, useWorkspaces } from '@/features/workspaces/stores/workspace.store';
+import {
+  useWorkspaceActions,
+  useWorkspaces,
+} from '@/features/workspaces/stores/workspace.store';
 import { useEffect, useState } from 'react';
 
 export const Route = createFileRoute('/_dashboard')({
@@ -55,12 +58,17 @@ function DashboardLayout() {
               />
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                <span className="text-sm text-muted-foreground">Loading...</span>
+                <span className="text-sm text-muted-foreground">
+                  Loading...
+                </span>
               </div>
             </div>
           </header>
           <div className="flex flex-1 items-center justify-center">
-            <LoadingScreen message="Loading workspace" submessage="Please wait while we prepare your dashboard" />
+            <LoadingScreen
+              message="Loading workspace"
+              submessage="Please wait while we prepare your dashboard"
+            />
           </div>
         </SidebarInset>
       </SidebarProvider>

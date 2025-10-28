@@ -17,11 +17,8 @@ export const Route = createFileRoute('/_dashboard/c/$slug/members')({
 
 function WorkspaceMembers() {
   const { slug } = useParams({ from: '/_dashboard/c/$slug/members' });
-  const { 
-    currentWorkspace, 
-    isLoading
-  } = useWorkspace();
-  
+  const { currentWorkspace, isLoading } = useWorkspace();
+
   const {
     data: members,
     isLoading: membersLoading,
@@ -43,7 +40,10 @@ function WorkspaceMembers() {
           <CardContent>
             <div className="space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 border rounded-lg">
+                <div
+                  key={i}
+                  className="flex items-center gap-4 p-4 border rounded-lg"
+                >
                   <Skeleton className="w-10 h-10 rounded-full" />
                   <div className="flex-1 space-y-2">
                     <Skeleton className="h-4 w-32" />
@@ -65,7 +65,8 @@ function WorkspaceMembers() {
         <div className="text-center">
           <h2 className="text-lg font-semibold mb-2">Workspace Not Found</h2>
           <p className="text-muted-foreground">
-            The workspace &quot;{slug}&quot; does not exist or you don&apos;t have access to it.
+            The workspace &quot;{slug}&quot; does not exist or you don&apos;t
+            have access to it.
           </p>
         </div>
       </div>
@@ -74,7 +75,6 @@ function WorkspaceMembers() {
 
   return (
     <div className="space-y-6">
-
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -103,7 +103,9 @@ function WorkspaceMembers() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-medium truncate">{member.name}</h3>
-                      <Badge variant={member.isActive ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={member.isActive ? 'default' : 'secondary'}
+                      >
                         {member.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </div>
@@ -118,9 +120,7 @@ function WorkspaceMembers() {
                       </span>
                     </div>
                   </div>
-                  <Badge variant="outline">
-                    {member.role}
-                  </Badge>
+                  <Badge variant="outline">{member.role}</Badge>
                 </div>
               ))}
             </div>

@@ -5,7 +5,10 @@ import {
   type CreateWorkspaceDto,
   type UpdateWorkspaceDto,
 } from '@/features/admin/api/admin.api';
-import { useWorkspaceActions, useWorkspaceStore } from '@/features/workspaces/stores/workspace.store';
+import {
+  useWorkspaceActions,
+  useWorkspaceStore,
+} from '@/features/workspaces/stores/workspace.store';
 
 // Query keys
 export const adminWorkspaceKeys = {
@@ -74,19 +77,21 @@ export function useCreateWorkspace() {
     onSuccess: async (workspace) => {
       // Invalidate workspaces list
       queryClient.invalidateQueries({ queryKey: adminWorkspaceKeys.lists() });
-      
+
       // Wait a moment for workspace store to be updated
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Switch to newly created workspace and navigate
       if (workspace?.slug) {
         const workspaces = useWorkspaceStore.getState().workspaces;
-        const newWorkspace = workspaces.find(ws => ws.slug === workspace.slug);
+        const newWorkspace = workspaces.find(
+          (ws) => ws.slug === workspace.slug
+        );
         if (newWorkspace) {
           await switchWorkspace(newWorkspace);
-          router.navigate({ 
-            to: '/c/$slug', 
-            params: { slug: workspace.slug } 
+          router.navigate({
+            to: '/c/$slug',
+            params: { slug: workspace.slug },
           });
         }
       }

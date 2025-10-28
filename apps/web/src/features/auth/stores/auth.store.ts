@@ -8,7 +8,7 @@ export interface AuthStore {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  
+
   // Actions
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
@@ -108,7 +108,8 @@ export const useAuthStore = create<AuthStore>()(
 
 // Selectors for optimized re-renders
 export const useUser = () => useAuthStore((state) => state.user);
-export const useIsAuthenticated = () => useAuthStore((state) => state.isAuthenticated);
+export const useIsAuthenticated = () =>
+  useAuthStore((state) => state.isAuthenticated);
 export const useAuthLoading = () => useAuthStore((state) => state.isLoading);
 
 // Action selectors for stable references
@@ -119,4 +120,3 @@ export const useAuthActions = () => ({
   initializeAuth: useAuthStore((state) => state.initializeAuth),
   setLoading: useAuthStore((state) => state.setLoading),
 });
-

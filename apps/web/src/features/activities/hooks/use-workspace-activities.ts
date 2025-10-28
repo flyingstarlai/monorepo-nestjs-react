@@ -2,7 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { type ActivityDto, getActivities } from '../api/activities.api';
 import { useWorkspace } from '@/features/workspaces';
 
-export function useWorkspaceActivities({ limit = 10 }: { limit?: number } = {}) {
+export function useWorkspaceActivities({
+  limit = 10,
+}: { limit?: number } = {}) {
   const { currentWorkspace } = useWorkspace();
 
   return useQuery({

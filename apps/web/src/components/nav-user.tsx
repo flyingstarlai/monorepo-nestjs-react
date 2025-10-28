@@ -1,10 +1,5 @@
 import { useRouter } from '@tanstack/react-router';
-import {
-  BadgeCheck,
-  ChevronsUpDown,
-  Lock,
-  LogOut,
-} from 'lucide-react';
+import { BadgeCheck, ChevronsUpDown, Lock, LogOut } from 'lucide-react';
 
 import {
   Avatar,

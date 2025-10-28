@@ -10,12 +10,12 @@ export const Route = createFileRoute('/_dashboard/c/$slug')({
 
 function WorkspaceLayout() {
   const { slug } = useParams({ from: '/_dashboard/c/$slug' });
-  const { 
-    currentWorkspace, 
-    isLoading, 
+  const {
+    currentWorkspace,
+    isLoading,
     isSwitchingWorkspace,
-    workspaces, 
-    workspaceProfile
+    workspaces,
+    workspaceProfile,
   } = useWorkspace();
   const { fetchWorkspaces, fetchWorkspaceProfile } = useWorkspaceActions();
 
@@ -46,17 +46,18 @@ function WorkspaceLayout() {
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             <div className="text-center space-y-2">
               <h3 className="text-lg font-semibold text-foreground">
-                {isSwitchingWorkspace ? 'Switching workspace...' : 'Loading workspace...'}
+                {isSwitchingWorkspace
+                  ? 'Switching workspace...'
+                  : 'Loading workspace...'}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {isSwitchingWorkspace 
+                {isSwitchingWorkspace
                   ? 'Please wait while we switch your workspace'
-                  : 'Setting up your workspace environment'
-                }
+                  : 'Setting up your workspace environment'}
               </p>
             </div>
           </div>
-          
+
           {/* Progress skeleton */}
           <div className="w-full space-y-4">
             <div className="flex items-center gap-4">
@@ -84,9 +85,9 @@ function WorkspaceLayout() {
         <div className="text-center">
           <h2 className="text-lg font-semibold mb-2">Workspace Not Found</h2>
           <p className="text-muted-foreground">
-            The workspace &quot;{slug}&quot; does not exist or you don&apos;t have access to
-            it. Please select a workspace from the sidebar or contact your
-            administrator.
+            The workspace &quot;{slug}&quot; does not exist or you don&apos;t
+            have access to it. Please select a workspace from the sidebar or
+            contact your administrator.
           </p>
         </div>
       </div>
