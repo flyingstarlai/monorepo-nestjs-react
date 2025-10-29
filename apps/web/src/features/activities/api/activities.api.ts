@@ -1,4 +1,6 @@
 import { tokenStorage } from '../../auth/api/auth.api';
+import { apiClient } from '@/lib/api-client';
+import { ApiError } from '@/lib/api-errors';
 
 export type ActivityType =
   | 'login_success'
@@ -27,21 +29,13 @@ export interface ActivitiesResponseDto {
   nextCursor?: string;
 }
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-
 export async function getActivities(
   slug: string,
   params?: {
     limit?: number;
     cursor?: string;
   }
-) {
-  const token = tokenStorage.getToken();
-  if (!token) {
-    throw new Error('No authentication token');
-  }
-
+): Promise<ActivitiesResponseDto> {
   const searchParams = new URLSearchParams();
   if (params?.limit) {
     searchParams.set('limit', params.limit.toString());
@@ -50,31 +44,26 @@ export async function getActivities(
     searchParams.set('cursor', params.cursor);
   }
 
-  const response = await fetch(
-    `${API_BASE_URL}/c/${slug}/activities?${searchParams.toString()}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  const queryString = searchParams.toString();
+  const endpoint = `/c/${slug}/activities${queryString ? `?${queryString}` : ''}`;
+
+  try {
+    const response = await apiClient.get<ActivitiesResponseDto>(endpoint);
+    return response.data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
     }
-  );
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch activities');
+    throw new ApiError(
+      error instanceof Error ? error.message : 'Failed to fetch activities'
+    );
   }
-
-  return response.json() as Promise<ActivitiesResponseDto>;
 }
 
 export async function getUserActivities(params?: {
   limit?: number;
   cursor?: string;
-}) {
-  const token = tokenStorage.getToken();
-  if (!token) {
-    throw new Error('No authentication token');
-  }
-
+}): Promise<ActivitiesResponseDto> {
   const searchParams = new URLSearchParams();
   if (params?.limit) {
     searchParams.set('limit', params.limit.toString());
@@ -83,18 +72,18 @@ export async function getUserActivities(params?: {
     searchParams.set('cursor', params.cursor);
   }
 
-  const response = await fetch(
-    `${API_BASE_URL}/activities?${searchParams.toString()}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  const queryString = searchParams.toString();
+  const endpoint = `/activities${queryString ? `?${queryString}` : ''}`;
+
+  try {
+    const response = await apiClient.get<ActivitiesResponseDto>(endpoint);
+    return response.data;
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
     }
-  );
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch user activities');
+    throw new ApiError(
+      error instanceof Error ? error.message : 'Failed to fetch user activities'
+    );
   }
-
-  return response.json() as Promise<ActivitiesResponseDto>;
 }

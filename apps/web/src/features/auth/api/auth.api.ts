@@ -1,44 +1,42 @@
 import type { AuthResponse, LoginCredentials, User } from '../types';
+import { apiClient } from '@/lib/api-client';
+import { AuthError as BaseAuthError } from '@/lib/api-errors';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-
-export class AuthError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AuthError';
-  }
-}
+// Re-export AuthError for backward compatibility
+export const AuthError = BaseAuthError;
 
 export const authApi = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    });
-
-    if (!response.ok) {
-      throw new AuthError('Invalid credentials');
+    try {
+      const response = await apiClient.post<AuthResponse>('/auth/login', credentials, {
+        skipAuth: true, // Login doesn't require authentication
+      });
+      return response.data;
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      throw new AuthError(
+        error instanceof Error ? error.message : 'Login failed'
+      );
     }
-
-    return response.json();
   },
 
   async getProfile(token: string): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
+    try {
+      const response = await apiClient.get<User>('/auth/profile', {
+        skipAuth: true, // We'll handle auth manually for this method
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error;
+      }
       throw new AuthError('Failed to fetch profile');
     }
-
-    return response.json();
   },
 
   async getWorkspaceProfile(slug: string): Promise<User> {
@@ -47,101 +45,75 @@ export const authApi = {
       throw new AuthError('No authentication token');
     }
 
-    const response = await fetch(`${API_BASE_URL}/c/${slug}/auth/profile`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
+    try {
+      const response = await apiClient.get<User>(`/c/${slug}/auth/profile`, {
+        skipAuth: true, // We'll handle auth manually for this method
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error;
+      }
       throw new AuthError('Failed to fetch workspace profile');
     }
-
-    return response.json();
   },
 
   async uploadAvatar(file: File): Promise<User> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new AuthError('No authentication token');
+    try {
+      const response = await apiClient.upload<User>('/users/avatar', file, {
+        method: 'PUT',
+        // The API client will automatically add the auth header
+      });
+      return response.data;
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      throw new AuthError(
+        error instanceof Error ? error.message : 'Failed to upload avatar'
+      );
     }
-
-    const formData = new FormData();
-    formData.append('avatar', file);
-
-    const response = await fetch(`${API_BASE_URL}/users/avatar`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new AuthError(error.message || 'Failed to upload avatar');
-    }
-
-    return response.json();
   },
 
   async updateProfile(profileData: {
     name?: string;
     username?: string;
   }): Promise<User> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new AuthError('No authentication token');
+    try {
+      const response = await apiClient.put<User>('/users/profile', profileData);
+      
+      // Keep the console logs for debugging (can be removed later)
+      console.log('Profile update response status:', response.status);
+      console.log('Profile update response headers:', response.headers);
+      console.log('Profile update response data:', response.data);
+
+      return response.data;
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      throw new AuthError(
+        error instanceof Error ? error.message : 'Failed to update profile'
+      );
     }
-
-    const response = await fetch(`${API_BASE_URL}/users/profile`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(profileData),
-    });
-
-    console.log('Profile update response status:', response.status);
-    console.log('Profile update response headers:', response.headers);
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new AuthError(error.message || 'Failed to update profile');
-    }
-
-    const text = await response.text();
-    console.log('Profile update response text:', text);
-
-    if (!text) {
-      throw new AuthError('Empty response from server');
-    }
-
-    return JSON.parse(text);
   },
 
   async changePassword(passwordData: {
     currentPassword: string;
     newPassword: string;
   }): Promise<void> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new AuthError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(passwordData),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new AuthError(error.message || 'Failed to change password');
+    try {
+      await apiClient.post<void>('/auth/change-password', passwordData);
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      throw new AuthError(
+        error instanceof Error ? error.message : 'Failed to change password'
+      );
     }
   },
 };

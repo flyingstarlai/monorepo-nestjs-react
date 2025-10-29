@@ -1,5 +1,7 @@
 import { tokenStorage } from '../../auth/api';
 import type { User } from '../../auth/types';
+import { apiClient } from '@/lib/api-client';
+import { AdminApiError as BaseAdminApiError } from '@/lib/api-errors';
 
 // Workspace types
 export interface Workspace {
@@ -31,9 +33,6 @@ export interface WorkspaceStats {
   recentlyActive: number;
 }
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-
 export interface CreateUserPayload {
   username: string;
   name: string;
@@ -49,142 +48,92 @@ export interface Role {
   description?: string;
 }
 
-export class AdminApiError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AdminApiError';
-  }
-}
+// Re-export AdminApiError for backward compatibility
+export const AdminApiError = BaseAdminApiError;
 
 export const adminApi = {
   async listUsers(): Promise<User[]> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new AdminApiError('No authentication token');
+    try {
+      const response = await apiClient.get<User[]>('/users');
+      return response.data;
+    } catch (error) {
+      if (error instanceof AdminApiError) {
+        throw error;
+      }
+      throw new AdminApiError(
+        error instanceof Error ? error.message : 'Failed to fetch users'
+      );
     }
-
-    const response = await fetch(`${API_BASE_URL}/users`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new AdminApiError('Failed to fetch users');
-    }
-
-    return response.json();
   },
 
   async listRoles(): Promise<Role[]> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new AdminApiError('No authentication token');
+    try {
+      const response = await apiClient.get<Role[]>('/users/roles');
+      return response.data;
+    } catch (error) {
+      if (error instanceof AdminApiError) {
+        throw error;
+      }
+      throw new AdminApiError(
+        error instanceof Error ? error.message : 'Failed to fetch roles'
+      );
     }
-
-    const response = await fetch(`${API_BASE_URL}/users/roles`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new AdminApiError('Failed to fetch roles');
-    }
-
-    return response.json();
   },
 
   async createUser(payload: CreateUserPayload): Promise<User> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new AdminApiError('No authentication token');
+    try {
+      const response = await apiClient.post<User>('/users', payload);
+      return response.data;
+    } catch (error) {
+      if (error instanceof AdminApiError) {
+        throw error;
+      }
+      throw new AdminApiError(
+        error instanceof Error ? error.message : 'Failed to create user'
+      );
     }
-
-    const response = await fetch(`${API_BASE_URL}/users`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new AdminApiError(error.message || 'Failed to create user');
-    }
-
-    return response.json();
   },
 
   async createUserWithWorkspace(payload: CreateUserPayload): Promise<User> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new AdminApiError('No authentication token');
+    try {
+      const response = await apiClient.post<User>('/users', payload);
+      return response.data;
+    } catch (error) {
+      if (error instanceof AdminApiError) {
+        throw error;
+      }
+      throw new AdminApiError(
+        error instanceof Error ? error.message : 'Failed to create user'
+      );
     }
-
-    const response = await fetch(`${API_BASE_URL}/users`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new AdminApiError(error.message || 'Failed to create user');
-    }
-
-    return response.json();
   },
 
   async setUserActive(userId: string, isActive: boolean): Promise<User> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new AdminApiError('No authentication token');
+    try {
+      const response = await apiClient.patch<User>(`/users/${userId}/status`, { isActive });
+      return response.data;
+    } catch (error) {
+      if (error instanceof AdminApiError) {
+        throw error;
+      }
+      throw new AdminApiError(
+        error instanceof Error ? error.message : 'Failed to update user status'
+      );
     }
-
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/status`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ isActive }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new AdminApiError(error.message || 'Failed to update user status');
-    }
-
-    return response.json();
   },
 
   async setUserRole(userId: string, roleName: 'Admin' | 'User'): Promise<User> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new AdminApiError('No authentication token');
+    try {
+      const response = await apiClient.patch<User>(`/users/${userId}/role`, { roleName });
+      return response.data;
+    } catch (error) {
+      if (error instanceof AdminApiError) {
+        throw error;
+      }
+      throw new AdminApiError(
+        error instanceof Error ? error.message : 'Failed to update user role'
+      );
     }
-
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/role`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ roleName }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new AdminApiError(error.message || 'Failed to update user role');
-    }
-
-    return response.json();
   },
 
   // Workspace management methods
@@ -200,11 +149,6 @@ export const adminApi = {
     limit: number;
     totalPages: number;
   }> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new AdminApiError('No authentication token');
-    }
-
     const params = new URLSearchParams();
     if (filters?.page) params.append('page', filters.page.toString());
     if (filters?.limit) params.append('limit', filters.limit.toString());
@@ -212,109 +156,79 @@ export const adminApi = {
     if (filters?.isActive !== undefined)
       params.append('isActive', filters.isActive.toString());
 
-    const response = await fetch(
-      `${API_BASE_URL}/admin/workspaces?${params.toString()}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const queryString = params.toString();
+    const endpoint = `/admin/workspaces${queryString ? `?${queryString}` : ''}`;
 
-    if (!response.ok) {
+    try {
+      const response = await apiClient.get<{
+        items: Workspace[];
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+      }>(endpoint);
+      return response.data;
+    } catch (error) {
+      if (error instanceof AdminApiError) {
+        throw error;
+      }
       throw new AdminApiError('Failed to fetch workspaces');
     }
-
-    return response.json();
   },
 
   async createWorkspace(data: CreateWorkspaceDto): Promise<Workspace> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new AdminApiError('No authentication token');
+    try {
+      const response = await apiClient.post<Workspace>('/admin/workspaces', data);
+      return response.data;
+    } catch (error) {
+      if (error instanceof AdminApiError) {
+        throw error;
+      }
+      throw new AdminApiError(
+        error instanceof Error ? error.message : 'Failed to create workspace'
+      );
     }
-
-    const response = await fetch(`${API_BASE_URL}/admin/workspaces`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new AdminApiError(error.message || 'Failed to create workspace');
-    }
-
-    return response.json();
   },
 
   async updateWorkspace(
     id: string,
     data: UpdateWorkspaceDto
   ): Promise<Workspace> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new AdminApiError('No authentication token');
+    try {
+      const response = await apiClient.patch<Workspace>(`/admin/workspaces/${id}`, data);
+      return response.data;
+    } catch (error) {
+      if (error instanceof AdminApiError) {
+        throw error;
+      }
+      throw new AdminApiError(
+        error instanceof Error ? error.message : 'Failed to update workspace'
+      );
     }
-
-    const response = await fetch(`${API_BASE_URL}/admin/workspaces/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new AdminApiError(error.message || 'Failed to update workspace');
-    }
-
-    return response.json();
   },
 
   async deleteWorkspace(id: string): Promise<void> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new AdminApiError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/admin/workspaces/${id}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new AdminApiError(error.message || 'Failed to delete workspace');
+    try {
+      await apiClient.delete<void>(`/admin/workspaces/${id}`);
+    } catch (error) {
+      if (error instanceof AdminApiError) {
+        throw error;
+      }
+      throw new AdminApiError(
+        error instanceof Error ? error.message : 'Failed to delete workspace'
+      );
     }
   },
 
   async getWorkspaceStats(id: string): Promise<WorkspaceStats> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new AdminApiError('No authentication token');
-    }
-
-    const response = await fetch(
-      `${API_BASE_URL}/admin/workspaces/${id}/stats`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    try {
+      const response = await apiClient.get<WorkspaceStats>(`/admin/workspaces/${id}/stats`);
+      return response.data;
+    } catch (error) {
+      if (error instanceof AdminApiError) {
+        throw error;
       }
-    );
-
-    if (!response.ok) {
       throw new AdminApiError('Failed to fetch workspace stats');
     }
-
-    return response.json();
   },
 };

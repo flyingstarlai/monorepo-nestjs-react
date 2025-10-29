@@ -5,134 +5,89 @@ import type {
   WorkspaceRole,
 } from '../types';
 import { tokenStorage } from '@/features/auth/api/auth.api';
+import { apiClient } from '@/lib/api-client';
+import { WorkspaceError as BaseWorkspaceError } from '@/lib/api-errors';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-
-export class WorkspaceError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'WorkspaceError';
-  }
-}
+// Re-export WorkspaceError for backward compatibility
+export const WorkspaceError = BaseWorkspaceError;
 
 export const workspacesApi = {
   async getWorkspaces(): Promise<WorkspacesResponse> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/workspaces`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Failed to fetch workspaces:', response.status, errorText);
+    try {
+      const response = await apiClient.get<WorkspacesResponse>('/workspaces');
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceError) {
+        throw error;
+      }
+      console.error('Failed to fetch workspaces:', error);
       throw new WorkspaceError(
-        `Failed to fetch workspaces: ${response.status} ${errorText}`
+        error instanceof Error ? error.message : 'Failed to fetch workspaces'
       );
     }
-
-    return response.json();
   },
 
   async getWorkspaceProfile(slug: string): Promise<WorkspaceProfile> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/c/${slug}/auth/profile`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
+    try {
+      const response = await apiClient.get<WorkspaceProfile>(`/c/${slug}/auth/profile`);
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceError) {
+        throw error;
+      }
       throw new WorkspaceError('Failed to fetch workspace profile');
     }
-
-    return response.json();
   },
 
   async getWorkspaceMembers(slug: string): Promise<WorkspaceMember[]> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/c/${slug}/users`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
+    try {
+      const response = await apiClient.get<WorkspaceMember[]>(`/c/${slug}/users`);
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceError) {
+        throw error;
+      }
       throw new WorkspaceError('Failed to fetch workspace members');
     }
-
-    return response.json();
   },
 
   async addWorkspaceMember(
     slug: string,
     memberData: { username: string; name?: string; role?: WorkspaceRole }
   ): Promise<WorkspaceMember> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/c/${slug}/users`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(memberData),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
+    try {
+      const response = await apiClient.post<WorkspaceMember>(
+        `/c/${slug}/users`,
+        memberData
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceError) {
+        throw error;
+      }
       throw new WorkspaceError(
-        error.message || 'Failed to add workspace member'
+        error instanceof Error ? error.message : 'Failed to add workspace member'
       );
     }
-
-    return response.json();
   },
 
   async updateMemberStatus(
     slug: string,
     memberId: string
   ): Promise<{ id: string; username: string; isActive: boolean }> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceError('No authentication token');
-    }
-
-    const response = await fetch(
-      `${API_BASE_URL}/c/${slug}/users/${memberId}/status`,
-      {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    try {
+      const response = await apiClient.patch<{ id: string; username: string; isActive: boolean }>(
+        `/c/${slug}/users/${memberId}/status`
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceError) {
+        throw error;
       }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
       throw new WorkspaceError(
-        error.message || 'Failed to update member status'
+        error instanceof Error ? error.message : 'Failed to update member status'
       );
     }
-
-    return response.json();
   },
 
   async updateMemberRole(
@@ -140,29 +95,20 @@ export const workspacesApi = {
     memberId: string,
     role: WorkspaceRole
   ): Promise<{ id: string; username: string; role: WorkspaceRole }> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceError('No authentication token');
-    }
-
-    const response = await fetch(
-      `${API_BASE_URL}/c/${slug}/users/${memberId}/role`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ role }),
+    try {
+      const response = await apiClient.patch<{ id: string; username: string; role: WorkspaceRole }>(
+        `/c/${slug}/users/${memberId}/role`,
+        { role }
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceError) {
+        throw error;
       }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new WorkspaceError(error.message || 'Failed to update member role');
+      throw new WorkspaceError(
+        error instanceof Error ? error.message : 'Failed to update member role'
+      );
     }
-
-    return response.json();
   },
 
   async getWorkspaceActivities(slug: string): Promise<{
@@ -180,22 +126,29 @@ export const workspacesApi = {
       totalPages: number;
     };
   }> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/c/${slug}/activities`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
+    try {
+      const response = await apiClient.get<{
+        items: Array<{
+          id: string;
+          type: string;
+          actor: string;
+          description?: string;
+          createdAt: string;
+        }>;
+        pagination: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+      }>(`/c/${slug}/activities`);
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceError) {
+        throw error;
+      }
       throw new WorkspaceError('Failed to fetch workspace activities');
     }
-
-    return response.json();
   },
 
   async getWorkspaceStats(): Promise<{
@@ -205,21 +158,20 @@ export const workspacesApi = {
     activeMembers: number;
     totalActivities: number;
   }> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/workspaces/stats`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
+    try {
+      const response = await apiClient.get<{
+        totalWorkspaces: number;
+        activeWorkspaces: number;
+        totalMembers: number;
+        activeMembers: number;
+        totalActivities: number;
+      }>('/workspaces/stats');
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceError) {
+        throw error;
+      }
       throw new WorkspaceError('Failed to fetch workspace stats');
     }
-
-    return response.json();
   },
 };

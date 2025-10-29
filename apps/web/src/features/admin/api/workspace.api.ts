@@ -1,7 +1,6 @@
 import { tokenStorage } from '../../auth/api';
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+import { apiClient } from '@/lib/api-client';
+import { WorkspaceError as BaseWorkspaceApiError } from '@/lib/api-errors';
 
 export interface Workspace {
   id: string;
@@ -60,12 +59,8 @@ export interface ReplaceOwnerPayload {
   newOwnerId: string;
 }
 
-export class WorkspaceApiError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'WorkspaceApiError';
-  }
-}
+// Re-export WorkspaceApiError for backward compatibility
+export const WorkspaceApiError = BaseWorkspaceApiError;
 
 export const workspaceApi = {
   // Admin workspace listing
@@ -83,11 +78,6 @@ export const workspaceApi = {
       totalPages: number;
     };
   }> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceApiError('No authentication token');
-    }
-
     const searchParams = new URLSearchParams();
     if (params?.page) searchParams.set('page', params.page.toString());
     if (params?.limit) searchParams.set('limit', params.limit.toString());
@@ -95,66 +85,54 @@ export const workspaceApi = {
     if (params?.isActive !== undefined)
       searchParams.set('isActive', params.isActive.toString());
 
-    const response = await fetch(
-      `${API_BASE_URL}/admin/workspaces?${searchParams}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const queryString = searchParams.toString();
+    const endpoint = `/admin/workspaces${queryString ? `?${queryString}` : ''}`;
 
-    if (!response.ok) {
+    try {
+      const response = await apiClient.get<{
+        workspaces: Workspace[];
+        pagination: {
+          page: number;
+          limit: number;
+          total: number;
+          totalPages: number;
+        };
+      }>(endpoint);
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceApiError) {
+        throw error;
+      }
       throw new WorkspaceApiError('Failed to fetch workspaces');
     }
-
-    return response.json();
   },
 
   // Create workspace
   async createWorkspace(payload: CreateWorkspacePayload): Promise<Workspace> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceApiError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/admin/workspaces`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
+    try {
+      const response = await apiClient.post<Workspace>('/admin/workspaces', payload);
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceApiError) {
+        throw error;
+      }
       throw new WorkspaceApiError(
-        error.message || 'Failed to create workspace'
+        error instanceof Error ? error.message : 'Failed to create workspace'
       );
     }
-
-    return response.json();
   },
 
   // Get workspace details
   async getWorkspace(slug: string): Promise<Workspace> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceApiError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/admin/c/${slug}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
+    try {
+      const response = await apiClient.get<Workspace>(`/admin/c/${slug}`);
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceApiError) {
+        throw error;
+      }
       throw new WorkspaceApiError('Failed to fetch workspace');
     }
-
-    return response.json();
   },
 
   // Update workspace
@@ -162,94 +140,60 @@ export const workspaceApi = {
     slug: string,
     payload: UpdateWorkspacePayload
   ): Promise<Workspace> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceApiError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/admin/c/${slug}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
+    try {
+      const response = await apiClient.patch<Workspace>(`/admin/c/${slug}`, payload);
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceApiError) {
+        throw error;
+      }
       throw new WorkspaceApiError(
-        error.message || 'Failed to update workspace'
+        error instanceof Error ? error.message : 'Failed to update workspace'
       );
     }
-
-    return response.json();
   },
 
   // Delete workspace
   async deleteWorkspace(
     slug: string
   ): Promise<{ message: string; id: string }> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceApiError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/admin/c/${slug}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
+    try {
+      const response = await apiClient.delete<{ message: string; id: string }>(`/admin/c/${slug}`);
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceApiError) {
+        throw error;
+      }
       throw new WorkspaceApiError(
-        error.message || 'Failed to delete workspace'
+        error instanceof Error ? error.message : 'Failed to delete workspace'
       );
     }
-
-    return response.json();
   },
 
   // Get workspace stats
   async getWorkspaceStats(slug: string): Promise<WorkspaceStats> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceApiError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/admin/c/${slug}/stats`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
+    try {
+      const response = await apiClient.get<WorkspaceStats>(`/admin/c/${slug}/stats`);
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceApiError) {
+        throw error;
+      }
       throw new WorkspaceApiError('Failed to fetch workspace stats');
     }
-
-    return response.json();
   },
 
   // Get workspace members
   async getWorkspaceMembers(slug: string): Promise<WorkspaceMember[]> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceApiError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/admin/c/${slug}/users`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
+    try {
+      const response = await apiClient.get<WorkspaceMember[]>(`/admin/c/${slug}/users`);
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceApiError) {
+        throw error;
+      }
       throw new WorkspaceApiError('Failed to fetch workspace members');
     }
-
-    return response.json();
   },
 
   // Add workspace member
@@ -257,28 +201,17 @@ export const workspaceApi = {
     slug: string,
     payload: AddWorkspaceMemberPayload
   ): Promise<WorkspaceMember> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceApiError('No authentication token');
-    }
-
-    const response = await fetch(`${API_BASE_URL}/admin/c/${slug}/users`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
+    try {
+      const response = await apiClient.post<WorkspaceMember>(`/admin/c/${slug}/users`, payload);
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceApiError) {
+        throw error;
+      }
       throw new WorkspaceApiError(
-        error.message || 'Failed to add workspace member'
+        error instanceof Error ? error.message : 'Failed to add workspace member'
       );
     }
-
-    return response.json();
   },
 
   // Update member role
@@ -287,31 +220,20 @@ export const workspaceApi = {
     memberId: string,
     payload: UpdateMemberRolePayload
   ): Promise<WorkspaceMember> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceApiError('No authentication token');
-    }
-
-    const response = await fetch(
-      `${API_BASE_URL}/admin/c/${slug}/users/${memberId}/role`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
+    try {
+      const response = await apiClient.patch<WorkspaceMember>(
+        `/admin/c/${slug}/users/${memberId}/role`,
+        payload
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceApiError) {
+        throw error;
       }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
       throw new WorkspaceApiError(
-        error.message || 'Failed to update member role'
+        error instanceof Error ? error.message : 'Failed to update member role'
       );
     }
-
-    return response.json();
   },
 
   // Toggle member status
@@ -319,29 +241,19 @@ export const workspaceApi = {
     slug: string,
     memberId: string
   ): Promise<WorkspaceMember> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceApiError('No authentication token');
-    }
-
-    const response = await fetch(
-      `${API_BASE_URL}/admin/c/${slug}/users/${memberId}/status`,
-      {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    try {
+      const response = await apiClient.patch<WorkspaceMember>(
+        `/admin/c/${slug}/users/${memberId}/status`
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceApiError) {
+        throw error;
       }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
       throw new WorkspaceApiError(
-        error.message || 'Failed to update member status'
+        error instanceof Error ? error.message : 'Failed to update member status'
       );
     }
-
-    return response.json();
   },
 
   // Remove member
@@ -349,27 +261,19 @@ export const workspaceApi = {
     slug: string,
     memberId: string
   ): Promise<{ message: string; id: string }> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceApiError('No authentication token');
-    }
-
-    const response = await fetch(
-      `${API_BASE_URL}/admin/c/${slug}/users/${memberId}`,
-      {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    try {
+      const response = await apiClient.delete<{ message: string; id: string }>(
+        `/admin/c/${slug}/users/${memberId}`
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceApiError) {
+        throw error;
       }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new WorkspaceApiError(error.message || 'Failed to remove member');
+      throw new WorkspaceApiError(
+        error instanceof Error ? error.message : 'Failed to remove member'
+      );
     }
-
-    return response.json();
   },
 
   // Replace owner
@@ -384,28 +288,23 @@ export const workspaceApi = {
       role: string;
     };
   }> {
-    const token = tokenStorage.getToken();
-    if (!token) {
-      throw new WorkspaceApiError('No authentication token');
-    }
-
-    const response = await fetch(
-      `${API_BASE_URL}/admin/c/${slug}/users/replace-owner`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
+    try {
+      const response = await apiClient.post<{
+        message: string;
+        newOwner: {
+          id: string;
+          username: string;
+          role: string;
+        };
+      }>(`/admin/c/${slug}/users/replace-owner`, payload);
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceApiError) {
+        throw error;
       }
-    );
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new WorkspaceApiError(error.message || 'Failed to replace owner');
+      throw new WorkspaceApiError(
+        error instanceof Error ? error.message : 'Failed to replace owner'
+      );
     }
-
-    return response.json();
   },
 };
