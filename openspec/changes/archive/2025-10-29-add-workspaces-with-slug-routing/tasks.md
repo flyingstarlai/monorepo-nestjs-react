@@ -52,8 +52,3 @@
 - [x] 1.10.3 E2E: platform admin bypass
 - [x] 1.10.4 E2E: last Owner protection for role/status changes
 - [x] 1.10.5 E2E: activities scoped by workspace
-
-- [x] 1.11 Rollout plan
-- [x] 1.11.1 Backfill activities for default workspace 'twsbp' (if needed)
-- [x] 1.11.2 Temporary compatibility proxy (optional): support old routes → redirect to `/c/:slug/...` for the default workspace - NOT NEEDED
-- [x] 1.11.3 Documentation and deprecation notice for old paths - NOT NEEDED

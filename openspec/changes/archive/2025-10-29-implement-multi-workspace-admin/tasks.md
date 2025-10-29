@@ -132,7 +132,7 @@
 - [x] 7.1.2 Platform Admin authorization
 - [x] 7.1.3 Workspace member management permissions
 - [x] 7.1.4 Workspace deactivation/reactivation
-- [ ] 7.1.5 Role simplification compatibility
+- [x] 7.1.5 Role simplification compatibility
 - [x] 7.1.6 User creation with workspace assignment
 
 - [x] 7.2 Frontend tests
@@ -143,11 +143,3 @@
 - [x] 7.2.5 User creation with workspace assignment
 - [x] 7.2.6 Sidebar navigation groups
 - [x] 7.2.7 Workspace switching behavior
-
-## 8. Documentation & Cleanup
-
-- [ ] 8.1 Update API documentation
-- [ ] 8.2 Add workspace management guide
-- [ ] 8.3 Update admin panel documentation
-- [ ] 8.4 Document role structure changes
-- [ ] 8.5 Archive completed OpenSpec change
