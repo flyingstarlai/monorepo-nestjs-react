@@ -1,7 +1,7 @@
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import type { ColumnDef } from '@tanstack/react-table';
 import { useWorkspace, useWorkspaceActions } from '@/features/workspaces';
-import { useWorkspaceActivities } from '@/features/activities/hooks/use-workspace-activities';
+import { useWorkspaceActivitiesInfinite } from '@/features/activities/hooks/use-workspace-activities';
 import type { Activity as ActivityType } from '@/features/workspaces/types';
 import {
   Card,
@@ -11,9 +11,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
-import { Users, Calendar, Clock, Activity } from 'lucide-react';
+import { Users, Calendar, Clock, Activity, ChevronDown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import React from 'react';
+import { Button } from '@/components/ui/button';
 
 export const Route = createFileRoute('/_dashboard/c/$slug/')({
   component: WorkspaceDashboard,
@@ -33,7 +34,15 @@ function WorkspaceDashboard() {
     data: activitiesData,
     isLoading: activitiesLoading,
     error: activitiesError,
-  } = useWorkspaceActivities({ limit: 5 });
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useWorkspaceActivitiesInfinite({ limit: 5 });
+
+  // Flatten all pages for display
+  const allActivities =
+    activitiesData?.pages.flatMap((page: any) => page.items) || [];
+  const hasMoreActivities = hasNextPage && !activitiesLoading;
   const [search, setSearch] = useState('');
 
   const activityColumns = React.useMemo<ColumnDef<ActivityType>[]>(
@@ -231,14 +240,38 @@ function WorkspaceDashboard() {
         <CardContent>
           <DataTable
             columns={activityColumns}
-            data={activitiesData?.items || []}
+            data={allActivities}
             isLoading={activitiesLoading}
-            error={activitiesError ? "Failed to load activities" : undefined}
+            error={activitiesError ? 'Failed to load activities' : undefined}
             searchPlaceholder="Search activities..."
             searchValue={search}
             onSearchChange={setSearch}
             emptyStateMessage="No recent activities"
           />
+
+          {/* Load More Button */}
+          {hasMoreActivities && (
+            <div className="flex justify-center mt-4">
+              <Button
+                variant="outline"
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                className="min-w-[120px]"
+              >
+                {isFetchingNextPage ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    Load More
+                    <ChevronDown className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
