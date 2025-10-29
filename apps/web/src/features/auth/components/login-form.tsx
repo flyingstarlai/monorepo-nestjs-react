@@ -37,9 +37,22 @@ export function LoginForm() {
       setError('');
       setIsLoading(true);
       try {
-        await login(value);
-        // Navigate to root after login (will redirect to appropriate workspace)
-        router.navigate({ to: '/' });
+        const response = await login(value);
+        
+        // Determine redirect target
+        const searchParams = router.state.location.search;
+        const redirectParam = searchParams?.redirect as string;
+        
+        if (redirectParam && redirectParam.startsWith('/')) {
+          // Honor explicit redirect parameter if it's a safe internal path
+          router.navigate({ to: redirectParam });
+        } else if (response.activeWorkspaceSlug) {
+          // Redirect to last active workspace
+          router.navigate({ to: `/c/${response.activeWorkspaceSlug}` });
+        } else {
+          // Fallback to root (will pick first workspace)
+          router.navigate({ to: '/' });
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Login failed');
       } finally {

@@ -2,198 +2,71 @@
 
 ### Requirement: SQL Editor Module
 
-The system SHALL provide a comprehensive SQL Editor module for managing MSSQL stored procedures with template-based creation and version control.
+The system SHALL provide a minimal SQL Editor to manage MSSQL stored procedures with a draft/publish workflow.
 
-#### Scenario: SQL Editor access
+#### Scenario: Access and listing
 
-- **WHEN** authenticated user navigates to SQL Editor
-- **THEN** system displays SQL Explorer interface with stored procedures
-- **AND** interface shows file tree structure organized by category
-- **AND** user permissions are enforced based on workspace role
-
-#### Scenario: Permission-based access control
-
-- **WHEN** user with Owner or Author role accesses SQL Editor
-- **THEN** user can create, edit, and execute stored procedures
-- **AND** user can view procedure history and versions
-- **WHEN** user with Member role accesses SQL Editor
-- **THEN** user can only execute stored procedures for testing
-- **AND** user cannot create or modify procedures
-
-### Requirement: Procedure Category Management
-
-The system SHALL support admin-only management of procedure categories for organizing stored procedures.
-
-#### Scenario: Category creation by admin
-
-- **WHEN** admin creates a new procedure category
-- **THEN** category is saved with unique name and description
-- **AND** category is available for template assignment
-- **AND** category appears in SQL Explorer tree structure
-
-#### Scenario: Category organization
-
-- **WHEN** procedures are created
-- **THEN** they are organized under their assigned category
-- **AND** categories provide hierarchical structure in explorer
-- **AND** categories can be reordered by admin users
-
-### Requirement: Procedure Template System
-
-The system SHALL provide admin-only template management for ensuring consistent parameter structures across procedures in the same category.
-
-#### Scenario: Template creation
-
-- **WHEN** admin creates a procedure template
-- **THEN** template includes parameter definitions with types and descriptions
-- **AND** template is assigned to a specific category
-- **AND** template defines the standard structure for procedures in that category
-
-#### Scenario: Template-based procedure creation
-
-- **WHEN** user creates new stored procedure
-- **THEN** system presents templates based on selected category
-- **AND** selected template pre-populates parameter structure
-- **AND** user cannot modify template-defined parameters
-- **AND** procedure maintains consistency with category standards
-
-### Requirement: Stored Procedure Explorer
-
-The system SHALL provide a file tree-like interface for browsing and managing stored procedures.
-
-#### Scenario: File tree navigation
-
-- **WHEN** user opens SQL Explorer
-- **THEN** procedures are displayed in hierarchical tree structure
-- **AND** categories appear as folders with procedure files inside
-- **AND** tree supports expand/collapse functionality
-- **AND** tree shows procedure status indicators (draft, published, etc.)
-
-#### Scenario: Procedure selection and preview
-
-- **WHEN** user clicks on procedure in explorer
-- **THEN** system shows procedure preview with metadata
-- **AND** preview displays category, template, last modified, and version
-- **AND** user can open procedure for editing or execution
+- **WHEN** an authenticated user navigates to SQL Editor within a workspace
+- **THEN** the system lists stored procedures for that workspace
+- **AND** actions are gated by role: Owner/Author can create/edit/publish/execute, Member can execute-only
 
 ### Requirement: Stored Procedure Editor
 
-The system SHALL provide a feature-rich SQL editor for creating and modifying stored procedures.
+The system SHALL allow creating and editing a draft procedure body with SQL syntax support.
 
-#### Scenario: Procedure creation with template
+#### Scenario: Edit draft with validation
 
-- **WHEN** user creates new procedure
-- **THEN** editor opens with template-based parameter structure
-- **AND** editor provides SQL syntax highlighting and auto-completion
-- **AND** editor validates SQL syntax before saving
-- **AND** user can test procedure execution before saving
+- **WHEN** a user creates or edits a procedure
+- **THEN** the editor provides SQL syntax highlighting and basic validation
+- **AND** saving updates the draft content only (does not publish)
 
-#### Scenario: Procedure editing
+### Requirement: Draft and Publish Model
 
-- **WHEN** user edits existing procedure
-- **THEN** editor loads current procedure content with full history
-- **AND** editor shows comparison with previous version
-- **AND** changes create new version automatically
-- **AND** editor prevents modification of template-defined parameters
+The system SHALL separate draft editing from published execution.
 
-### Requirement: Procedure Version Control
+#### Scenario: Publish copies draft to published
 
-The system SHALL maintain version history for stored procedures with diff and publish semantics.
+- **WHEN** a user with Owner or Author role publishes a procedure
+- **THEN** the system copies the current draft body to the published body
+- **AND** sets `status = 'published'` and updates `published_at`
+- **AND** deploys a `CREATE OR ALTER PROCEDURE` statement to the workspace MSSQL database using the published body
 
-#### Scenario: Automatic versioning on save
+#### Scenario: Drafts cannot execute
 
-- **WHEN** a user saves changes to a procedure
-- **THEN** the system creates a new ProcedureVersion with monotonically increasing version_number
-- **AND** the new version records timestamp, author, and optional change description
-- **AND** StoredProcedure.current_version_id is updated to the new version
+- **WHEN** a procedure is in draft
+- **THEN** it cannot be executed
+- **AND** users may run syntax-only validation against the workspace MSSQL connection
 
-#### Scenario: Optimistic concurrency guard
+### Requirement: Procedure Execution
 
-- **WHEN** a save request includes a base_version_id that does not match current_version_id
-- **THEN** the system rejects the save with a 409 Conflict indicating the draft is out of date
+The system SHALL execute only the published procedure definition for the current workspace and display results.
 
-#### Scenario: Revert current version
+#### Scenario: Execute published procedure
 
-- **WHEN** a user selects a previous version to use as current
-- **THEN** the system sets current_version_id to the selected version
-- **AND** the published version remains unchanged until publish is requested
-
-#### Scenario: Publish selected version
-
-- **WHEN** a user with Owner or Author role publishes a selected version
-- **THEN** the system compiles a CREATE OR ALTER PROCEDURE statement using the template-defined parameter signature and the selected version's sql_body
-- **AND** applies it to the workspace's MSSQL connection
-- **AND** updates published_version_id, status to 'published', and published_at
-- **AND** on error, no published metadata is changed and the error is returned
-
-#### Scenario: Version comparison and diff
-
-- **WHEN** user views procedure history
-- **THEN** system shows list of all versions with metadata
-- **AND** user can compare any two versions
-- **AND** diff viewer highlights changes in SQL code
-- **AND** user can revert to previous version if needed
-
-### Requirement: Procedure Execution and Testing
-
-The system SHALL provide a safe execution environment for testing stored procedures.
-
-#### Scenario: Procedure execution (published-only)
-
-- **WHEN** user executes a stored procedure
-- **THEN** system runs the published version against the workspace's MSSQL database
-- **AND** execution uses the appropriate workspace database context
-- **AND** results are displayed in tabular format
-- **AND** only the published version executes; drafts cannot be executed
-- **AND** execution is logged for audit purposes
-
-#### Scenario: Parameter input for execution
-
-- **WHEN** user executes procedure with parameters
-- **THEN** system presents input form based on procedure signature
-- **AND** form validates parameter types before execution
-- **AND** only Owner/Author can save parameter sets for repeated testing; Members may use inputs but cannot save presets
-
-#### Scenario: Draft syntax validation
-
-- **WHEN** a user validates a draft version or current editor content
-- **THEN** the system performs a syntax-only check (e.g., PARSEONLY/NOEXEC) against the workspace MSSQL connection
-- **AND** returns errors or warnings without persisting or executing the procedure
-- **AND** validation is available even when no version has been published
-
-### Requirement: MSSQL Connection Management
-
-The system SHALL manage MSSQL connections separate from PostgreSQL application database.
-
-#### Scenario: Dual database support
-
-- **WHEN** application starts
-- **THEN** PostgreSQL connection is established for application data
-- **AND** MSSQL connection pool is established for procedure execution
-- **AND** connections are properly isolated and managed separately
-
-#### Scenario: Connection configuration
-
-- **WHEN** MSSQL connection is configured
-- **THEN** connection uses workspace Environment configuration from the environments table (environment variables may provide global defaults)
-- **AND** connection pooling is optimized for performance
-- **AND** connection health is monitored and reported
+- **WHEN** a user executes a stored procedure
+- **THEN** the system runs the published version against the workspace MSSQL database
+- **AND** parameters are collected via a simple input form based on the procedure signature
+- **AND** results are displayed in a tabular view
+- **AND** the system records structured logs but does not persist an audit row
 
 ### Requirement: Workspace Integration
 
-The system SHALL integrate stored procedures with workspace context and permissions.
+The system SHALL scope procedures and permissions to the current workspace.
 
-#### Scenario: Workspace-scoped procedures
+#### Scenario: Workspace scoping and roles
 
-- **WHEN** procedures are created
-- **THEN** they are associated with specific workspace
-- **AND** only workspace members can access procedures
-- **AND** workspace context is applied during execution
+- **WHEN** accessing procedures
+- **THEN** only members of the workspace can view/execute them
+- **AND** Owner/Author roles may create/edit/publish/execute
+- **AND** Member role may execute-only
 
-#### Scenario: Permission inheritance
+### Requirement: Sidebar Navigation (SQL Tools)
 
-- **WHEN** user accesses procedures
-- **THEN** workspace role determines available actions
-- **AND** Owner and Author roles have full access
-- **AND** Member role has execute-only access
-- **AND** permissions are enforced on both frontend and backend
+The system SHALL add a new top-level sidebar category "SQL Tools" with a "SQL Editor" item to group current and future SQL features.
+
+#### Scenario: Sidebar group and item
+
+- **WHEN** the feature flag `FEATURE_SQL_EDITOR` is enabled and the user is within a workspace
+- **THEN** the sidebar shows a "SQL Tools" group with a "SQL Editor" entry
+- **AND** the entry links to the SQL Editor route for the current workspace and highlights when active
+- **AND** the menu is visible to all workspace members; actions remain role-gated inside the module

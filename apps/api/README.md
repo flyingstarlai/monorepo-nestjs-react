@@ -49,14 +49,15 @@ pnpm run reset-db
 
 Default seeded accounts:
 
-- Admin: `admin/nimda`
-- User: `user/user123`
+- Admin: `admin/admin`
+- User: `user/user`
 
 ## API Endpoints
 
 ### Authentication
 
-- `POST /auth/login` - User login (records login activity)
+- `POST /auth/login` - User login (records login activity, returns active workspace slug)
+  - Response includes: `access_token`, `user`, and `activeWorkspaceSlug` (optional)
 - `POST /auth/change-password` - Change password (records password change activity)
 - `GET /auth/profile` - Get current user profile
 
@@ -98,6 +99,8 @@ Default seeded accounts:
 - `role` (enum) - User role: `Admin` or `User`
 - `avatar` (string, nullable) - Avatar file path
 - `isActive` (boolean) - Account status
+- `lastActiveWorkspaceId` (UUID, nullable) - ID of user's last active workspace
+- `lastActiveWorkspaceAt` (timestamp, nullable) - When workspace was last set as active
 - `createdAt`/`updatedAt` (datetime) - Timestamps
 
 **Role Entity**
@@ -117,7 +120,7 @@ Default seeded accounts:
 
 ### Database Configuration
 
-**Database Engine**: Microsoft SQL Server (MSSQL) in every environment (external instance). TypeORM migrations run automatically at startup (`migrationsRun: true`), and the first boot seeds default roles plus admin (`admin/nimda`) and user (`user/user123`) accounts for testing.
+**Database Engine**: Microsoft SQL Server (MSSQL) in every environment (external instance). TypeORM migrations run automatically at startup (`migrationsRun: true`), and the first boot seeds default roles plus admin (`admin/admin`) and user (`user/user`) accounts for testing.
 
 **Performance**: Index on `(owner_id, createdAt)` keeps activity pagination efficient. Users eager-load roles to avoid N+1 queries.
 

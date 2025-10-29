@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Role } from './role.entity';
+import { Workspace } from '../../workspaces/entities/workspace.entity';
 
 @Entity('users')
 export class User {
@@ -53,4 +54,14 @@ export class User {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @Column({ name: 'last_active_workspace_id', nullable: true })
+  lastActiveWorkspaceId: string | null;
+
+  @Column({ name: 'last_active_workspace_at', nullable: true })
+  lastActiveWorkspaceAt: Date | null;
+
+  @ManyToOne(() => Workspace, { nullable: true })
+  @JoinColumn({ name: 'last_active_workspace_id' })
+  lastActiveWorkspace?: Workspace | null;
 }

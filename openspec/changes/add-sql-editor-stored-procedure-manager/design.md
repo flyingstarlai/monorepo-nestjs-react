@@ -1,67 +1,65 @@
 ## Context
 
-Adding a comprehensive SQL Editor module to enable teams to manage MSSQL stored procedures through a web interface while maintaining the existing PostgreSQL-based application data. The system needs to support template-based procedure creation, version control, and workspace-based permissions.
+Introduce a minimal SQL Editor module to manage MSSQL stored procedures via a draft/publish workflow while maintaining PostgreSQL for application data and metadata. The module supports per‑workspace permissions and environments.
 
 ## Goals / Non-Goals
 
 - Goals:
-  - Template-based stored procedure creation with consistent parameters
-  - File tree explorer interface for intuitive navigation
-  - Version control with diff capabilities for procedures
-  - Workspace-based permission system (Owner/Author write, User execute)
-  - MSSQL execution while keeping PostgreSQL for app data
-  - Admin-only template and category management
-
-- Non-Goals:
-  - User-created templates (admin only)
-  - Template versioning (procedures only)
-  - Direct database schema management
-  - Support for other database types beyond MSSQL for procedures
+  - Minimal create/edit/publish/execute loop
+  - Draft editing with SQL syntax validation (Monaco)
+  - Execute published only, scoped to workspace
+  - Workspace‑based permission system (Owner/Author write, Member execute)
+  - Separate MSSQL connection pool per workspace
+- Non-Goals (v1):
+  - Categories and templates
+  - Version history, diff, revert, optimistic concurrency
+  - Parameter presets
+  - Persistent execution audit tables (structured logs only)
+  - Other database types beyond MSSQL for procedures
+  - Direct database schema management beyond stored procedures
 
 ## Decisions
 
-- Decision: Use separate MSSQL connection pool for stored procedure execution
-  - Rationale: Keeps application data separate from procedure execution, allows independent scaling
-  - Alternatives considered: Single connection with multiple databases, but adds complexity
+- Decision: Separate MSSQL connection pool per workspace
+  - Rationale: Isolate publish/execute from PostgreSQL, allow independent sizing
+  - Alternatives: Single pool with multiple DBs (adds coupling/complexity)
 
-- Decision: Implement version control at procedure level, not template level
-  - Rationale: Templates are for consistency, procedures are for business logic
-  - Alternatives considered: Versioning both, but adds unnecessary complexity for templates
+- Decision: No version table; single `stored_procedures` with draft/published columns
+  - Rationale: Simplest model to ship; history can be added later with a migration
+  - Alternatives: ProcedureVersion table (adds scope/UX/tests)
 
-- Decision: File tree explorer pattern similar to VSCode
-  - Rationale: Familiar interface for developers, good for hierarchical organization
-  - Alternatives considered: Table view, but less intuitive for folder-like structure
+- Decision: Simple list (not tree) for explorer
+  - Rationale: No categories/templates; a list is sufficient and faster to ship
+  - Alternatives: Tree (requires categories and reordering features)
 
-- Decision: Use Monaco Editor for SQL editing
-  - Rationale: Industry standard, excellent SQL syntax highlighting, built-in features
-  - Alternatives considered: CodeMirror, but Monaco has better SQL support
+- Decision: Sidebar category 'SQL Tools' for navigation
+  - Rationale: Groups SQL-related tools; allows future expansion without changing existing routes
+  - Alternatives: Place under 'Workspace' or 'Settings' (less clear; mixed semantics)
+
+- Decision: Use Monaco Editor for SQL
+  - Rationale: Mature SQL highlighting; good editing ergonomics
+  - Alternatives: CodeMirror (acceptable, but Monaco already used elsewhere)
 
 ## Risks / Trade-offs
 
-- Risk: MSSQL connection complexity in PostgreSQL-based app
-  - Mitigation: Separate connection pools, proper error handling, connection testing
+- Risk: MSSQL connection complexity alongside PostgreSQL
+  - Mitigation: Isolated pools, health checks, clear error messages
 
-- Risk: SQL injection through procedure execution
-  - Mitigation: Parameterized queries, role-based execution, audit logging
+- Risk: No persisted audit/history in v1
+  - Mitigation: Structured logs; can add audit table in a follow-up change
 
-- Trade-off: Additional infrastructure complexity for dual database support
-  - Benefit: Clear separation of concerns, independent scaling
-
-- Trade-off: Learning curve for non-technical users
-  - Benefit: Powerful capabilities for technical teams, templates reduce complexity
+- Trade-off: Limited features vs time-to-ship
+  - Benefit: Delivers core value quickly; leaves room for iterative enhancements
 
 ## Migration Plan
 
-1. Phase 1: Backend infrastructure (entities, connections, basic CRUD)
-2. Phase 2: Frontend components (explorer, editor, basic functionality)
-3. Phase 3: Advanced features (versioning, diff, execution)
-4. Phase 4: Integration testing and documentation
+1. Backend minimal: entity + migration + publish/execute/validate services
+2. Frontend minimal: list → editor → publish/execute
+3. Manual validation on staging; feature flag toggling
 
-Rollback: Disable SQL Editor module, no impact on existing functionality
+Rollback: Disable SQL Editor feature flag; drop `stored_procedures` via down migration if never used in prod.
 
 ## Open Questions
 
-- Should procedure execution be logged for audit purposes?
-- Do we need procedure scheduling/automation capabilities?
-- Should templates support parameter validation rules?
-- Do we need procedure dependency tracking?
+- Do we need any basic metrics (counts/latency) in v1, or rely on logs only?
+- Should publish require a confirmation dialog in UI (recommended)?

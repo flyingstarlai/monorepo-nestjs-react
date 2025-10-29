@@ -8,7 +8,7 @@ const BASE_URL = 'http://localhost:3000';
 // Test data
 const adminCredentials = {
   username: 'admin',
-  password: 'admin123'
+  password: 'admin'
 };
 
 async function makeRequest(path, method = 'GET', data = null, headers = {}) {
@@ -68,7 +68,7 @@ async function testAdminEndpoints() {
     try {
       const login = await makeRequest('/auth/login', 'POST', adminCredentials);
       console.log(`   Status: ${login.statusCode}`);
-      if (login.statusCode === 200) {
+      if (login.statusCode === 200 || login.statusCode === 201) {
         const loginData = JSON.parse(login.body);
         console.log('   ✅ Admin login successful');
         console.log(`   Token: ${loginData.access_token?.substring(0, 20)}...`);

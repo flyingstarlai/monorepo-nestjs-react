@@ -29,6 +29,21 @@ export class AuthService {
       role: user.role.name,
     };
 
+    // Compute active workspace slug
+    let activeWorkspaceSlug: string | null = null;
+    try {
+      // Try to get last active workspace
+      activeWorkspaceSlug = await this.usersService.getActiveWorkspaceSlug(user.id);
+      
+      // If no valid last active workspace, get fallback
+      if (!activeWorkspaceSlug) {
+        activeWorkspaceSlug = await this.usersService.getFallbackWorkspaceSlug(user.id);
+      }
+    } catch (error) {
+      console.error('Error determining active workspace:', error);
+      // Continue without active workspace slug on error
+    }
+
     return {
       access_token: await this.jwtService.signAsync(payload),
       user: {
@@ -38,6 +53,7 @@ export class AuthService {
         role: user.role.name,
         avatar: user.avatar,
       },
+      activeWorkspaceSlug,
     };
   }
 

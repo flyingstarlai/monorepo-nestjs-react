@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authApi, tokenStorage, AuthError } from '../api';
-import type { User, LoginCredentials } from '../types';
+import type { User, LoginCredentials, AuthResponse } from '../types';
 
 export interface AuthStore {
   // State
@@ -10,7 +10,7 @@ export interface AuthStore {
   isLoading: boolean;
 
   // Actions
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<AuthResponse>;
   logout: () => void;
   updateUser: (updatedUser: User) => void;
   initializeAuth: () => Promise<void>;
@@ -35,6 +35,7 @@ export const useAuthStore = create<AuthStore>()(
             isAuthenticated: true,
             isLoading: false,
           });
+          return response;
         } catch (error) {
           throw new AuthError(
             error instanceof Error ? error.message : 'Login failed'

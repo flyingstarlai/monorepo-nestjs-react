@@ -23,6 +23,7 @@ export interface LoginCredentials {
 export interface AuthResponse {
   access_token: string;
   user: User;
+  activeWorkspaceSlug?: string | null;
 }
 
 export interface AuthState {

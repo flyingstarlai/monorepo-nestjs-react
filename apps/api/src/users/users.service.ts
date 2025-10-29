@@ -219,4 +219,75 @@ export class UsersService {
       });
     }
   }
+
+  async setLastActiveWorkspace(userId: string, workspaceId: string): Promise<void> {
+    await this.usersRepository.update(userId, {
+      lastActiveWorkspaceId: workspaceId,
+      lastActiveWorkspaceAt: new Date(),
+    });
+  }
+
+  async clearLastActiveWorkspace(userId: string): Promise<void> {
+    await this.usersRepository.update(userId, {
+      lastActiveWorkspaceId: null,
+      lastActiveWorkspaceAt: null,
+    });
+  }
+
+  async getActiveWorkspaceSlug(userId: string): Promise<string | null> {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['lastActiveWorkspace'],
+    });
+
+    if (!user || !user.lastActiveWorkspaceId) {
+      return null;
+    }
+
+    // Verify the workspace exists and is active
+    if (!user.lastActiveWorkspace || !user.lastActiveWorkspace.isActive) {
+      // Clear invalid last active workspace
+      await this.clearLastActiveWorkspace(userId);
+      return null;
+    }
+
+    // Verify user is still an active member of this workspace
+    const membership = await this.workspacesService.getMember(
+      user.lastActiveWorkspaceId,
+      userId
+    );
+
+    if (!membership || !membership.isActive) {
+      // Clear invalid membership
+      await this.clearLastActiveWorkspace(userId);
+      return null;
+    }
+
+    return user.lastActiveWorkspace.slug;
+  }
+
+  async getFallbackWorkspaceSlug(userId: string): Promise<string | null> {
+    const memberships = await this.workspacesService.findMembershipsByUser(userId);
+    const activeMemberships = memberships.filter(m => m.isActive && m.workspace.isActive);
+
+    if (activeMemberships.length === 0) {
+      return null;
+    }
+
+    // Prefer DEFAULT_WORKSPACE_SLUG if user is a member
+    const defaultSlug = process.env.DEFAULT_WORKSPACE_SLUG;
+    if (defaultSlug) {
+      const defaultMembership = activeMemberships.find(m => m.workspace.slug === defaultSlug);
+      if (defaultMembership) {
+        return defaultMembership.workspace.slug;
+      }
+    }
+
+    // Otherwise, select by earliest joinedAt
+    const sortedMemberships = activeMemberships.sort((a, b) => 
+      new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()
+    );
+
+    return sortedMemberships[0].workspace.slug;
+  }
 }
