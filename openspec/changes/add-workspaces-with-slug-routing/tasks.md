@@ -46,12 +46,12 @@
 - [x] 1.9 Observability
 - [x] 1.9.1 Add `workspaceId` label to HTTP metrics (when available)
 
-- [ ] 1.10 Tests
-- [ ] 1.10.1 E2E: workspace resolution and 404 for unknown slug
-- [ ] 1.10.2 E2E: membership required for workspace routes (403)
-- [ ] 1.10.3 E2E: platform admin bypass
-- [ ] 1.10.4 E2E: last Owner protection for role/status changes
-- [ ] 1.10.5 E2E: activities scoped by workspace
+- [x] 1.10 Tests
+- [x] 1.10.1 E2E: workspace resolution and 404 for unknown slug
+- [x] 1.10.2 E2E: membership required for workspace routes (403)
+- [x] 1.10.3 E2E: platform admin bypass
+- [x] 1.10.4 E2E: last Owner protection for role/status changes
+- [x] 1.10.5 E2E: activities scoped by workspace
 
 - [x] 1.11 Rollout plan
 - [x] 1.11.1 Backfill activities for default workspace 'twsbp' (if needed)
