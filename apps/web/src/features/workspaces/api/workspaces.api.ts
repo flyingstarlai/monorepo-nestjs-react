@@ -4,7 +4,6 @@ import type {
   WorkspaceProfile,
   WorkspaceRole,
 } from '../types';
-import { tokenStorage } from '@/features/auth/api/auth.api';
 import { apiClient } from '@/lib/api-client';
 import { WorkspaceError as BaseWorkspaceError } from '@/lib/api-errors';
 

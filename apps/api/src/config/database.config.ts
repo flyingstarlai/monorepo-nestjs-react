@@ -6,6 +6,7 @@ import { Role } from '../users/entities/role.entity';
 import { User } from '../users/entities/user.entity';
 import { Workspace } from '../workspaces/entities/workspace.entity';
 import { WorkspaceMember } from '../workspaces/entities/workspace-member.entity';
+import { Environment } from '../workspaces/entities/environment.entity';
 
 type DatabaseType = 'postgres' | 'mssql';
 
@@ -56,7 +57,7 @@ const buildDatabaseOptions = (): TypeOrmModuleOptions => {
   const database = process.env.DB_DATABASE || defaults.database;
 
   const baseOptions = {
-    entities: [User, Role, Activity, Workspace, WorkspaceMember],
+    entities: [User, Role, Activity, Workspace, WorkspaceMember, Environment],
     synchronize: false,
     migrations: getMigrationsPath(),
     migrationsRun: false,

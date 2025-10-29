@@ -1,4 +1,3 @@
-import { tokenStorage } from '../../auth/api';
 import { apiClient } from '@/lib/api-client';
 import { WorkspaceError as BaseWorkspaceApiError } from '@/lib/api-errors';
 

@@ -31,6 +31,11 @@ export enum ActivityType {
   MEMBER_REMOVED = 'member_removed',
   MEMBER_ROLE_CHANGED = 'member_role_changed',
   MEMBER_STATUS_CHANGED = 'member_status_changed',
+  // Environment lifecycle events
+  ENVIRONMENT_CREATED = 'environment_created',
+  ENVIRONMENT_UPDATED = 'environment_updated',
+  ENVIRONMENT_DELETED = 'environment_deleted',
+  ENVIRONMENT_CONNECTION_TESTED = 'environment_connection_tested',
 }
 
 @Entity('activities')

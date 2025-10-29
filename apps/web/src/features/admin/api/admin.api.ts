@@ -1,4 +1,3 @@
-import { tokenStorage } from '../../auth/api';
 import type { User } from '../../auth/types';
 import { apiClient } from '@/lib/api-client';
 import { AdminApiError as BaseAdminApiError } from '@/lib/api-errors';

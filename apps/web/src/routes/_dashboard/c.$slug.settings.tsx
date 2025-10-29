@@ -1,5 +1,6 @@
 import { createFileRoute, useParams } from '@tanstack/react-router';
 import { useWorkspace } from '@/features/workspaces';
+import { EnvironmentForm } from '@/features/workspaces/environment-form';
 import {
   Card,
   CardContent,
@@ -9,7 +10,7 @@ import {
 } from '@/components/ui/card';
 
 import { Skeleton } from '@/components/ui/skeleton';
-import { Settings, Calendar, Globe } from 'lucide-react';
+import { Calendar, Globe } from 'lucide-react';
 
 export const Route = createFileRoute('/_dashboard/c/$slug/settings')({
   component: WorkspaceSettings,
@@ -149,26 +150,10 @@ function WorkspaceSettings() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Advanced Settings
-          </CardTitle>
-          <CardDescription>
-            Additional workspace configuration options
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Advanced workspace settings are not yet available.</p>
-            <p className="text-sm">
-              This feature is coming in a future update.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <EnvironmentForm 
+        workspaceSlug={currentWorkspace.slug} 
+        userRole={workspaceProfile?.workspaceRole}
+      />
     </div>
   );
 }

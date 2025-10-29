@@ -22,14 +22,6 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 });
 
-// Mock console methods to avoid noise in tests
-const consoleSpy = {
-  error: vi.spyOn(console, 'error').mockImplementation(() => {}),
-  warn: vi.spyOn(console, 'warn').mockImplementation(() => {}),
-  info: vi.spyOn(console, 'info').mockImplementation(() => {}),
-  debug: vi.spyOn(console, 'debug').mockImplementation(() => {}),
-};
-
 describe('API Client', () => {
   beforeEach(() => {
     vi.clearAllMocks();

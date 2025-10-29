@@ -1,4 +1,4 @@
-import React, { Component, ReactNode, ComponentType } from 'react';
+import { Component, type ReactNode, type ComponentType } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -250,7 +250,6 @@ export class ApiErrorBoundary extends Component<Props, State> {
       }
       
       const ErrorIcon = this.getErrorIcon(this.state.error);
-      const severity = this.getErrorSeverity(this.state.error);
       const canRetry = this.canRetry(this.state.error);
       
       return (

@@ -290,7 +290,7 @@ export function setupApiLogging(): void {
   // Request interceptor
   apiClient.interceptors.addRequest(async (config) => {
     const requestId = (config.headers as Record<string, string>)?.['X-Request-ID'];
-    const url = config.url || '';
+    const url = (config as any).url || '';
     const method = config.method?.toUpperCase();
 
     addLogEntry(createLogEntry('info', 'request', {
@@ -310,8 +310,8 @@ export function setupApiLogging(): void {
 
   // Response interceptor
   apiClient.interceptors.addResponse(async (response) => {
-    const requestId = (response.headers as Record<string, string>)?.['x-request-id'];
-    const url = response.url || '';
+    const requestId = Object.fromEntries(response.headers.entries())['x-request-id'];
+    const url = (response as any).url || '';
     const method = 'GET'; // We don't have method info in response
 
     addLogEntry(createLogEntry('info', 'response', {

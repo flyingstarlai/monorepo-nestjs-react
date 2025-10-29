@@ -3,7 +3,7 @@
  * Object-based approach for better compatibility with functional patterns
  */
 
-import { ApiError, createApiError, AuthError } from './api-errors';
+import { ApiError, AuthError } from './api-errors';
 
 // Single source of truth for API base URL
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
@@ -438,20 +438,23 @@ const interceptorMethods = {
   addRequest: (interceptor: RequestInterceptor): number => 
     apiClientState.requestInterceptors.push(interceptor) - 1,
 
-  removeRequest: (index: number): void => 
-    apiClientState.requestInterceptors.splice(index, 1),
+  removeRequest: (index: number): void => {
+    apiClientState.requestInterceptors.splice(index, 1);
+  },
 
   addResponse: <T = any>(interceptor: ResponseInterceptor<T>): number => 
     apiClientState.responseInterceptors.push(interceptor as ResponseInterceptor) - 1,
 
-  removeResponse: (index: number): void => 
-    apiClientState.responseInterceptors.splice(index, 1),
+  removeResponse: (index: number): void => {
+    apiClientState.responseInterceptors.splice(index, 1);
+  },
 
   addError: (interceptor: ErrorInterceptor): number => 
     apiClientState.errorInterceptors.push(interceptor) - 1,
 
-  removeError: (index: number): void => 
-    apiClientState.errorInterceptors.splice(index, 1),
+  removeError: (index: number): void => {
+    apiClientState.errorInterceptors.splice(index, 1);
+  },
 
   clear: (): void => {
     apiClientState.requestInterceptors = [];
@@ -529,20 +532,23 @@ export function createApiClient(baseUrl?: string, timeout?: number) {
       addRequest: (interceptor: RequestInterceptor): number => 
         customState.requestInterceptors.push(interceptor) - 1,
 
-      removeRequest: (index: number): void => 
-        customState.requestInterceptors.splice(index, 1),
+      removeRequest: (index: number): void => {
+        customState.requestInterceptors.splice(index, 1);
+      },
 
       addResponse: <T = any>(interceptor: ResponseInterceptor<T>): number => 
         customState.responseInterceptors.push(interceptor as ResponseInterceptor) - 1,
 
-      removeResponse: (index: number): void => 
-        customState.responseInterceptors.splice(index, 1),
+      removeResponse: (index: number): void => {
+        customState.responseInterceptors.splice(index, 1);
+      },
 
       addError: (interceptor: ErrorInterceptor): number => 
         customState.errorInterceptors.push(interceptor) - 1,
 
-      removeError: (index: number): void => 
-        customState.errorInterceptors.splice(index, 1),
+      removeError: (index: number): void => {
+        customState.errorInterceptors.splice(index, 1);
+      },
 
       clear: (): void => {
         customState.requestInterceptors = [];
