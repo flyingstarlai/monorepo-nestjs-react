@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -61,7 +61,7 @@ export function ExecuteProcedureDialog({
   const executeMutation = useExecuteProcedure();
 
   // Parse parameters from procedure SQL (basic implementation)
-  const parseParameters = (sql: string): ProcedureParameter[] => {
+  const parseParameters = useCallback((sql: string): ProcedureParameter[] => {
     const params: ProcedureParameter[] = [];
     // Simple regex to find parameters - this is a basic implementation
     // In a real implementation, you'd want more sophisticated parsing
@@ -82,32 +82,36 @@ export function ExecuteProcedureDialog({
     }
 
     return params;
-  };
+  }, []);
+
+  // Memoize parsed parameters to prevent re-parsing on every render
+  const parsedParameters = useMemo(() => {
+    if (!procedure?.sqlPublished) return [];
+    return parseParameters(procedure.sqlPublished);
+  }, [procedure?.sqlPublished, parseParameters]);
 
   // Update parameters when procedure changes
-  const handleProcedureChange = () => {
-    if (procedure?.sqlPublished) {
-      const parsedParams = parseParameters(procedure.sqlPublished);
-      setParameters(parsedParams);
-    } else {
-      setParameters([]);
-    }
+  useEffect(() => {
+    setParameters(parsedParameters);
     setExecutionResult(null);
-  };
+  }, [parsedParameters]);
 
-  const handleParameterChange = (
-    index: number,
-    field: keyof ProcedureParameter,
-    value: string | boolean
-  ) => {
-    setParameters((prev) =>
-      prev.map((param, i) =>
-        i === index ? { ...param, [field]: value } : param
-      )
-    );
-  };
+  const handleParameterChange = useCallback(
+    (
+      index: number,
+      field: keyof ProcedureParameter,
+      value: string | boolean
+    ) => {
+      setParameters((prev) =>
+        prev.map((param, i) =>
+          i === index ? { ...param, [field]: value } : param
+        )
+      );
+    },
+    []
+  );
 
-  const handleExecute = async () => {
+  const handleExecute = useCallback(async () => {
     if (!procedure) return;
 
     // Validate required parameters
@@ -157,28 +161,34 @@ export function ExecuteProcedureDialog({
     } finally {
       setIsExecuting(false);
     }
-  };
+  }, [
+    procedure,
+    parameters,
+    timeout,
+    executeMutation,
+    onSuccess,
+    workspaceSlug,
+  ]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (!isExecuting) {
       onOpenChange(false);
       setExecutionResult(null);
     }
-  };
+  }, [isExecuting, onOpenChange]);
 
-  const handleTimeoutChange = (value: string) => {
+  const handleTimeoutChange = useCallback((value: string) => {
     const num = parseInt(value);
     if (!isNaN(num) && num > 0 && num <= 60) {
       setTimeout(num);
     }
-  };
+  }, []);
 
-  // Update parameters when procedure changes
-  if (procedure) {
-    handleProcedureChange();
-  }
-
-  const missingParams = parameters.filter((p) => p.required && !p.value.trim());
+  // Memoize missing parameters calculation
+  const missingParams = useMemo(
+    () => parameters.filter((p) => p.required && !p.value.trim()),
+    [parameters]
+  );
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
