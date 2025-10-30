@@ -106,6 +106,29 @@ export function usePublishProcedure(workspaceSlug: string, id: string) {
   });
 }
 
+export function useUnpublishProcedure(workspaceSlug: string, id: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => sqlEditorApi.unpublishProcedure(workspaceSlug, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['sql-editor', 'procedures', workspaceSlug],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['sql-editor', 'procedures', workspaceSlug, id],
+      });
+    },
+    onError: (error) => {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to unpublish procedure';
+      toast.error(errorMessage);
+    },
+  });
+}
+
 export function useExecuteProcedure() {
   return useMutation({
     mutationFn: ({

@@ -25,18 +25,28 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { ProcedureList } from '@/features/sql-editor/components/procedure-list';
 import { ProcedureDialog } from '@/features/sql-editor/components/procedure-dialog';
 import { ExecuteProcedureDialog } from '@/features/sql-editor/components/execute-dialog';
-import { PublishDialog } from '@/features/sql-editor/components/publish-dialog';
+
 import { SqlEditorComponent } from '@/features/sql-editor/components/sql-editor';
 import {
   useProcedures,
   useDeleteProcedure,
   useUpdateProcedure,
+  useUnpublishProcedure,
+  useValidateSql,
 } from '@/features/sql-editor/hooks/use-sql-editor';
-import type { StoredProcedure, ExecutionResult } from '@/features/sql-editor/types';
+import type {
+  StoredProcedure,
+  ExecutionResult,
+} from '@/features/sql-editor/types';
 import { useSqlEditorStore } from '@/features/sql-editor/stores/sql-editor.store';
 import { toast } from 'sonner';
 
@@ -140,7 +150,6 @@ function SqlEditorPage() {
     rowCount?: number;
   }>({});
 
-
   const [consoleMessages, setConsoleMessages] = useState<
     Array<{
       timestamp: Date;
@@ -177,7 +186,7 @@ function SqlEditorPage() {
       type: 'error' | 'warning';
       message: string;
     }> = [];
-    
+
     // Add errors
     currentValidationErrors.forEach((error) => {
       messages.push({
@@ -186,7 +195,7 @@ function SqlEditorPage() {
         message: error,
       });
     });
-    
+
     // Add warnings
     currentValidationWarnings.forEach((warning) => {
       messages.push({
@@ -195,7 +204,7 @@ function SqlEditorPage() {
         message: warning,
       });
     });
-    
+
     return messages;
   }, [currentValidationErrors, currentValidationWarnings]);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -211,19 +220,15 @@ function SqlEditorPage() {
     createDialogOpen,
     editDialogOpen,
     executeDialogOpen,
-    publishDialogOpen,
     editingProcedure,
     executingProcedure,
-    publishingProcedure,
     setSelectedProcedureId,
     setEditorContent,
     setIsDirty,
     setCreateDialogOpen,
     setEditDialogOpen,
     setExecuteDialogOpen,
-    setPublishDialogOpen,
     setExecutingProcedure,
-    setPublishingProcedure,
   } = storeState;
 
   const { data: procedures, isLoading, error, refetch } = useProcedures(slug);
@@ -232,6 +237,11 @@ function SqlEditorPage() {
     slug,
     selectedProcedureId || ''
   );
+  const unpublishProcedureMutation = useUnpublishProcedure(
+    slug,
+    selectedProcedureId || ''
+  );
+  const validateMutation = useValidateSql(slug);
 
   const selectedProcedure = procedures?.find(
     (p) => p.id === selectedProcedureId
@@ -299,8 +309,6 @@ function SqlEditorPage() {
     };
   }, [open, setOpen]);
 
-
-
   // Auto-switch to validation tab when validation errors occur
   useEffect(() => {
     // Show bottom panel and switch to validation if there are validation errors
@@ -320,8 +328,6 @@ function SqlEditorPage() {
     storeState,
   ]);
 
-
-
   const handleCreateProcedure = () => {
     setCreateDialogOpen(true);
   };
@@ -340,6 +346,30 @@ function SqlEditorPage() {
       toast.error('Failed to save procedure');
     }
   }, [selectedProcedure, editorContent, updateProcedureMutation, refetch]);
+
+  const handleMoveToDraft = useCallback(async () => {
+    if (!selectedProcedure) return;
+
+    try {
+      await unpublishProcedureMutation.mutateAsync();
+      toast.success('Procedure moved to draft successfully');
+    } catch {
+      toast.error('Failed to move procedure to draft');
+    }
+  }, [selectedProcedure, unpublishProcedureMutation, refetch]);
+
+  const handleValidate = useCallback(async () => {
+    if (!selectedProcedure) return;
+
+    try {
+      await validateMutation.mutateAsync({
+        sql: editorContent,
+      });
+      toast.success('Validation completed');
+    } catch {
+      // Error is already handled by the hook's onError
+    }
+  }, [selectedProcedure, editorContent, validateMutation]);
 
   const handleExecuteProcedure = useCallback(
     (id: string) => {
@@ -412,9 +442,15 @@ function SqlEditorPage() {
       storeState.setActiveBottomTab('validation');
     };
 
-    window.addEventListener('switch-to-validation-tab', handleSwitchToValidationTab);
+    window.addEventListener(
+      'switch-to-validation-tab',
+      handleSwitchToValidationTab
+    );
     return () =>
-      window.removeEventListener('switch-to-validation-tab', handleSwitchToValidationTab);
+      window.removeEventListener(
+        'switch-to-validation-tab',
+        handleSwitchToValidationTab
+      );
   }, [bottomPanelOpen, storeState]);
 
   // Route change guard for dirty editor state
@@ -569,14 +605,6 @@ function SqlEditorPage() {
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-  };
-
-  const handlePublishProcedure = (id: string) => {
-    const procedure = procedures?.find((p) => p.id === id);
-    if (procedure) {
-      setPublishingProcedure(procedure);
-      setPublishDialogOpen(true);
-    }
   };
 
   const exportToCSV = useCallback(() => {
@@ -753,8 +781,12 @@ function SqlEditorPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => storeState.setBottomPanelOpen(!bottomPanelOpen)}
-                  aria-label={!bottomPanelOpen ? 'Show bottom panel' : 'Hide bottom panel'}
+                  onClick={() =>
+                    storeState.setBottomPanelOpen(!bottomPanelOpen)
+                  }
+                  aria-label={
+                    !bottomPanelOpen ? 'Show bottom panel' : 'Hide bottom panel'
+                  }
                 >
                   {!bottomPanelOpen ? (
                     <Maximize2 className="h-4 w-4" />
@@ -765,28 +797,6 @@ function SqlEditorPage() {
               </TooltipTrigger>
               <TooltipContent>Toggle Panel</TooltipContent>
             </Tooltip>
-
-            <div className="w-px h-5 bg-border mx-1" />
-
-            {selectedProcedure?.status === 'published' && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleExecuteProcedure(selectedProcedure.id)}
-                      aria-label="Execute (Shift+Change)"
-                    >
-                      <Zap className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Execute (Shift+Enter)</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-
-
           </div>
         </TooltipProvider>
       </div>
@@ -816,8 +826,6 @@ function SqlEditorPage() {
             onSelectProcedure={setSelectedProcedureId}
             onCreateProcedure={handleCreateProcedure}
             onDeleteProcedure={handleDeleteProcedure}
-            onPublishProcedure={handlePublishProcedure}
-            onExecuteProcedure={handleExecuteProcedure}
           />
         </div>
 
@@ -842,12 +850,16 @@ function SqlEditorPage() {
                 value={editorContent}
                 onChange={setEditorContent}
                 onSave={handleSaveProcedure}
+                onExecute={() => handleExecuteProcedure(selectedProcedure.id)}
+                onMoveToDraft={handleMoveToDraft}
+                onValidate={handleValidate}
                 height={
                   bottomPanelOpen && bottomPanelHeight > 0
                     ? `calc(100% - ${bottomPanelHeight}px)`
                     : '100%'
                 }
                 isDirty={isDirty}
+                readOnly={selectedProcedure?.status === 'published'}
                 workspaceSlug={slug}
               />
             </div>
@@ -1139,7 +1151,9 @@ function SqlEditorPage() {
                   >
                     <div className="p-4">
                       <div className="flex items-center justify-between mb-4">
-                        <p className="text-sm font-medium">Validation Messages</p>
+                        <p className="text-sm font-medium">
+                          Validation Messages
+                        </p>
                       </div>
 
                       {validationMessages.length > 0 ? (
@@ -1254,15 +1268,6 @@ function SqlEditorPage() {
         procedure={executingProcedure}
         onExecuteStart={handleExecuteStart}
         onSuccess={handleExecuteSuccess}
-      />
-
-      {/* Publish Procedure Dialog */}
-      <PublishDialog
-        open={publishDialogOpen}
-        onOpenChange={setPublishDialogOpen}
-        workspaceSlug={slug}
-        procedure={publishingProcedure}
-        onSuccess={handleDialogSuccess}
       />
 
       {/* Context Switch Confirmation Dialog */}

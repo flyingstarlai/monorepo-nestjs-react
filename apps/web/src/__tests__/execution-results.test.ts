@@ -58,16 +58,28 @@ describe('Execution Results Handling', () => {
       );
 
       expect(filteredResults).toHaveLength(3);
-      expect(filteredResults[0]).toEqual({ id: 1, name: 'Test 1', value: null });
-      expect(filteredResults[1]).toEqual({ id: 2, name: 'Test 2', value: undefined });
-      expect(filteredResults[2]).toEqual({ id: 3, name: 'Test 3', value: 'valid' });
+      expect(filteredResults[0]).toEqual({
+        id: 1,
+        name: 'Test 1',
+        value: null,
+      });
+      expect(filteredResults[1]).toEqual({
+        id: 2,
+        name: 'Test 2',
+        value: undefined,
+      });
+      expect(filteredResults[2]).toEqual({
+        id: 3,
+        name: 'Test 3',
+        value: 'valid',
+      });
     });
   });
 
   describe('Object.values safety', () => {
     it('should handle null rows safely', () => {
       const row = null;
-      
+
       // This should not throw an error with the fix
       const safeCheck = row != null && typeof row === 'object';
       expect(safeCheck).toBe(false);
@@ -75,7 +87,7 @@ describe('Execution Results Handling', () => {
 
     it('should handle undefined rows safely', () => {
       const row = undefined;
-      
+
       // This should not throw an error with the fix
       const safeCheck = row != null && typeof row === 'object';
       expect(safeCheck).toBe(false);
@@ -83,11 +95,11 @@ describe('Execution Results Handling', () => {
 
     it('should handle valid object rows', () => {
       const row = { id: 1, name: 'Test' };
-      
+
       // This should pass the safety check
       const safeCheck = row != null && typeof row === 'object';
       expect(safeCheck).toBe(true);
-      
+
       // And Object.values should work
       expect(Object.values(row)).toEqual([1, 'Test']);
     });

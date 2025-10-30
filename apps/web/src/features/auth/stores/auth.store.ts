@@ -12,6 +12,7 @@ export interface AuthStore {
   // Actions
   login: (credentials: LoginCredentials) => Promise<AuthResponse>;
   logout: () => void;
+  handleLogoutEvent: () => void;
   updateUser: (updatedUser: User) => void;
   initializeAuth: () => Promise<void>;
   setLoading: (loading: boolean) => void;
@@ -44,6 +45,16 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: () => {
+        tokenStorage.removeToken();
+        set({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+      },
+
+      handleLogoutEvent: () => {
+        // Clear auth state when logout event is received
         tokenStorage.removeToken();
         set({
           user: null,
@@ -117,6 +128,7 @@ export const useAuthLoading = () => useAuthStore((state) => state.isLoading);
 export const useAuthActions = () => ({
   login: useAuthStore((state) => state.login),
   logout: useAuthStore((state) => state.logout),
+  handleLogoutEvent: useAuthStore((state) => state.handleLogoutEvent),
   updateUser: useAuthStore((state) => state.updateUser),
   initializeAuth: useAuthStore((state) => state.initializeAuth),
   setLoading: useAuthStore((state) => state.setLoading),

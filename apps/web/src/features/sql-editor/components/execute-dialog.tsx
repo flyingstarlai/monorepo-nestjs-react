@@ -162,7 +162,7 @@ export function ExecuteProcedureDialog({
       setExecutionResult(result);
       setExecutionCompleted(true);
       onSuccess?.(result);
-      
+
       // Close dialog immediately after successful execution
       setTimeout(() => {
         onOpenChange(false);
@@ -343,11 +343,15 @@ export function ExecuteProcedureDialog({
                     <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
                       <Zap className="h-6 w-6 text-green-600" />
                     </div>
-                    <h3 className="font-medium text-sm mb-1">Execution Successful</h3>
+                    <h3 className="font-medium text-sm mb-1">
+                      Execution Successful
+                    </h3>
                     <p className="text-xs text-muted-foreground">
                       Results will appear in the bottom panel
-                      {executionResult.executionTime && ` (${executionResult.executionTime}ms)`}
-                      {executionResult.rowCount && ` - ${executionResult.rowCount} rows`}
+                      {executionResult.executionTime &&
+                        ` (${executionResult.executionTime}ms)`}
+                      {executionResult.rowCount &&
+                        ` - ${executionResult.rowCount} rows`}
                     </p>
                   </div>
                 ) : (

@@ -1,13 +1,6 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import {
-  Database,
-  Trash2,
-  Rocket,
-  MoreHorizontal,
-  Plus,
-  Zap,
-} from 'lucide-react';
+import { FileCode, Trash2, MoreHorizontal, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -36,8 +29,6 @@ interface ProcedureListProps {
   onSelectProcedure: (id: string) => void;
   onCreateProcedure: () => void;
   onDeleteProcedure: (id: string) => void;
-  onPublishProcedure: (id: string) => void;
-  onExecuteProcedure: (id: string) => void;
   readOnly?: boolean;
   isLoading?: boolean;
 }
@@ -49,8 +40,6 @@ export function ProcedureList({
   onSelectProcedure,
   onCreateProcedure,
   onDeleteProcedure,
-  onPublishProcedure,
-  onExecuteProcedure,
 }: ProcedureListProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [procedureToDelete, setProcedureToDelete] = useState<string | null>(
@@ -167,7 +156,7 @@ export function ProcedureList({
                     }
                   }}
                 >
-                  <Database className="h-4 w-4 text-muted-foreground flex-shrink-0 group-hover:text-foreground transition-colors" />
+                  <FileCode className="h-4 w-4 text-muted-foreground flex-shrink-0 group-hover:text-foreground transition-colors" />
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
@@ -198,41 +187,6 @@ export function ProcedureList({
                     </p>
                   </div>
 
-                  {/* Quick Action Buttons */}
-                  <div className="flex gap-1 mr-1">
-                    {/* Quick Publish Button for Draft Procedures */}
-                    {procedure.status === 'draft' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-2 text-xs bg-green-50 hover:bg-green-100 text-green-700 border-green-200 hover:border-green-300 opacity-0 group-hover:opacity-100 transition-all duration-200"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onPublishProcedure(procedure.id);
-                        }}
-                        aria-label={`Publish procedure ${procedure.name}`}
-                      >
-                        <Rocket className="h-3 w-3" />
-                      </Button>
-                    )}
-
-                    {/* Quick Execute Button for Published Procedures */}
-                    {procedure.status === 'published' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-2 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 hover:border-blue-300 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm hover:shadow-md"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onExecuteProcedure(procedure.id);
-                        }}
-                        aria-label={`Execute procedure ${procedure.name}`}
-                      >
-                        <Zap className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -252,33 +206,6 @@ export function ProcedureList({
                       className="min-w-[140px]"
                       aria-label={`Procedure actions for ${procedure.name}`}
                     >
-                      {procedure.status === 'draft' && (
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onPublishProcedure(procedure.id);
-                          }}
-                          className="text-green-700 focus:text-green-700 focus:bg-green-50"
-                        >
-                          <Rocket className="h-3.5 w-3.5 mr-2" />
-                          <span className="text-sm font-medium">
-                            Publish Procedure
-                          </span>
-                        </DropdownMenuItem>
-                      )}
-
-                      {procedure.status === 'published' && (
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onExecuteProcedure(procedure.id);
-                          }}
-                        >
-                          <Zap className="h-3.5 w-3.5 mr-2" />
-                          <span className="text-sm">Execute</span>
-                        </DropdownMenuItem>
-                      )}
-
                       <DropdownMenuSeparator />
 
                       <DropdownMenuItem
@@ -298,7 +225,7 @@ export function ProcedureList({
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Database className="h-8 w-8 mb-3 text-muted-foreground/40" />
+              <FileCode className="h-8 w-8 mb-3 text-muted-foreground/40" />
               <p className="text-sm font-medium text-foreground mb-1">
                 No procedures yet
               </p>

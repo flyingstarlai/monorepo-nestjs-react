@@ -53,11 +53,32 @@ function RouterWithAuth() {
 
 // Auth initialization component
 function AuthInitializer({ children }: { children: React.ReactNode }) {
-  const { initializeAuth, isLoading } = useAuth();
+  const { initializeAuth, isLoading, handleLogoutEvent } = useAuth();
 
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
+
+  // Global auth:logout event listener
+  useEffect(() => {
+    const handleLogout = () => {
+      // Update auth state using dedicated method
+      handleLogoutEvent();
+
+      // Redirect to login page with current URL as redirect parameter
+      const currentPath = window.location.pathname + window.location.search;
+      const loginUrl = `/login?redirect=${encodeURIComponent(currentPath)}`;
+      window.location.href = loginUrl;
+    };
+
+    // Add event listener
+    window.addEventListener('auth:logout', handleLogout);
+
+    // Cleanup event listener
+    return () => {
+      window.removeEventListener('auth:logout', handleLogout);
+    };
+  }, [handleLogoutEvent]);
 
   // Show loading state while checking auth
   if (isLoading) {

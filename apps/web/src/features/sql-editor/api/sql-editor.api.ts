@@ -144,6 +144,28 @@ export const sqlEditorApi = {
     }
   },
 
+  async unpublishProcedure(
+    workspaceSlug: string,
+    id: string
+  ): Promise<StoredProcedure> {
+    try {
+      const response = await apiClient.post<StoredProcedure>(
+        `/c/${workspaceSlug}/sql-editor/${id}/unpublish`,
+        {}
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceError || error instanceof SqlEditorError) {
+        throw error;
+      }
+      throw new SqlEditorError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to unpublish stored procedure'
+      );
+    }
+  },
+
   async executeProcedure(
     workspaceSlug: string,
     id: string,
