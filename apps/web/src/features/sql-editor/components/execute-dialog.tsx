@@ -55,7 +55,7 @@ export function ExecuteProcedureDialog({
   onSuccess,
 }: ExecuteProcedureDialogProps) {
   const [parameters, setParameters] = useState<ProcedureParameter[]>([]);
-  const [timeout, setTimeout] = useState(30); // Default 30 seconds
+  const [timeout, setTimeoutValue] = useState(30); // Default 30 seconds
   const [executionResult, setExecutionResult] =
     useState<ExecutionResult | null>(null);
   const [executionCompleted, setExecutionCompleted] = useState(false);
@@ -195,7 +195,7 @@ export function ExecuteProcedureDialog({
   const handleTimeoutChange = useCallback((value: string) => {
     const num = parseInt(value);
     if (!isNaN(num) && num > 0 && num <= 60) {
-      setTimeout(num);
+      setTimeoutValue(num);
     }
   }, []);
 

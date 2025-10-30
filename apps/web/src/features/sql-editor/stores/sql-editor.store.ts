@@ -6,7 +6,7 @@ interface WorkspaceLayoutState {
   explorerWidth: number;
   bottomPanelHeight: number;
   bottomPanelOpen: boolean;
-  activeBottomTab: 'results' | 'messages';
+  activeBottomTab: 'results' | 'validation' | 'console';
   explorerCollapsed: boolean;
   lastProcedureId: string | null;
 }
@@ -61,7 +61,7 @@ interface SqlEditorState {
   setExplorerWidth: (width: number) => void;
   setBottomPanelHeight: (height: number) => void;
   setBottomPanelOpen: (open: boolean) => void;
-  setActiveBottomTab: (tab: 'results' | 'messages') => void;
+  setActiveBottomTab: (tab: 'results' | 'validation' | 'console') => void;
   setExplorerCollapsed: (collapsed: boolean) => void;
   setLastProcedureId: (procedureId: string | null) => void;
 

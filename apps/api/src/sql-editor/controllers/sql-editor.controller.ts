@@ -304,7 +304,7 @@ export class SqlEditorController {
   }
 
   @Post(':procedureId/validate')
-  @ApiOperation({ summary: 'Validate a stored procedure draft' })
+  @ApiOperation({ summary: 'Validate a stored procedure draft (Dry Run)' })
   @ApiParam({ name: 'procedureId', description: 'Procedure ID' })
   @ApiResponse({
     status: 200,
@@ -326,7 +326,7 @@ export class SqlEditorController {
 
   @Post('validate')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Validate SQL content without saving' })
+  @ApiOperation({ summary: 'Validate SQL content without saving (Dry Run)' })
   @ApiResponse({
     status: 200,
     description: 'Validation result',

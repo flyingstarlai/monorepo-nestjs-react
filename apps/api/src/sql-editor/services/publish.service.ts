@@ -2,7 +2,6 @@ import {
   Injectable,
   Logger,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
@@ -13,6 +12,8 @@ import {
 import { MssqlConnectionRegistry } from './mssql-connection-registry.service';
 import { ActivitiesService } from '../../activities/activities.service';
 import { ActivityType } from '../../activities/entities/activity.entity';
+import { IPublisher, PublishContext } from '../interfaces/publishing.interfaces';
+import { PublisherService } from '../publishers/publisher.service';
 
 @Injectable()
 export class PublishService {
@@ -22,7 +23,8 @@ export class PublishService {
     @InjectRepository(StoredProcedure)
     private readonly storedProcedureRepository: Repository<StoredProcedure>,
     private readonly mssqlConnectionRegistry: MssqlConnectionRegistry,
-    private readonly activitiesService: ActivitiesService
+    private readonly activitiesService: ActivitiesService,
+    private readonly publisher: PublisherService
   ) {}
 
   async publishProcedure(
@@ -48,19 +50,33 @@ export class PublishService {
       throw new Error('Cannot publish procedure with empty draft content');
     }
 
-    try {
-      // Get MSSQL connection
-      const connection =
-        await this.mssqlConnectionRegistry.getConnectionForWorkspace(
-          workspaceId
-        );
+    const publishContext: PublishContext = {
+      workspaceId,
+      procedureId,
+      userId,
+    };
 
-      // Deploy to MSSQL using CREATE OR ALTER PROCEDURE
-      await this.deployProcedureToMssql(
-        connection,
-        procedure.name,
-        procedure.sqlDraft
-      );
+    try {
+      // Step 1: Precheck validation
+      const precheckResult = await this.publisher.precheck(publishContext, procedure.sqlDraft);
+      if (!precheckResult.canProceed) {
+        const errorMessages = precheckResult.issues?.map(issue => issue.message).join('; ') || 'Unknown validation error';
+        throw new Error(`Precheck validation failed: ${errorMessages}`);
+      }
+
+      // Step 2: Deploy
+      const deployResult = await this.publisher.deploy(publishContext, procedure.sqlDraft);
+      if (!deployResult.success) {
+        const errorMessages = deployResult.issues?.map(issue => issue.message).join('; ') || 'Unknown deployment error';
+        throw new Error(`Deployment failed: ${errorMessages}`);
+      }
+
+      // Step 3: Verify
+      const verifyResult = await this.publisher.verify(publishContext, procedure.name);
+      if (!verifyResult.verified) {
+        const errorMessages = verifyResult.issues?.map(issue => issue.message).join('; ') || 'Unknown verification error';
+        throw new Error(`Verification failed: ${errorMessages}`);
+      }
 
       // Update procedure in PostgreSQL
       await this.storedProcedureRepository.update(procedureId, {
@@ -196,7 +212,7 @@ export class PublishService {
   }
 
   private async deployProcedureToMssql(
-    connection: DataSource,
+    connection: any,
     procedureName: string,
     procedureSql: string
   ): Promise<void> {
@@ -207,6 +223,14 @@ export class PublishService {
         procedureSql
       );
 
+      // Log the SQL being executed (truncated for very long procedures)
+      const sqlLog = createProcedureSql.length > 500 
+        ? createProcedureSql.substring(0, 500) + '...' 
+        : createProcedureSql;
+      this.logger.debug(
+        `Deploying procedure ${procedureName} to MSSQL. SQL: ${sqlLog}`
+      );
+
       // Execute the deployment
       await connection.query(createProcedureSql);
 
@@ -214,18 +238,29 @@ export class PublishService {
         `Successfully deployed procedure ${procedureName} to MSSQL`
       );
     } catch (error) {
+      // Enhanced error logging with more context
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
       this.logger.error(
-        `Failed to deploy procedure ${procedureName} to MSSQL:`,
-        error
+        `Failed to deploy procedure ${procedureName} to MSSQL. Error: ${errorMessage}`,
+        {
+          procedureName,
+          sqlLength: procedureSql.length,
+          sqlPreview: procedureSql.substring(0, 200) + (procedureSql.length > 200 ? '...' : ''),
+          originalError: error,
+          stack: errorStack
+        }
       );
-      throw new Error(
-        `MSSQL deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+
+      // Parse MSSQL error for better user feedback
+      const enhancedError = this.parseMssqlDeployError(errorMessage);
+      throw new Error(`MSSQL deployment failed: ${enhancedError}`);
     }
   }
 
   private async dropProcedureFromMssql(
-    connection: DataSource,
+    connection: any,
     procedureName: string
   ): Promise<void> {
     try {
@@ -272,19 +307,10 @@ export class PublishService {
     const hasHeader = /\bcreate\s+(or\s+alter\s+)?procedure\b/i.test(sql);
 
     if (hasHeader) {
-      // If it's a full definition, execute it via sp_executesql to avoid
-      // "must be first statement in batch" issues and keep the batch clean.
-      // Remove GO batch separators if present.
+      // If it's a full definition, execute it directly without wrapping
+      // This avoids nested BEGIN/END block conflicts
       const sanitized = sql.replace(/^\s*go\s*$/gim, '').trim();
-      const escaped = sanitized.replace(/'/g, "''");
-      return `
-        BEGIN TRY
-          EXEC sp_executesql N'${escaped}';
-        END TRY
-        BEGIN CATCH
-          THROW;
-        END CATCH
-      `;
+      return sanitized;
     }
 
     // Treat the input as the procedure body and wrap it in a proper definition
@@ -293,26 +319,59 @@ export class PublishService {
     // Build the complete CREATE OR ALTER PROCEDURE statement
     const fullProcedureSql = `CREATE OR ALTER PROCEDURE [${procedureName}] AS\n${body}`;
     
-    // Use sp_executesql with proper parameterization
-    return `
-      BEGIN TRY
-        DECLARE @sql NVARCHAR(MAX) = N${this.escapeSqlString(fullProcedureSql)};
-        EXEC sp_executesql @sql;
-      END TRY
-      BEGIN CATCH
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
-        DECLARE @ErrorState INT = ERROR_STATE();
-        RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
-      END CATCH
-    `;
+    return fullProcedureSql;
   }
 
   private escapeSqlString(sql: string): string {
     // Escape single quotes by doubling them
-    let escaped = sql.replace(/'/g, "''");
+    const escaped = sql.replace(/'/g, "''");
     // Return as N'...' string literal
     return `'${escaped}'`;
+  }
+
+  private parseMssqlDeployError(errorMessage: string): string {
+    // Try to extract line and column information from MSSQL error messages
+    const lineMatch = errorMessage.match(/line\s+(\d+):/i);
+    const line = lineMatch ? parseInt(lineMatch[1]) : undefined;
+
+    const nearMatch = errorMessage.match(/near\s+'([^']+)'/i);
+
+    // Clean up common MSSQL error messages
+    let cleanError = errorMessage;
+
+    // Remove SQL Server specific prefixes
+    cleanError = cleanError.replace(
+      /^Msg\s+\d+,\s+Level\s+\d+,\s+State\s+\d+,\s+Line\s+\d+:\s*/i,
+      ''
+    );
+    cleanError = cleanError.replace(
+      /^Microsoft\s+SQL\s+Server\s+Error\s+\d+:\s*/i,
+      ''
+    );
+
+    // Remove duplicate line information
+    if (line && cleanError.includes(`Line ${line}:`)) {
+      cleanError = cleanError.replace(/Line\s+\d+:\s*/i, '');
+    }
+
+    // Add line number information if available
+    if (line) {
+      cleanError = `Line ${line}: ${cleanError}`;
+    }
+
+    // Add helpful context for common deployment errors
+    if (cleanError.includes('Incorrect syntax near')) {
+      if (nearMatch) {
+        const invalidToken = nearMatch[1];
+        cleanError += ` → Check syntax near '${invalidToken}' and ensure proper SQL structure`;
+      }
+    }
+
+    if (cleanError.includes('already exists') || cleanError.includes('There is already an object')) {
+      cleanError += ' → Try using CREATE OR ALTER instead of CREATE';
+    }
+
+    return cleanError.trim();
   }
 
   async canUserPublishProcedure(

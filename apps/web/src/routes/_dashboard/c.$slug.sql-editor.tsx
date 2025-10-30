@@ -11,8 +11,6 @@ import {
   Download,
   FileText,
   Save,
-  CheckCircle,
-  Play,
   Rocket,
   Zap,
 } from 'lucide-react';
@@ -40,7 +38,7 @@ import {
   useDeleteProcedure,
   useUpdateProcedure,
 } from '@/features/sql-editor/hooks/use-sql-editor';
-import type { StoredProcedure } from '@/features/sql-editor/types';
+import type { StoredProcedure, ExecutionResult } from '@/features/sql-editor/types';
 import { useSqlEditorStore } from '@/features/sql-editor/stores/sql-editor.store';
 import { toast } from 'sonner';
 
@@ -143,10 +141,12 @@ function SqlEditorPage() {
     executionTime?: number;
     rowCount?: number;
   }>({});
-  const [executionMessages, setExecutionMessages] = useState<
+
+
+  const [consoleMessages, setConsoleMessages] = useState<
     Array<{
       timestamp: Date;
-      type: 'info' | 'success' | 'warning' | 'error';
+      type: 'info' | 'success' | 'error';
       message: string;
     }>
   >([]);
@@ -160,7 +160,7 @@ function SqlEditorPage() {
     targetProcedureName: string;
   }>({ open: false, targetProcedureId: '', targetProcedureName: '' });
 
-  // Create procedure-specific validation messages
+  // Create procedure-specific validation messages from store
   const currentValidationErrors = useMemo(
     () =>
       selectedProcedureId ? validationErrors[selectedProcedureId] || [] : [],
@@ -172,27 +172,34 @@ function SqlEditorPage() {
     [selectedProcedureId, validationWarnings]
   );
 
-  // Helper to add validation messages without duplicates
-  const addValidationMessage = useCallback(
-    (type: 'error' | 'warning', message: string) => {
-      const fullMessage = `Validation ${type}: ${message}`;
-      setExecutionMessages((prev) => {
-        // Check if message already exists
-        const exists = prev.some((msg) => msg.message === fullMessage);
-        if (exists) return prev;
-
-        return [
-          ...prev,
-          {
-            timestamp: new Date(),
-            type,
-            message: fullMessage,
-          },
-        ];
+  // Convert store validation to local validation messages format for display
+  const validationMessages = useMemo(() => {
+    const messages: Array<{
+      timestamp: Date;
+      type: 'error' | 'warning';
+      message: string;
+    }> = [];
+    
+    // Add errors
+    currentValidationErrors.forEach((error) => {
+      messages.push({
+        timestamp: new Date(),
+        type: 'error',
+        message: error,
       });
-    },
-    []
-  );
+    });
+    
+    // Add warnings
+    currentValidationWarnings.forEach((warning) => {
+      messages.push({
+        timestamp: new Date(),
+        type: 'warning',
+        message: warning,
+      });
+    });
+    
+    return messages;
+  }, [currentValidationErrors, currentValidationWarnings]);
   const containerRef = useRef<HTMLDivElement>(null);
   const { open, setOpen } = useSidebar();
   const [previousSidebarState, setPreviousSidebarState] = useState<
@@ -294,35 +301,11 @@ function SqlEditorPage() {
     };
   }, [open, setOpen]);
 
-  // Sync validation errors to messages
+
+
+  // Auto-switch to validation tab when validation errors occur
   useEffect(() => {
-    // Clear previous validation messages
-    setExecutionMessages((prev) =>
-      prev.filter(
-        (msg) =>
-          !msg.message.startsWith('Validation error:') &&
-          !msg.message.startsWith('Validation warning:')
-      )
-    );
-
-    // Add current validation errors
-    currentValidationErrors.forEach((error) => {
-      addValidationMessage('error', error);
-    });
-
-    // Add current validation warnings
-    currentValidationWarnings.forEach((warning) => {
-      addValidationMessage('warning', warning);
-    });
-  }, [
-    currentValidationErrors,
-    currentValidationWarnings,
-    addValidationMessage,
-  ]);
-
-  // Auto-switch to messages tab when validation errors occur
-  useEffect(() => {
-    // Show bottom panel and switch to messages if there are validation errors
+    // Show bottom panel and switch to validation if there are validation errors
     if (
       (currentValidationErrors.length > 0 ||
         currentValidationWarnings.length > 0) &&
@@ -330,7 +313,7 @@ function SqlEditorPage() {
     ) {
       storeState.setBottomPanelOpen(true);
       storeState.setBottomPanelHeight(200);
-      storeState.setActiveBottomTab('messages');
+      storeState.setActiveBottomTab('validation');
     }
   }, [
     currentValidationErrors.length,
@@ -339,17 +322,7 @@ function SqlEditorPage() {
     storeState,
   ]);
 
-  // Clear validation messages when switching procedures
-  useEffect(() => {
-    // Clear validation messages when switching procedures
-    setExecutionMessages((prev) =>
-      prev.filter(
-        (msg) =>
-          !msg.message.startsWith('Validation error:') &&
-          !msg.message.startsWith('Validation warning:')
-      )
-    );
-  }, [selectedProcedureId]);
+
 
   const handleCreateProcedure = () => {
     setCreateDialogOpen(true);
@@ -430,6 +403,22 @@ function SqlEditorPage() {
     readOnly,
   ]);
 
+  // Listen for validation tab switch event
+  useEffect(() => {
+    const handleSwitchToValidationTab = () => {
+      // Show bottom panel and switch to validation tab
+      if (!bottomPanelOpen) {
+        storeState.setBottomPanelOpen(true);
+        storeState.setBottomPanelHeight(200);
+      }
+      storeState.setActiveBottomTab('validation');
+    };
+
+    window.addEventListener('switch-to-validation-tab', handleSwitchToValidationTab);
+    return () =>
+      window.removeEventListener('switch-to-validation-tab', handleSwitchToValidationTab);
+  }, [bottomPanelOpen, storeState]);
+
   // Route change guard for dirty editor state
   useBlocker(
     () => isDirty,
@@ -462,7 +451,7 @@ function SqlEditorPage() {
     storeState.setActiveBottomTab('results');
 
     // Add execution start message
-    setExecutionMessages((prev) => [
+    setConsoleMessages((prev) => [
       ...prev,
       {
         timestamp: new Date(),
@@ -472,15 +461,7 @@ function SqlEditorPage() {
     ]);
   };
 
-  const handleExecuteSuccess = (result: {
-    success: boolean;
-    result?: Record<string, unknown>;
-    data?: Record<string, unknown>[];
-    columns?: Array<{ name: string; type: string }>;
-    executionTime?: number;
-    rowCount?: number;
-    error?: string;
-  }) => {
+  const handleExecuteSuccess = (result: ExecutionResult) => {
     setIsExecuting(false);
 
     // Track which procedure was executed
@@ -526,11 +507,11 @@ function SqlEditorPage() {
     }
 
     // Add execution message
-    setExecutionMessages((prev) => [
+    setConsoleMessages((prev) => [
       ...prev,
       {
         timestamp: new Date(),
-        type: result.success ? 'info' : 'error',
+        type: result.success ? 'success' : 'error',
         message: result.success
           ? `Procedure executed successfully${result.executionTime ? ` in ${result.executionTime}ms` : ''}${result.rowCount !== undefined ? ` (${result.rowCount} rows)` : ''}`
           : result.error || 'Procedure execution failed',
@@ -797,7 +778,7 @@ function SqlEditorPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => setShowPublishDialog(true)}
+                        onClick={() => setPublishDialogOpen(true)}
                         disabled={!selectedProcedure || selectedProcedure.status === 'published'}
                         aria-label="Publish procedure"
                       >
@@ -961,7 +942,7 @@ function SqlEditorPage() {
                   value={activeBottomTab}
                   onValueChange={(value) =>
                     storeState.setActiveBottomTab(
-                      value as 'results' | 'messages'
+                      value as 'results' | 'validation' | 'console'
                     )
                   }
                   aria-label="Bottom panel tabs"
@@ -978,13 +959,32 @@ function SqlEditorPage() {
                         Results
                       </TabsTrigger>
                       <TabsTrigger
-                        value="messages"
+                        value="validation"
                         className="text-xs"
                         role="tab"
-                        aria-selected={activeBottomTab === 'messages'}
-                        aria-controls="messages-panel"
+                        aria-selected={activeBottomTab === 'validation'}
+                        aria-controls="validation-panel"
                       >
-                        Messages
+                        Validation
+                        {validationMessages.length > 0 && (
+                          <span className="ml-1 px-1.5 py-0.5 text-xs bg-orange-100 text-orange-800 rounded-full">
+                            {validationMessages.length}
+                          </span>
+                        )}
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="console"
+                        className="text-xs"
+                        role="tab"
+                        aria-selected={activeBottomTab === 'console'}
+                        aria-controls="console-panel"
+                      >
+                        Console
+                        {consoleMessages.length > 0 && (
+                          <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-100 text-blue-800 rounded-full">
+                            {consoleMessages.length}
+                          </span>
+                        )}
                       </TabsTrigger>
                     </TabsList>
                   </div>
@@ -1186,36 +1186,77 @@ function SqlEditorPage() {
                   </TabsContent>
 
                   <TabsContent
-                    value="messages"
+                    value="validation"
                     className="m-0 h-[calc(100%-2rem)] overflow-hidden"
                     role="tabpanel"
-                    id="messages-panel"
-                    aria-labelledby="messages-tab"
+                    id="validation-panel"
+                    aria-labelledby="validation-tab"
                   >
                     <div className="p-4">
                       <div className="flex items-center justify-between mb-4">
-                        <p className="text-sm font-medium">Messages</p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setExecutionMessages([])}
-                          disabled={executionMessages.length === 0}
-                          aria-label="Clear all messages"
-                        >
-                          Clear
-                        </Button>
+                        <p className="text-sm font-medium">Validation Messages</p>
                       </div>
 
-                      {executionMessages.length > 0 ? (
+                      {validationMessages.length > 0 ? (
                         <div className="space-y-2">
-                          {executionMessages.map((msg, index) => (
+                          {validationMessages.map((msg, index) => (
                             <div
                               key={index}
                               className={`p-3 rounded-md border ${
                                 msg.type === 'error'
                                   ? 'bg-destructive/10 border-destructive/20 text-destructive'
-                                  : msg.type === 'warning'
-                                    ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                                  : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="text-sm flex-1">{msg.message}</p>
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                  {msg.timestamp.toLocaleTimeString()}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          No validation messages. SQL syntax errors and warnings
+                          will appear here.
+                        </p>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent
+                    value="console"
+                    className="m-0 h-[calc(100%-2rem)] overflow-hidden"
+                    role="tabpanel"
+                    id="console-panel"
+                    aria-labelledby="console-tab"
+                  >
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <p className="text-sm font-medium">Console Messages</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setConsoleMessages([])}
+                          disabled={consoleMessages.length === 0}
+                          aria-label="Clear all console messages"
+                        >
+                          Clear
+                        </Button>
+                      </div>
+
+                      {consoleMessages.length > 0 ? (
+                        <div className="space-y-2">
+                          {consoleMessages.map((msg, index) => (
+                            <div
+                              key={index}
+                              className={`p-3 rounded-md border ${
+                                msg.type === 'error'
+                                  ? 'bg-destructive/10 border-destructive/20 text-destructive'
+                                  : msg.type === 'success'
+                                    ? 'bg-green-50 border-green-200 text-green-800'
                                     : 'bg-blue-50 border-blue-200 text-blue-800'
                               }`}
                             >
@@ -1230,8 +1271,8 @@ function SqlEditorPage() {
                         </div>
                       ) : (
                         <p className="text-sm text-muted-foreground">
-                          No messages. Validation errors and execution messages
-                          will appear here.
+                          No console messages. Procedure execution status and
+                          results will appear here.
                         </p>
                       )}
                     </div>

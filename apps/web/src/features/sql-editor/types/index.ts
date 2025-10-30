@@ -22,7 +22,7 @@ export interface UpdateStoredProcedureDto {
 }
 
 export interface PublishStoredProcedureDto {
-  // No data needed - server loads SQL from database
+  data?: Record<string, never>;
 }
 
 export interface ExecuteStoredProcedureDto {
@@ -35,15 +35,27 @@ export interface ValidateSqlDto {
   sql: string;
 }
 
+export interface ValidationIssue {
+  message: string;
+  line?: number;
+  column?: number;
+  near?: string;
+  code?: string;
+  severity: 'error' | 'warning';
+}
+
 export interface ValidationResult {
   isValid: boolean;
   errors: string[];
   warnings: string[];
+  issues?: ValidationIssue[];
 }
 
 export interface ExecutionResult {
   success: boolean;
-  result: any;
+  result: unknown;
+  data?: unknown;
+  columns?: Array<{ name: string; type: string }>;
   error?: string;
   executionTime: number;
   rowCount?: number;

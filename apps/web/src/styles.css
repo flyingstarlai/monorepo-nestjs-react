@@ -136,3 +136,28 @@ code {
     @apply bg-background text-foreground;
   }
 }
+
+/* Monaco Editor Validation Decorations */
+.line-error-decoration {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid rgb(239, 68, 68);
+}
+
+.line-warning-decoration {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-left: 3px solid rgb(245, 158, 11);
+}
+
+.error-glyph-margin {
+  background-color: rgb(239, 68, 68);
+  border-radius: 2px;
+  width: 3px !important;
+  margin-left: 2px;
+}
+
+.warning-glyph-margin {
+  background-color: rgb(245, 158, 11);
+  border-radius: 2px;
+  width: 3px !important;
+  margin-left: 2px;
+}

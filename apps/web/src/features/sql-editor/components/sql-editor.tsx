@@ -3,10 +3,16 @@ import Editor from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { CheckCircle, AlertCircle, Loader2, Rocket } from 'lucide-react';
 import { useValidateSql } from '../hooks/use-sql-editor';
 import { useSqlEditorStore } from '../stores/sql-editor.store';
-import type { StoredProcedure } from '../types';
+import type { StoredProcedure, ValidationIssue } from '../types';
 
 interface SqlEditorComponentProps {
   procedure: StoredProcedure | null;
@@ -212,19 +218,130 @@ export function SqlEditorComponent({
     }
   }, [value, procedure?.id, clearValidationForProcedure]);
 
-  // Listen for validation shortcut
-  useEffect(() => {
-    const handleValidateEvent = () => {
-      handleValidate();
-    };
+   // Listen for validation shortcut
+   useEffect(() => {
+     const handleValidateEvent = () => {
+       handleValidate();
+     };
 
-    window.addEventListener('validate-sql', handleValidateEvent);
-    return () =>
-      window.removeEventListener('validate-sql', handleValidateEvent);
-  }, [value, procedure, handleValidate]);
+     window.addEventListener('validate-sql', handleValidateEvent);
+     return () =>
+       window.removeEventListener('validate-sql', handleValidateEvent);
+   }, [value, procedure, handleValidate]);
+
+   // Add inline error decorations in Monaco editor using structured issues
+   useEffect(() => {
+     if (!editorRef.current) return;
+
+     const editor = editorRef.current;
+     const model = editor.getModel();
+     if (!model) return;
+
+     // Clear previous decorations
+     editor.deltaDecorations([], []);
+
+// Create decorations from validation issues if available
+     const allIssues: ValidationIssue[] = [];
+     
+      // If we have structured issues from new API, use them
+      if (validationResult && 'issues' in validationResult && Array.isArray(validationResult.issues)) {
+        allIssues.push(...validationResult.issues);
+     } else {
+       // Fallback: create issues from error/warning strings
+       if (validationResult?.errors) {
+         validationResult.errors.forEach((error) => {
+           const lineMatch = error.match(/line\s+(\d+):/i);
+           allIssues.push({
+             message: error,
+             line: lineMatch ? parseInt(lineMatch[1]) : undefined,
+             severity: 'error',
+           });
+         });
+       }
+       
+       if (validationResult?.warnings) {
+         validationResult.warnings.forEach((warning) => {
+           const lineMatch = warning.match(/line\s+(\d+):/i);
+           allIssues.push({
+             message: warning,
+             line: lineMatch ? parseInt(lineMatch[1]) : undefined,
+             severity: 'warning',
+           });
+         });
+       }
+     }
+
+     if (allIssues.length > 0) {
+       const decorations: any[] = [];
+       const lineCount = model.getLineCount();
+
+       allIssues.forEach((issue) => {
+         if (issue.line && issue.line <= lineCount) {
+           const isWarning = issue.severity === 'warning';
+           
+           decorations.push({
+             range: {
+               startLineNumber: issue.line,
+               startColumn: issue.column || 1,
+               endLineNumber: issue.line,
+               endColumn: model.getLineMaxColumn(issue.line)
+             },
+             options: {
+               isWholeLine: true,
+               className: isWarning ? 'line-warning-decoration' : 'line-error-decoration',
+               hoverMessage: { 
+                 value: `${issue.severity.toUpperCase()}: ${issue.message}${
+                   issue.near ? ` (near '${issue.near}')` : ''
+                 }${issue.code ? ` [Code: ${issue.code}]` : ''}`
+               },
+               glyphMarginClassName: isWarning ? 'warning-glyph-margin' : 'error-glyph-margin',
+               minimap: {
+                 color: isWarning ? '#f59e0b' : '#ef4444',
+                 position: 2
+               }
+             }
+           });
+         }
+       });
+
+       editor.deltaDecorations([], decorations);
+     }
+   }, [validationResult]);
 
   return (
-    <div className="h-full flex flex-col">
+    <TooltipProvider>
+      <div className="h-full flex flex-col">
+      {/* Validation Error Banner */}
+      {validationResult && !validationResult.isValid && !isValidating && (
+        <div className="bg-red-50 border-b border-red-200 px-4 py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <span className="text-sm font-medium text-red-800">
+                Syntax Error{validationResult.errors.length !== 1 ? 's' : ''} Detected
+              </span>
+              <span className="text-sm text-red-600">
+                ({validationResult.errors.length} error{validationResult.errors.length !== 1 ? 's' : ''})
+                {validationResult.warnings.length > 0 && (
+                  <>, {validationResult.warnings.length} warning{validationResult.warnings.length !== 1 ? 's' : ''}</>
+                )}
+              </span>
+            </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  // Trigger a global event to switch to validation tab
+                  window.dispatchEvent(new CustomEvent('switch-to-validation-tab'));
+                }}
+                className="text-red-600 hover:text-red-700 hover:bg-red-100"
+              >
+                View Details
+              </Button>
+          </div>
+        </div>
+      )}
+
       {/* Monaco Editor */}
       <div className="flex-1">
         <Editor
@@ -262,30 +379,83 @@ export function SqlEditorComponent({
       {/* Status Bar */}
       <div className="flex items-center justify-between px-3 py-2 border-t bg-muted/30">
         <div className="flex items-center gap-4">
-          {/* Validation Status */}
-          {isValidating && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Validating...
-            </div>
-          )}
+           {/* Validation Status */}
+           {isValidating && (
+             <Tooltip>
+               <TooltipTrigger asChild>
+                 <div className="flex items-center gap-2 text-sm text-muted-foreground cursor-help">
+                   <Loader2 className="h-4 w-4 animate-spin" />
+                   <span>Validating...</span>
+                 </div>
+               </TooltipTrigger>
+               <TooltipContent>
+                 <p className="text-sm">Checking SQL syntax...</p>
+                 <p className="text-xs text-muted-foreground mt-1">
+                   Validation runs automatically 1.5s after you stop typing
+                 </p>
+               </TooltipContent>
+             </Tooltip>
+           )}
 
-          {validationResult && !isValidating && (
-            <div className="flex items-center gap-2">
-              {validationResult.isValid ? (
-                <div className="flex items-center gap-1 text-sm text-green-600">
-                  <CheckCircle className="h-4 w-4" />
-                  Valid
-                </div>
-              ) : (
-                <div className="flex items-center gap-1 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />
-                  {validationResult.errors.length} Error
-                  {validationResult.errors.length !== 1 ? 's' : ''}
-                </div>
-              )}
-            </div>
-          )}
+           {validationResult && !isValidating && (
+             <div className="flex items-center gap-2">
+               {validationResult.isValid ? (
+                 <Tooltip>
+                   <TooltipTrigger asChild>
+                     <div className="flex items-center gap-1 text-sm text-green-600 cursor-help">
+                       <CheckCircle className="h-4 w-4" />
+                       <span className="font-medium">Valid</span>
+                       {validationResult.warnings.length > 0 && (
+                         <span className="text-yellow-600 ml-1">
+                           ({validationResult.warnings.length} warning{validationResult.warnings.length !== 1 ? 's' : ''})
+                         </span>
+                       )}
+                     </div>
+                   </TooltipTrigger>
+                   <TooltipContent>
+                     <p className="text-sm">
+                       SQL syntax is valid{validationResult.warnings.length > 0 ? ' but has warnings' : ''}
+                     </p>
+                     {validationResult.warnings.length > 0 && (
+                       <p className="text-xs text-muted-foreground mt-1">
+                         Check warnings tab for best practice recommendations
+                       </p>
+                     )}
+                   </TooltipContent>
+                 </Tooltip>
+               ) : (
+                 <Tooltip>
+                   <TooltipTrigger asChild>
+                     <div className="flex items-center gap-1 text-sm text-red-600 font-medium cursor-help">
+                       <AlertCircle className="h-4 w-4 animate-pulse" />
+                       <span>{validationResult.errors.length} Error{validationResult.errors.length !== 1 ? 's' : ''}</span>
+                       {validationResult.warnings.length > 0 && (
+                         <span className="text-yellow-600 ml-1">
+                           +{validationResult.warnings.length} Warning{validationResult.warnings.length !== 1 ? 's' : ''}
+                         </span>
+                       )}
+                     </div>
+                   </TooltipTrigger>
+                   <TooltipContent>
+                     <p className="text-sm font-medium">
+                       SQL syntax validation failed
+                     </p>
+                     <p className="text-xs text-muted-foreground mt-1">
+                       Click "View Details" or check Messages tab for error details
+                     </p>
+                     {validationResult.errors.length > 0 && (
+                       <div className="mt-2 max-w-xs">
+                         <p className="text-xs font-medium">First error:</p>
+                         <p className="text-xs text-red-600 truncate">
+                           {validationResult.errors[0]}
+                         </p>
+                       </div>
+                     )}
+                   </TooltipContent>
+                 </Tooltip>
+               )}
+             </div>
+           )}
 
           {procedure && (
             <Badge
@@ -310,14 +480,24 @@ export function SqlEditorComponent({
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleValidate}
-            disabled={!value.trim() || isValidating}
-          >
-            Validate
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleValidate}
+                disabled={!value.trim() || isValidating}
+              >
+                Validate
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-sm">Validate SQL syntax now</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Or use Ctrl+Enter shortcut
+              </p>
+            </TooltipContent>
+          </Tooltip>
 
           {onPublish && procedure?.status === 'draft' && (
             <Button
@@ -342,5 +522,6 @@ export function SqlEditorComponent({
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 }

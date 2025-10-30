@@ -11,6 +11,12 @@ import { ValidationService } from './services/validation.service';
 import { MssqlConnectionRegistry } from './services/mssql-connection-registry.service';
 import { ActivitiesModule } from '../activities/activities.module';
 import { WorkspacesModule } from '../workspaces/workspaces.module';
+import { SyntaxCompileValidatorService } from './validators/syntax-compile-validator.service';
+import { BestPracticesValidatorService } from './validators/best-practices-validator.service';
+import { MssqlErrorParserService } from './validators/mssql-error-parser.service';
+import { ProcedureNameRewriterService } from './validators/procedure-name-rewriter.service';
+import { MssqlClientService } from './clients/mssql-client.service';
+import { PublisherService } from './publishers/publisher.service';
 
 const FEATURE_SQL_EDITOR = process.env.FEATURE_SQL_EDITOR === 'true';
 
@@ -27,6 +33,13 @@ const FEATURE_SQL_EDITOR = process.env.FEATURE_SQL_EDITOR === 'true';
     ExecutionService,
     ValidationService,
     MssqlConnectionRegistry,
+    // New pipeline components
+    SyntaxCompileValidatorService,
+    BestPracticesValidatorService,
+    MssqlErrorParserService,
+    ProcedureNameRewriterService,
+    MssqlClientService,
+    PublisherService,
   ],
   exports: [
     SqlEditorService,
@@ -34,6 +47,13 @@ const FEATURE_SQL_EDITOR = process.env.FEATURE_SQL_EDITOR === 'true';
     ExecutionService,
     ValidationService,
     MssqlConnectionRegistry,
+    // New pipeline components
+    SyntaxCompileValidatorService,
+    BestPracticesValidatorService,
+    MssqlErrorParserService,
+    ProcedureNameRewriterService,
+    MssqlClientService,
+    PublisherService,
   ],
 })
 export class SqlEditorModule {

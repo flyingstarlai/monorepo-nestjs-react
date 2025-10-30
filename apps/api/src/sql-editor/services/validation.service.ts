@@ -4,9 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository } from 'typeorm';
 import { StoredProcedure } from '../entities/stored-procedure.entity';
 import { MssqlConnectionRegistry } from './mssql-connection-registry.service';
+import { ISqlValidator, ValidationIssue, ValidationContext } from '../interfaces/validation.interfaces';
+import { SyntaxCompileValidatorService } from '../validators/syntax-compile-validator.service';
+import { BestPracticesValidatorService } from '../validators/best-practices-validator.service';
+import { MssqlClientService } from '../clients/mssql-client.service';
 
 export interface ValidationResult {
   valid: boolean;
@@ -19,12 +23,20 @@ export interface ValidationResult {
 @Injectable()
 export class ValidationService {
   private readonly logger = new Logger(ValidationService.name);
+  private readonly validators: ISqlValidator[];
 
   constructor(
     @InjectRepository(StoredProcedure)
     private readonly storedProcedureRepository: Repository<StoredProcedure>,
-    private readonly mssqlConnectionRegistry: MssqlConnectionRegistry
-  ) {}
+    private readonly mssqlConnectionRegistry: MssqlConnectionRegistry,
+    private readonly syntaxValidator: SyntaxCompileValidatorService,
+    private readonly bestPracticesValidator: BestPracticesValidatorService
+  ) {
+    this.validators = [
+      this.syntaxValidator,
+      this.bestPracticesValidator,
+    ];
+  }
 
   async validateDraft(
     procedureId: string,
@@ -50,38 +62,16 @@ export class ValidationService {
       };
     }
 
-    try {
-      // Get MSSQL connection
-      const connection =
-        await this.mssqlConnectionRegistry.getConnectionForWorkspace(
-          workspaceId
-        );
-
-      // Validate syntax using PARSEONLY/NOEXEC
-      const validationResult = await this.validateSqlSyntax(
-        connection,
-        procedure.sqlDraft
-      );
-
-      this.logger.debug(
-        `Validation result for procedure ${procedureId}: ${validationResult.valid ? 'valid' : 'invalid'}`
-      );
-      return validationResult;
-    } catch (error) {
-      this.logger.error(`Failed to validate procedure ${procedureId}:`, error);
-
-      return {
-        valid: false,
-        errors: [
-          `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        ],
-      };
-    }
+    return this.validateSqlContent(procedure.sqlDraft, workspaceId, {
+      workspaceId,
+      procedureId,
+    });
   }
 
   async validateSqlContent(
     sqlContent: string,
-    workspaceId: string
+    workspaceId: string,
+    context?: Partial<ValidationContext>
   ): Promise<ValidationResult> {
     this.logger.debug(`Validating SQL content for workspace ${workspaceId}`);
 
@@ -92,23 +82,35 @@ export class ValidationService {
       };
     }
 
-    try {
-      // Get MSSQL connection
-      const connection =
-        await this.mssqlConnectionRegistry.getConnectionForWorkspace(
-          workspaceId
-        );
+    const validationContext: ValidationContext = {
+      workspaceId,
+      ...context,
+    };
 
-      // Validate syntax using PARSEONLY/NOEXEC
-      const validationResult = await this.validateSqlSyntax(
-        connection,
-        sqlContent
-      );
+    try {
+      // Run validation pipeline
+      const allIssues: ValidationIssue[] = [];
+      
+      for (const validator of this.validators) {
+        const issues = await validator.validate(sqlContent, validationContext);
+        allIssues.push(...issues);
+      }
+
+      // Separate errors and warnings
+      const errors = allIssues.filter(issue => issue.severity === 'error');
+      const warnings = allIssues.filter(issue => issue.severity === 'warning');
+
+      const result: ValidationResult = {
+        valid: errors.length === 0,
+        errors: errors.length > 0 ? errors.map(e => this.formatIssue(e)) : undefined,
+        warnings: warnings.length > 0 ? warnings.map(w => this.formatIssue(w)) : undefined,
+      };
 
       this.logger.debug(
-        `SQL validation result for workspace ${workspaceId}: ${validationResult.valid ? 'valid' : 'invalid'}`
+        `SQL validation result for workspace ${workspaceId}: ${result.valid ? 'valid' : 'invalid'} (${errors.length} errors, ${warnings.length} warnings)`
       );
-      return validationResult;
+
+      return result;
     } catch (error) {
       this.logger.error(
         `Failed to validate SQL content for workspace ${workspaceId}:`,
@@ -124,146 +126,18 @@ export class ValidationService {
     }
   }
 
-  private async validateSqlSyntax(
-    connection: DataSource,
-    sqlContent: string
-  ): Promise<ValidationResult> {
-    try {
-      // Check if it looks like a stored procedure
-      if (!this.isStoredProcedure(sqlContent)) {
-        return {
-          valid: false,
-          errors: [
-            'SQL content must be a stored procedure (CREATE PROCEDURE or ALTER PROCEDURE)',
-          ],
-        };
-      }
-
-      // Extract procedure name for validation
-      const procedureName = this.extractProcedureName(sqlContent);
-      if (!procedureName) {
-        return {
-          valid: false,
-          errors: ['Could not extract procedure name from SQL content'],
-        };
-      }
-
-      // Build validation SQL using SET PARSEONLY and SET NOEXEC
-      const validationSql = this.buildValidationSql(sqlContent);
-
-      // Execute validation
-      await connection.query(validationSql);
-
-      return {
-        valid: true,
-        errors: [],
-        warnings: [],
-      };
-    } catch (error) {
-      // Parse MSSQL error message for better feedback
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-
-      return {
-        valid: false,
-        errors: [this.parseMssqlError(errorMessage)],
-      };
-    }
-  }
-
-  private buildValidationSql(sqlContent: string): string {
-    // Escape single quotes in the SQL content for dynamic SQL
-    const escapedSql = sqlContent.replace(/'/g, "''");
+  private formatIssue(issue: ValidationIssue): string {
+    let formatted = issue.message;
     
-    // Use dynamic SQL to avoid batch boundary issues with CREATE/ALTER PROCEDURE
-    return `
-      SET PARSEONLY ON;
-      SET NOEXEC ON;
-      
-      BEGIN TRY
-        EXEC sp_executesql N'${escapedSql}'
-      END TRY
-      BEGIN CATCH
-        -- Re-throw the error to be caught by our catch block
-        THROW;
-      END CATCH
-      
-      SET PARSEONLY OFF;
-      SET NOEXEC OFF;
-    `;
-  }
-
-  private isStoredProcedure(sqlContent: string): boolean {
-    const normalizedSql = sqlContent.trim().toLowerCase();
-    return (
-      normalizedSql.startsWith('create procedure') ||
-      normalizedSql.startsWith('create proc') ||
-      normalizedSql.startsWith('alter procedure') ||
-      normalizedSql.startsWith('alter proc') ||
-      normalizedSql.startsWith('create or alter procedure') ||
-      normalizedSql.startsWith('create or alter proc')
-    );
-  }
-
-  private extractProcedureName(sqlContent: string): string | null {
-    // Extract procedure name from CREATE/ALTER/CREATE OR ALTER PROCEDURE statement
-    const normalizedSql = sqlContent.trim().toLowerCase();
-
-    // Match CREATE OR ALTER PROCEDURE [schema.]procedure_name
-    const createOrAlterMatch = normalizedSql.match(
-      /create\s+or\s+alter\s+(?:procedure|proc)\s+(?:\w+\.)?(\w+)/i
-    );
-    if (createOrAlterMatch) {
-      return createOrAlterMatch[1];
+    if (issue.line) {
+      formatted = `Line ${issue.line}: ${formatted}`;
     }
-
-    // Match CREATE PROCEDURE [schema.]procedure_name
-    const createMatch = normalizedSql.match(
-      /create\s+(?:procedure|proc)\s+(?:\w+\.)?(\w+)/i
-    );
-    if (createMatch) {
-      return createMatch[1];
+    
+    if (issue.near) {
+      formatted += ` (near '${issue.near}')`;
     }
-
-    // Match ALTER PROCEDURE [schema.]procedure_name
-    const alterMatch = normalizedSql.match(
-      /alter\s+(?:procedure|proc)\s+(?:\w+\.)?(\w+)/i
-    );
-    if (alterMatch) {
-      return alterMatch[1];
-    }
-
-    return null;
-  }
-
-  private parseMssqlError(errorMessage: string): string {
-    // Try to extract line and column information from MSSQL error messages
-    // Format: "Incorrect syntax near 'XYZ'." or "Line X: Incorrect syntax near 'XYZ'."
-
-    const lineMatch = errorMessage.match(/line\s+(\d+):/i);
-    const line = lineMatch ? parseInt(lineMatch[1]) : undefined;
-
-    const nearMatch = errorMessage.match(/near\s+'([^']+)'/i);
-
-    // Clean up common MSSQL error messages
-    let cleanError = errorMessage;
-
-    // Remove SQL Server specific prefixes
-    cleanError = cleanError.replace(
-      /^Msg\s+\d+,\s+Level\s+\d+,\s+State\s+\d+,\s+Line\s+\d+:\s*/i,
-      ''
-    );
-    cleanError = cleanError.replace(
-      /^Microsoft\s+SQL\s+Server\s+Error\s+\d+:\s*/i,
-      ''
-    );
-
-    // Remove duplicate line information
-    if (line && cleanError.includes(`Line ${line}:`)) {
-      cleanError = cleanError.replace(/Line\s+\d+:\s*/i, '');
-    }
-
-    return cleanError.trim();
+    
+    return formatted;
   }
 
   async canUserValidateProcedure(
@@ -284,7 +158,7 @@ export class ValidationService {
     return true;
   }
 
-  // Additional validation helpers for common procedure issues
+  // Additional validation helpers for common procedure issues (deprecated - use pipeline)
   async validateProcedureStructure(
     sqlContent: string
   ): Promise<ValidationResult> {
@@ -318,5 +192,17 @@ export class ValidationService {
       errors: errors.length > 0 ? errors : undefined,
       warnings: warnings.length > 0 ? warnings : undefined,
     };
+  }
+
+  private isStoredProcedure(sqlContent: string): boolean {
+    const normalizedSql = sqlContent.trim().toLowerCase();
+    return (
+      normalizedSql.startsWith('create procedure') ||
+      normalizedSql.startsWith('create proc') ||
+      normalizedSql.startsWith('alter procedure') ||
+      normalizedSql.startsWith('alter proc') ||
+      normalizedSql.startsWith('create or alter procedure') ||
+      normalizedSql.startsWith('create or alter proc')
+    );
   }
 }
