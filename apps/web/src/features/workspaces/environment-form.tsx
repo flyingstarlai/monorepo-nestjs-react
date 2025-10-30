@@ -51,6 +51,7 @@ export function EnvironmentForm({
     error?: string;
   } | null>(null);
   const [testSuccessful, setTestSuccessful] = useState(false);
+  const [testedValues, setTestedValues] = useState<any>(null);
   const [passwordMasked, setPasswordMasked] = useState(true);
 
   const form = useForm({
@@ -66,12 +67,25 @@ export function EnvironmentForm({
 
   const canEdit = userRole === 'Owner' || userRole === 'Author';
 
-  // Reset test success when form values change
+  // Reset test success when critical form values change for new environments
   useEffect(() => {
-    if (testSuccessful && !environment) {
-      setTestSuccessful(false);
+    if (testSuccessful && !environment && testedValues) {
+      const currentValues = form.state.values;
+      
+      // Only reset test success if critical connection fields change from what was tested
+      const criticalFieldsChanged = 
+        currentValues.host !== testedValues.host ||
+        currentValues.port !== testedValues.port ||
+        currentValues.username !== testedValues.username ||
+        currentValues.password !== testedValues.password ||
+        currentValues.database !== testedValues.database;
+      
+      if (criticalFieldsChanged) {
+        setTestSuccessful(false);
+        setTestedValues(null);
+      }
     }
-  }, [form.state.values, environment, testSuccessful]);
+  }, [form.state.values, environment, testSuccessful, testedValues]);
 
   // Fetch existing environment
   useEffect(() => {
@@ -81,6 +95,9 @@ export function EnvironmentForm({
         setEnvironment(response.environment);
 
         if (response.environment) {
+          // Reset tested values for existing environments
+          setTestedValues(null);
+          
           // Populate form with existing data (mask password for security)
           form.setFieldValue('host', response.environment.host);
           form.setFieldValue('port', response.environment.port);
@@ -194,6 +211,11 @@ export function EnvironmentForm({
       setTestSuccessful(response.success);
 
       if (response.success) {
+        // Store the values that were successfully tested for new environments
+        if (!environment) {
+          setTestedValues(formData);
+        }
+        
         toast.success(
           '✅ Connection test successful! Database is reachable and credentials are valid.'
         );
