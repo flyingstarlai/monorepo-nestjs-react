@@ -30,7 +30,7 @@ export class UpdateStoredProcedureDto {
   sqlDraft?: string;
 }
 
-export class ExecuteStoredProcedureDto {
+export class ExecuteProcedureDto {
   @ApiPropertyOptional({
     description: 'Parameters to pass to the stored procedure',
     example: { param1: 'value1', param2: 123 },

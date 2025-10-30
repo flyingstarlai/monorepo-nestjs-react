@@ -3,10 +3,10 @@ import { formatDistanceToNow } from 'date-fns';
 import {
   Database,
   Trash2,
-  Play,
-  Upload,
+  Rocket,
   MoreHorizontal,
   Plus,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -76,7 +76,9 @@ export function ProcedureList({
         <div className="px-4 py-3 border-b border-border/50">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-foreground">Procedures</h2>
+              <h2 className="text-sm font-semibold text-foreground">
+                Procedures
+              </h2>
               <p className="text-xs text-muted-foreground">Loading...</p>
             </div>
             <Button
@@ -118,9 +120,12 @@ export function ProcedureList({
         <div className="px-4 py-3 border-b border-border/50">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-foreground">Procedures</h2>
+              <h2 className="text-sm font-semibold text-foreground">
+                Procedures
+              </h2>
               <p className="text-xs text-muted-foreground">
-                {procedures?.length || 0} {procedures?.length === 1 ? 'procedure' : 'procedures'}
+                {procedures?.length || 0}{' '}
+                {procedures?.length === 1 ? 'procedure' : 'procedures'}
               </p>
             </div>
             <Button
@@ -146,7 +151,9 @@ export function ProcedureList({
                   className={`group flex items-center gap-2 px-3 py-2 cursor-pointer transition-all duration-150 hover:bg-muted/40 focus:outline-none focus:bg-muted/60 ${
                     selectedProcedureId === procedure.id
                       ? 'bg-primary/10 border-l-2 border-primary'
-                      : 'border-l-2 border-transparent hover:border-l-muted-foreground/20'
+                      : procedure.status === 'draft'
+                        ? 'border-l-2 border-green-200 hover:border-l-green-400 bg-green-50/30'
+                        : 'border-l-2 border-transparent hover:border-l-muted-foreground/20'
                   }`}
                   onClick={() => onSelectProcedure(procedure.id)}
                   role="button"
@@ -164,7 +171,9 @@ export function ProcedureList({
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <p className="text-sm font-medium text-foreground truncate pr-1">{procedure.name}</p>
+                      <p className="text-sm font-medium text-foreground truncate pr-1">
+                        {procedure.name}
+                      </p>
                       <Badge
                         variant={
                           procedure.status === 'published'
@@ -187,6 +196,41 @@ export function ProcedureList({
                             { addSuffix: true }
                           )}`}
                     </p>
+                  </div>
+
+                  {/* Quick Action Buttons */}
+                  <div className="flex gap-1 mr-1">
+                    {/* Quick Publish Button for Draft Procedures */}
+                    {procedure.status === 'draft' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs bg-green-50 hover:bg-green-100 text-green-700 border-green-200 hover:border-green-300 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onPublishProcedure(procedure.id);
+                        }}
+                        aria-label={`Publish procedure ${procedure.name}`}
+                      >
+                        <Rocket className="h-3 w-3" />
+                      </Button>
+                    )}
+
+                    {/* Quick Execute Button for Published Procedures */}
+                    {procedure.status === 'published' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 hover:border-blue-300 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm hover:shadow-md"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onExecuteProcedure(procedure.id);
+                        }}
+                        aria-label={`Execute procedure ${procedure.name}`}
+                      >
+                        <Zap className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
 
                   <DropdownMenu>
@@ -214,9 +258,12 @@ export function ProcedureList({
                             e.stopPropagation();
                             onPublishProcedure(procedure.id);
                           }}
+                          className="text-green-700 focus:text-green-700 focus:bg-green-50"
                         >
-                          <Upload className="h-3.5 w-3.5 mr-2" />
-                          <span className="text-sm">Publish</span>
+                          <Rocket className="h-3.5 w-3.5 mr-2" />
+                          <span className="text-sm font-medium">
+                            Publish Procedure
+                          </span>
                         </DropdownMenuItem>
                       )}
 
@@ -227,7 +274,7 @@ export function ProcedureList({
                             onExecuteProcedure(procedure.id);
                           }}
                         >
-                          <Play className="h-3.5 w-3.5 mr-2" />
+                          <Zap className="h-3.5 w-3.5 mr-2" />
                           <span className="text-sm">Execute</span>
                         </DropdownMenuItem>
                       )}
@@ -252,7 +299,9 @@ export function ProcedureList({
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Database className="h-8 w-8 mb-3 text-muted-foreground/40" />
-              <p className="text-sm font-medium text-foreground mb-1">No procedures yet</p>
+              <p className="text-sm font-medium text-foreground mb-1">
+                No procedures yet
+              </p>
               <p className="text-xs text-muted-foreground mb-4">
                 Create your first stored procedure to get started
               </p>

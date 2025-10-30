@@ -38,7 +38,8 @@ export function useCreateProcedure(workspaceSlug: string) {
       );
     },
     onError: (error) => {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create procedure';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to create procedure';
       toast.error(errorMessage);
     },
   });
@@ -59,7 +60,8 @@ export function useUpdateProcedure(workspaceSlug: string, id: string) {
       });
     },
     onError: (error) => {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update procedure';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to update procedure';
       toast.error(errorMessage);
     },
   });
@@ -76,7 +78,8 @@ export function useDeleteProcedure(workspaceSlug: string) {
       });
     },
     onError: (error) => {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete procedure';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to delete procedure';
       toast.error(errorMessage);
     },
   });
@@ -86,8 +89,7 @@ export function usePublishProcedure(workspaceSlug: string, id: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () =>
-      sqlEditorApi.publishProcedure(workspaceSlug, id),
+    mutationFn: () => sqlEditorApi.publishProcedure(workspaceSlug, id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['sql-editor', 'procedures', workspaceSlug],
@@ -97,7 +99,8 @@ export function usePublishProcedure(workspaceSlug: string, id: string) {
       });
     },
     onError: (error) => {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to publish procedure';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to publish procedure';
       toast.error(errorMessage);
     },
   });
@@ -113,8 +116,7 @@ export function useExecuteProcedure() {
       workspaceSlug: string;
       id: string;
       data: {
-        sqlPublished: string;
-        parameters?: Record<string, any>;
+        parameters?: Record<string, unknown>;
         timeout?: number;
       };
     }) => sqlEditorApi.executeProcedure(workspaceSlug, id, data),
@@ -126,7 +128,8 @@ export function useValidateSql(workspaceSlug: string) {
     mutationFn: (data: { sql: string }) =>
       sqlEditorApi.validateSql(workspaceSlug, data),
     onError: (error) => {
-      const errorMessage = error instanceof Error ? error.message : 'Validation failed';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Validation failed';
       toast.error(errorMessage);
     },
   });

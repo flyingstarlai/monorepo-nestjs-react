@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Play, Clock, Database } from 'lucide-react';
+import { Zap, Clock, Database } from 'lucide-react';
 import { useExecuteProcedure } from '../hooks/use-sql-editor';
 import type { StoredProcedure, ExecutionResult } from '../types';
 
@@ -35,6 +35,7 @@ interface ExecuteProcedureDialogProps {
   onOpenChange: (open: boolean) => void;
   workspaceSlug: string;
   procedure: StoredProcedure | null;
+  onSuccess?: (result: ExecutionResult) => void;
 }
 
 interface ProcedureParameter {
@@ -49,6 +50,7 @@ export function ExecuteProcedureDialog({
   onOpenChange,
   workspaceSlug,
   procedure,
+  onSuccess,
 }: ExecuteProcedureDialogProps) {
   const [parameters, setParameters] = useState<ProcedureParameter[]>([]);
   const [timeout, setTimeout] = useState(30); // Default 30 seconds
@@ -110,8 +112,11 @@ export function ExecuteProcedureDialog({
 
     // Validate required parameters
     const missingParams = parameters.filter(
-      (p) => p.required && !p.value.trim()
+      (p) =>
+        p.required &&
+        (p.value === '' || p.value === null || p.value === undefined)
     );
+
     if (missingParams.length > 0) {
       return; // Show validation error
     }
@@ -120,16 +125,17 @@ export function ExecuteProcedureDialog({
     setExecutionResult(null);
 
     try {
-      const parametersObj: Record<string, any> = {};
+      const parametersObj: Record<string, unknown> = {};
       parameters.forEach((param) => {
-        if (param.value.trim()) {
+        const value = String(param.value).trim();
+        if (value) {
           // Convert string values to appropriate types
           if (param.type === 'number') {
-            parametersObj[param.name] = Number(param.value);
+            parametersObj[param.name] = Number(value);
           } else if (param.type === 'boolean') {
-            parametersObj[param.name] = param.value.toLowerCase() === 'true';
+            parametersObj[param.name] = value.toLowerCase() === 'true';
           } else {
-            parametersObj[param.name] = param.value;
+            parametersObj[param.name] = value;
           }
         }
       });
@@ -138,7 +144,6 @@ export function ExecuteProcedureDialog({
         workspaceSlug,
         id: procedure.id,
         data: {
-          sqlPublished: procedure.sqlPublished || '',
           parameters:
             Object.keys(parametersObj).length > 0 ? parametersObj : undefined,
           timeout: timeout * 1000, // Convert to milliseconds
@@ -146,7 +151,8 @@ export function ExecuteProcedureDialog({
       });
 
       setExecutionResult(result);
-    } catch (error) {
+      onSuccess?.(result);
+    } catch {
       // Error is handled by the mutation
     } finally {
       setIsExecuting(false);
@@ -179,7 +185,7 @@ export function ExecuteProcedureDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Play className="h-5 w-5" />
+            <Zap className="h-5 w-5 text-blue-600" />
             Execute Procedure
           </DialogTitle>
           <DialogDescription>
@@ -204,7 +210,7 @@ export function ExecuteProcedureDialog({
           )}
 
           {/* Parameters */}
-          {parameters.length > 0 && (
+          {parameters.length > 0 ? (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Parameters</CardTitle>
@@ -260,6 +266,18 @@ export function ExecuteProcedureDialog({
                     </AlertDescription>
                   </Alert>
                 )}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="py-6">
+                <div className="text-center text-muted-foreground">
+                  <Zap className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                  <p className="text-sm">This procedure has no parameters.</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    You can execute it directly.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           )}
@@ -343,7 +361,9 @@ export function ExecuteProcedureDialog({
             <Button
               onClick={handleExecute}
               disabled={isExecuting || missingParams.length > 0}
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
             >
+              <Zap className="h-4 w-4 mr-2" />
               {isExecuting ? 'Executing...' : 'Execute Procedure'}
             </Button>
           )}

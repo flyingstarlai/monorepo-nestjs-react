@@ -26,8 +26,8 @@ export interface PublishStoredProcedureDto {
 }
 
 export interface ExecuteStoredProcedureDto {
-  sqlPublished: string;
-  parameters?: Record<string, any>;
+  // No sqlPublished needed - server loads from database
+  parameters?: Record<string, unknown>;
   timeout?: number;
 }
 
