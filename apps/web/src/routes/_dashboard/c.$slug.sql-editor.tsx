@@ -1,6 +1,12 @@
 import { createFileRoute, useParams, useBlocker } from '@tanstack/react-router';
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { Database, Minimize2, Maximize2, PanelLeft, PanelRight } from 'lucide-react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import {
+  Database,
+  Minimize2,
+  Maximize2,
+  PanelLeft,
+  PanelRight,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -16,7 +22,8 @@ import {
   useDeleteProcedure,
   useUpdateProcedure,
 } from '@/features/sql-editor/hooks/use-sql-editor';
-import { useSqlEditorStore, useSqlEditorSelectors } from '@/features/sql-editor/stores/sql-editor.store';
+import type { StoredProcedure } from '@/features/sql-editor/types';
+import { useSqlEditorStore } from '@/features/sql-editor/stores/sql-editor.store';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/_dashboard/c/$slug/sql-editor')({
@@ -28,7 +35,31 @@ function SqlEditorPage() {
   const [isResizing, setIsResizing] = useState(false);
   const [isBottomResizing, setIsBottomResizing] = useState(false);
 
-  // Workspace layout state from Zustand
+  // Zustand store state - use direct store access to avoid selector issues
+  const storeState = useSqlEditorStore();
+
+  // Extract validation state from store
+  const { validationErrors, validationWarnings, selectedProcedureId } =
+    storeState;
+
+  // Memoize layout state to prevent re-renders
+  const layoutState = useMemo(() => {
+    const workspaceId = storeState.currentWorkspaceId;
+    const layout =
+      workspaceId && storeState.workspaceLayouts[workspaceId]
+        ? storeState.workspaceLayouts[workspaceId]
+        : {
+            explorerWidth: 320,
+            bottomPanelHeight: 0,
+            bottomPanelOpen: false,
+            activeBottomTab: 'results' as const,
+            explorerCollapsed: false,
+            lastProcedureId: null,
+          };
+
+    return layout;
+  }, [storeState.currentWorkspaceId, storeState.workspaceLayouts]);
+
   const {
     explorerWidth,
     bottomPanelHeight,
@@ -36,36 +67,59 @@ function SqlEditorPage() {
     activeBottomTab,
     explorerCollapsed,
     lastProcedureId,
-  } = useSqlEditorSelectors.useWorkspaceLayout();
-  
-  const {
-    setCurrentWorkspace,
-    setExplorerWidth,
-    setBottomPanelHeight,
-    setBottomPanelOpen,
-    setActiveBottomTab,
-    setExplorerCollapsed,
-    setLastProcedureId,
-  } = useSqlEditorSelectors.useWorkspaceLayoutActions();
+  } = layoutState;
   const [executionResults, setExecutionResults] = useState<
     Record<string, unknown>[]
   >([]);
   const [executionMessages, setExecutionMessages] = useState<
     Array<{
       timestamp: Date;
-      type: 'error' | 'warning' | 'info';
+      type: 'info' | 'success' | 'warning' | 'error';
       message: string;
     }>
   >([]);
+
+  // Create procedure-specific validation messages
+  const currentValidationErrors = useMemo(
+    () =>
+      selectedProcedureId ? validationErrors[selectedProcedureId] || [] : [],
+    [selectedProcedureId, validationErrors]
+  );
+  const currentValidationWarnings = useMemo(
+    () =>
+      selectedProcedureId ? validationWarnings[selectedProcedureId] || [] : [],
+    [selectedProcedureId, validationWarnings]
+  );
+
+  // Helper to add validation messages without duplicates
+  const addValidationMessage = useCallback(
+    (type: 'error' | 'warning', message: string) => {
+      const fullMessage = `Validation ${type}: ${message}`;
+      setExecutionMessages((prev) => {
+        // Check if message already exists
+        const exists = prev.some((msg) => msg.message === fullMessage);
+        if (exists) return prev;
+
+        return [
+          ...prev,
+          {
+            timestamp: new Date(),
+            type,
+            message: fullMessage,
+          },
+        ];
+      });
+    },
+    []
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const { open, setOpen } = useSidebar();
   const [previousSidebarState, setPreviousSidebarState] = useState<
     boolean | null
   >(null);
 
-  // Zustand store state
+  // Extract individual state values from store
   const {
-    selectedProcedureId,
     editorContent,
     isDirty,
     createDialogOpen,
@@ -84,7 +138,7 @@ function SqlEditorPage() {
     setPublishDialogOpen,
     setExecutingProcedure,
     setPublishingProcedure,
-  } = useSqlEditorStore();
+  } = storeState;
 
   const { data: procedures, isLoading, error, refetch } = useProcedures(slug);
   const deleteProcedureMutation = useDeleteProcedure(slug);
@@ -98,35 +152,39 @@ function SqlEditorPage() {
   );
   const readOnly = selectedProcedure?.status === 'published';
 
-  // Initialize workspace and restore last procedure
+  // Initialize workspace
   useEffect(() => {
-    setCurrentWorkspace(slug);
-    
-    // Restore last selected procedure if available
-    if (lastProcedureId && procedures?.some(p => p.id === lastProcedureId)) {
-      setSelectedProcedureId(lastProcedureId);
+    if (storeState.currentWorkspaceId !== slug) {
+      storeState.setCurrentWorkspace(slug);
     }
-  }, [slug, lastProcedureId, procedures]); // Remove functions from dependencies
+  }, [slug, storeState.currentWorkspaceId, storeState.setCurrentWorkspace]);
+
+  // Restore last selected procedure when procedures are loaded
+  useEffect(() => {
+    if (lastProcedureId && procedures?.some((p) => p.id === lastProcedureId)) {
+      storeState.setSelectedProcedureId(lastProcedureId);
+    }
+  }, [lastProcedureId, procedures, storeState.setSelectedProcedureId]);
 
   // Responsive behavior: collapse explorer on small screens
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024 && !explorerCollapsed) {
-        setExplorerCollapsed(true);
+        storeState.setExplorerCollapsed(true);
       }
     };
 
     handleResize(); // Check on mount
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [explorerCollapsed]); // Remove function from dependencies
+  }, [explorerCollapsed, storeState.setExplorerCollapsed]);
 
   // Update last procedure when selection changes
   useEffect(() => {
     if (selectedProcedureId) {
-      setLastProcedureId(selectedProcedureId);
+      storeState.setLastProcedureId(selectedProcedureId);
     }
-  }, [selectedProcedureId]); // Remove function from dependencies
+  }, [selectedProcedureId, storeState.setLastProcedureId]);
 
   // Update editor content when selected procedure changes
   useEffect(() => {
@@ -154,6 +212,63 @@ function SqlEditorPage() {
       }
     };
   }, [open, setOpen]);
+
+  // Sync validation errors to messages
+  useEffect(() => {
+    // Clear previous validation messages
+    setExecutionMessages((prev) =>
+      prev.filter(
+        (msg) =>
+          !msg.message.startsWith('Validation error:') &&
+          !msg.message.startsWith('Validation warning:')
+      )
+    );
+
+    // Add current validation errors
+    currentValidationErrors.forEach((error) => {
+      addValidationMessage('error', error);
+    });
+
+    // Add current validation warnings
+    currentValidationWarnings.forEach((warning) => {
+      addValidationMessage('warning', warning);
+    });
+  }, [
+    currentValidationErrors,
+    currentValidationWarnings,
+    addValidationMessage,
+  ]);
+
+  // Auto-switch to messages tab when validation errors occur
+  useEffect(() => {
+    // Show bottom panel and switch to messages if there are validation errors
+    if (
+      (currentValidationErrors.length > 0 ||
+        currentValidationWarnings.length > 0) &&
+      !bottomPanelOpen
+    ) {
+      storeState.setBottomPanelOpen(true);
+      storeState.setBottomPanelHeight(200);
+      storeState.setActiveBottomTab('messages');
+    }
+  }, [
+    currentValidationErrors.length,
+    currentValidationWarnings.length,
+    bottomPanelOpen,
+    storeState,
+  ]);
+
+  // Clear validation messages when switching procedures
+  useEffect(() => {
+    // Clear validation messages when switching procedures
+    setExecutionMessages((prev) =>
+      prev.filter(
+        (msg) =>
+          !msg.message.startsWith('Validation error:') &&
+          !msg.message.startsWith('Validation warning:')
+      )
+    );
+  }, [selectedProcedureId]);
 
   const handleCreateProcedure = () => {
     setCreateDialogOpen(true);
@@ -247,12 +362,12 @@ function SqlEditorPage() {
   }) => {
     // Show bottom panel if hidden
     if (!bottomPanelOpen) {
-      setBottomPanelOpen(true);
-      setBottomPanelHeight(200);
+      storeState.setBottomPanelOpen(true);
+      storeState.setBottomPanelHeight(200);
     }
 
     // Set active tab to results
-    setActiveBottomTab('results');
+    storeState.setActiveBottomTab('results');
 
     // Store execution results
     setExecutionResults(
@@ -272,43 +387,14 @@ function SqlEditorPage() {
     ]);
   };
 
-  const handleValidationError = (errors: string[], warnings: string[]) => {
-    // Show bottom panel if hidden and there are errors
-    if (!bottomPanelOpen && (errors.length > 0 || warnings.length > 0)) {
-      setBottomPanelOpen(true);
-      setBottomPanelHeight(200);
-    }
-
-    // Switch to messages tab
-    setActiveBottomTab('messages');
-
-    // Add validation messages
-    const timestamp = new Date();
-    errors.forEach((error) => {
-      setExecutionMessages((prev) => [
-        ...prev,
-        {
-          timestamp,
-          type: 'error',
-          message: `Validation error: ${error}`,
-        },
-      ]);
-    });
-
-    warnings.forEach((warning) => {
-      setExecutionMessages((prev) => [
-        ...prev,
-        {
-          timestamp,
-          type: 'warning',
-          message: `Validation warning: ${warning}`,
-        },
-      ]);
-    });
-  };
-
-  const handleDialogSuccess = () => {
+  const handleDialogSuccess = (createdProcedure?: StoredProcedure) => {
     refetch();
+    
+    // If a new procedure was created, set it as the selected procedure
+    if (createdProcedure) {
+      setSelectedProcedureId(createdProcedure.id);
+      storeState.setLastProcedureId(createdProcedure.id);
+    }
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -320,7 +406,7 @@ function SqlEditorPage() {
       const containerRect = containerRef.current.getBoundingClientRect();
       const newWidth = e.clientX - containerRect.left;
       const clampedWidth = Math.max(280, Math.min(500, newWidth)); // Min 280px, Max 500px
-      setExplorerWidth(clampedWidth);
+      storeState.setExplorerWidth(clampedWidth);
     };
 
     const handleMouseUp = () => {
@@ -342,7 +428,7 @@ function SqlEditorPage() {
       const containerRect = containerRef.current.getBoundingClientRect();
       const newHeight = containerRect.bottom - e.clientY;
       const clampedHeight = Math.max(0, Math.min(400, newHeight)); // Min 0px, Max 400px
-      setBottomPanelHeight(clampedHeight);
+      storeState.setBottomPanelHeight(clampedHeight);
     };
 
     const handleMouseUp = () => {
@@ -376,9 +462,9 @@ function SqlEditorPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col -m-4">
+    <div className="h-screen flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-background">
+      <div className="flex items-center justify-between px-4 py-3 border-b bg-background flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="bg-primary/10 p-2 rounded-lg">
             <Database className="h-5 w-5 text-primary" />
@@ -394,7 +480,12 @@ function SqlEditorPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setExplorerCollapsed(!explorerCollapsed)}
+            onClick={() => storeState.setExplorerCollapsed(!explorerCollapsed)}
+            aria-label={
+              explorerCollapsed
+                ? 'Show procedure explorer'
+                : 'Hide procedure explorer'
+            }
           >
             {explorerCollapsed ? (
               <PanelRight className="h-4 w-4 mr-2" />
@@ -406,8 +497,9 @@ function SqlEditorPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() =>
-              setBottomPanelOpen(!bottomPanelOpen)
+            onClick={() => storeState.setBottomPanelOpen(!bottomPanelOpen)}
+            aria-label={
+              !bottomPanelOpen ? 'Show bottom panel' : 'Hide bottom panel'
             }
           >
             {!bottomPanelOpen ? (
@@ -417,12 +509,17 @@ function SqlEditorPage() {
             )}
             {!bottomPanelOpen ? 'Show Panel' : 'Hide Panel'}
           </Button>
-          <Button onClick={handleCreateProcedure}>Create Procedure</Button>
+          <Button
+            onClick={handleCreateProcedure}
+            aria-label="Create new stored procedure"
+          >
+            Create Procedure
+          </Button>
         </div>
       </div>
 
       {/* Feature Flag Notice */}
-      <div className="px-4 py-2 bg-blue-50 border-b">
+      <div className="px-4 py-2 bg-blue-50 border-b flex-shrink-0">
         <p className="text-sm text-blue-800">
           SQL Tools is currently in beta. Stored procedures are executed against
           your workspace&apos;s configured database.
@@ -430,14 +527,14 @@ function SqlEditorPage() {
       </div>
 
       {/* Main Content */}
-      <div ref={containerRef} className="flex-1 flex overflow-hidden">
+      <div ref={containerRef} className="flex-1 flex overflow-hidden min-h-0">
         {/* Procedures List */}
         <div
-          style={{ 
+          style={{
             width: explorerCollapsed ? 0 : `${explorerWidth}px`,
-            display: explorerCollapsed ? 'none' : 'block'
+            display: explorerCollapsed ? 'none' : 'block',
           }}
-          className="border-r bg-muted/20 overflow-y-auto flex-shrink-0 transition-all duration-200"
+          className="border-r bg-muted/20 overflow-hidden flex-shrink-0 transition-all duration-200"
         >
           <ProcedureList
             procedures={procedures}
@@ -453,28 +550,34 @@ function SqlEditorPage() {
 
         {/* Resizer */}
         <div
-          className={`w-1 bg-border cursor-col-resize hover:bg-primary/50 transition-colors ${
+          className={`w-1 bg-border cursor-col-resize hover:bg-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 ${
             isResizing ? 'bg-primary/50' : ''
           }`}
           onMouseDown={handleMouseDown}
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize procedure explorer"
+          tabIndex={0}
         />
 
         {/* Editor/Details Panel */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {selectedProcedure ? (
-            <SqlEditorComponent
-              procedure={selectedProcedure}
-              value={editorContent}
-              onChange={setEditorContent}
-              onSave={handleSaveProcedure}
-              height={
-                bottomPanelOpen && bottomPanelHeight > 0
-                  ? `calc(100% - ${bottomPanelHeight}px)`
-                  : '100%'
-              }
-              onValidationError={handleValidationError}
-              isDirty={isDirty}
-            />
+            <div className="flex-1 min-h-0">
+              <SqlEditorComponent
+                procedure={selectedProcedure}
+                value={editorContent}
+                onChange={setEditorContent}
+                onSave={handleSaveProcedure}
+                height={
+                  bottomPanelOpen && bottomPanelHeight > 0
+                    ? `calc(100% - ${bottomPanelHeight}px)`
+                    : '100%'
+                }
+                isDirty={isDirty}
+                workspaceSlug={slug}
+              />
+            </div>
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center text-muted-foreground">
@@ -492,29 +595,48 @@ function SqlEditorPage() {
             <>
               {/* Resizer */}
               <div
-                className={`h-1 bg-border cursor-row-resize hover:bg-primary/50 transition-colors ${
+                className={`h-1 bg-border cursor-row-resize hover:bg-primary/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 flex-shrink-0 ${
                   isBottomResizing ? 'bg-primary/50' : ''
                 }`}
                 onMouseDown={handleBottomMouseDown}
+                role="separator"
+                aria-orientation="horizontal"
+                aria-label="Resize bottom panel"
+                tabIndex={0}
               />
 
               {/* Bottom Panel Content */}
               <div
                 style={{ height: `${bottomPanelHeight}px` }}
-                className="border-t bg-background"
+                className="border-t bg-background flex-shrink-0 overflow-hidden"
               >
                 <Tabs
                   value={activeBottomTab}
                   onValueChange={(value) =>
-                    setActiveBottomTab(value as 'results' | 'messages')
+                    storeState.setActiveBottomTab(
+                      value as 'results' | 'messages'
+                    )
                   }
+                  aria-label="Bottom panel tabs"
                 >
                   <div className="border-b">
-                    <TabsList className="h-8 px-2">
-                      <TabsTrigger value="results" className="text-xs">
+                    <TabsList className="h-8 px-2" role="tablist">
+                      <TabsTrigger
+                        value="results"
+                        className="text-xs"
+                        role="tab"
+                        aria-selected={activeBottomTab === 'results'}
+                        aria-controls="results-panel"
+                      >
                         Results
                       </TabsTrigger>
-                      <TabsTrigger value="messages" className="text-xs">
+                      <TabsTrigger
+                        value="messages"
+                        className="text-xs"
+                        role="tab"
+                        aria-selected={activeBottomTab === 'messages'}
+                        aria-controls="messages-panel"
+                      >
                         Messages
                       </TabsTrigger>
                     </TabsList>
@@ -522,7 +644,10 @@ function SqlEditorPage() {
 
                   <TabsContent
                     value="results"
-                    className="m-0 h-[calc(100%-2rem)] overflow-auto"
+                    className="m-0 h-[calc(100%-2rem)] overflow-hidden"
+                    role="tabpanel"
+                    id="results-panel"
+                    aria-labelledby="results-tab"
                   >
                     <div className="p-4">
                       {executionResults.length > 0 ? (
@@ -586,7 +711,10 @@ function SqlEditorPage() {
 
                   <TabsContent
                     value="messages"
-                    className="m-0 h-[calc(100%-2rem)] overflow-auto"
+                    className="m-0 h-[calc(100%-2rem)] overflow-hidden"
+                    role="tabpanel"
+                    id="messages-panel"
+                    aria-labelledby="messages-tab"
                   >
                     <div className="p-4">
                       <div className="flex items-center justify-between mb-4">
@@ -596,6 +724,7 @@ function SqlEditorPage() {
                           size="sm"
                           onClick={() => setExecutionMessages([])}
                           disabled={executionMessages.length === 0}
+                          aria-label="Clear all messages"
                         >
                           Clear
                         </Button>

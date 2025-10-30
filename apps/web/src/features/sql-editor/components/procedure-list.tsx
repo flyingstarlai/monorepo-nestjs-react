@@ -90,7 +90,7 @@ export function ProcedureList({
             </Button>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto py-1">
+        <div className="flex-1 overflow-hidden py-1">
           {[...Array(5)].map((_, index) => (
             <div
               key={index}
@@ -137,7 +137,7 @@ export function ProcedureList({
         </div>
 
         {/* Procedure List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-hidden">
           {procedures && procedures.length > 0 ? (
             <div className="py-1">
               {procedures.map((procedure) => (
