@@ -106,7 +106,7 @@ function SqlEditorPage() {
     if (lastProcedureId && procedures?.some(p => p.id === lastProcedureId)) {
       setSelectedProcedureId(lastProcedureId);
     }
-  }, [slug, setCurrentWorkspace, lastProcedureId, procedures, setSelectedProcedureId]);
+  }, [slug, lastProcedureId, procedures]); // Remove functions from dependencies
 
   // Responsive behavior: collapse explorer on small screens
   useEffect(() => {
@@ -119,14 +119,14 @@ function SqlEditorPage() {
     handleResize(); // Check on mount
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [explorerCollapsed, setExplorerCollapsed]);
+  }, [explorerCollapsed]); // Remove function from dependencies
 
   // Update last procedure when selection changes
   useEffect(() => {
     if (selectedProcedureId) {
       setLastProcedureId(selectedProcedureId);
     }
-  }, [selectedProcedureId, setLastProcedureId]);
+  }, [selectedProcedureId]); // Remove function from dependencies
 
   // Update editor content when selected procedure changes
   useEffect(() => {

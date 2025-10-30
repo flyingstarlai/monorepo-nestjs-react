@@ -23,7 +23,7 @@ interface ProcedureDialogProps {
   onOpenChange: (open: boolean) => void;
   workspaceSlug: string;
   procedure?: StoredProcedure | null;
-  onSuccess?: () => void;
+  onSuccess?: (createdProcedure?: StoredProcedure) => void;
 }
 
 export function ProcedureDialog({
@@ -74,16 +74,19 @@ export function ProcedureDialog({
     }
 
     try {
+      let result: StoredProcedure | undefined;
+      
       if (isEditing && procedure) {
-        await updateMutation.mutateAsync(formData);
+        result = await updateMutation.mutateAsync(formData);
       } else {
-        await createMutation.mutateAsync(formData);
+        result = await createMutation.mutateAsync(formData);
       }
-      onSuccess?.();
+      
+      onSuccess?.(result);
       onOpenChange(false);
       setFormData({ name: '', sqlDraft: '' });
       setErrors({});
-    } catch (error) {
+    } catch {
       // Error is handled by the mutation
     }
   };
@@ -97,7 +100,34 @@ export function ProcedureDialog({
   };
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const newData = { ...prev, [field]: value };
+
+      // Auto-generate template when name is entered for new procedures
+      // Update template if user changes the name and sqlDraft is empty or only contains the previous template
+      if (field === 'name' && !procedure && value.trim()) {
+        const procedureName = value.trim();
+        const isSqlDraftEmptyOrTemplate =
+          !prev.sqlDraft.trim() ||
+          (prev.sqlDraft.includes('CREATE OR ALTER PROCEDURE') &&
+            prev.sqlDraft.includes('-- TODO: Add logic for'));
+
+        if (isSqlDraftEmptyOrTemplate) {
+          newData.sqlDraft = `CREATE OR ALTER PROCEDURE ${procedureName} AS
+BEGIN
+    -- TODO: Add logic for ${procedureName}
+END`;
+
+          // Clear any existing sqlDraft error since we're providing valid content
+          if (errors.sqlDraft) {
+            setErrors((prev) => ({ ...prev, sqlDraft: undefined }));
+          }
+        }
+      }
+
+      return newData;
+    });
+
     // Clear error for this field when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -144,6 +174,7 @@ export function ProcedureDialog({
               onChange={(value) => handleInputChange('sqlDraft', value)}
               readOnly={isLoading}
               height="400px"
+              workspaceSlug={workspaceSlug}
             />
             {errors.sqlDraft && (
               <Alert variant="destructive" className="mt-2">

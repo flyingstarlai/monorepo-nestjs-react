@@ -1,15 +1,15 @@
 ## 1. Layout & Theme
 
-- [ ] 1.1 Switch Monaco theme to `vs-light`; keep readability options (minimap off, wordWrap on, bracket colorization, fontSize 14)
-- [ ] 1.2 Convert SQL Editor page to flat, full‑width layout; remove heavy Card chrome around the editor; remove any container max-width (e.g., no 'max-w-7xl')
-- [ ] 1.3 Split page into two panes: Procedure Explorer (left ~280px fixed) and Editor (right flex) with a resizable splitter
-- [ ] 1.4 Add bottom panel (tabbed): Results | Messages; resizable height vs editor; default closed states defined
+- [x] 1.1 Switch Monaco theme to `vs-light`; keep readability options (minimap off, wordWrap on, bracket colorization, fontSize 14)
+- [x] 1.2 Convert SQL Editor page to flat, full‑width layout; remove heavy Card chrome around the editor; remove any container max-width (e.g., no 'max-w-7xl')
+- [x] 1.3 Split page into two panes: Procedure Explorer (left ~280px fixed) and Editor (right flex) with a resizable splitter
+- [x] 1.4 Add bottom panel (tabbed): Results | Messages; resizable height vs editor; default closed states defined
 
 ## 2. Sidebar Focus Mode
 
-- [ ] 2.1 On route enter (`/c/$slug/sql-editor`), collapse app sidebar via `useSidebar().setOpen(false)`; cache prior state
-- [ ] 2.2 On route exit, restore cached sidebar state
-- [ ] 2.3 Do not persist focus-mode collapse to cookie/local persistence
+- [x] 2.1 On route enter (`/c/$slug/sql-editor`), collapse app sidebar via `useSidebar().setOpen(false)`; cache prior state
+- [x] 2.2 On route exit, restore cached sidebar state
+- [x] 2.3 Do not persist focus-mode collapse to cookie/local persistence
 
 ## 3. Procedure Explorer
 
@@ -17,7 +17,7 @@
 - [x] 3.2 Provide actions: Create, Delete, Publish (draft), Execute (published) — defer Rename and Duplicate
 - [x] 3.3 Selection loads draft into editor without modal/context disruption
 - [x] 3.4 Optional: remember explorer width per workspace (localStorage)
-- [ ] 3.5 On Create, prefill editor with default MSSQL template `CREATE OR ALTER PROCEDURE <Name> AS BEGIN ... END` using the typed name; mark draft dirty
+- [x] 3.5 On Create, prefill editor with default MSSQL template `CREATE OR ALTER PROCEDURE <Name> AS BEGIN ... END` using the typed name; mark draft dirty
 
 ## 4. Results & Messages Panel
 
@@ -46,8 +46,8 @@
 ## 8. Responsive, A11y, QA
 
 - [x] 8.1 Responsive: collapse explorer under 1024px behind a toggle
-- [ ] 8.2 A11y: focus outlines, ARIA for menus/tabs
-- [ ] 8.3 Visual QA: flat spacing scale and tokens; contrast on light theme
+- [x] 8.2 A11y: focus outlines, ARIA for menus/tabs
+- [x] 8.3 Visual QA: flat spacing scale and tokens; contrast on light theme
 
 ## 9. Definition of Done
 
@@ -58,3 +58,4 @@
 - [x] 9.5 No API changes; behind `FEATURE_SQL_EDITOR`
 - [x] 9.6 Explorer actions exclude Rename and Duplicate
 - [x] 9.7 Creating a procedure pre-fills a default template with the typed name
+- [x] 9.8 When creating a procedure, set it as the active/selected procedure in the editor

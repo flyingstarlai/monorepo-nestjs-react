@@ -145,10 +145,15 @@ export const useSqlEditorStore = create<SqlEditorState>()(
         if (!currentWorkspaceId) return;
         
         const currentLayout = workspaceLayouts[currentWorkspaceId] || createWorkspaceLayout();
+        const newLayout = { ...currentLayout, explorerWidth: width };
+        
+        // Prevent unnecessary updates
+        if (currentLayout.explorerWidth === width) return;
+        
         set({
           workspaceLayouts: {
             ...workspaceLayouts,
-            [currentWorkspaceId]: { ...currentLayout, explorerWidth: width },
+            [currentWorkspaceId]: newLayout,
           },
         });
       },
@@ -158,14 +163,19 @@ export const useSqlEditorStore = create<SqlEditorState>()(
         if (!currentWorkspaceId) return;
         
         const currentLayout = workspaceLayouts[currentWorkspaceId] || createWorkspaceLayout();
+        const newLayout = { 
+          ...currentLayout, 
+          bottomPanelHeight: height,
+          bottomPanelOpen: height > 0,
+        };
+        
+        // Prevent unnecessary updates
+        if (JSON.stringify(currentLayout) === JSON.stringify(newLayout)) return;
+        
         set({
           workspaceLayouts: {
             ...workspaceLayouts,
-            [currentWorkspaceId]: { 
-              ...currentLayout, 
-              bottomPanelHeight: height,
-              bottomPanelOpen: height > 0,
-            },
+            [currentWorkspaceId]: newLayout,
           },
         });
       },
@@ -175,14 +185,19 @@ export const useSqlEditorStore = create<SqlEditorState>()(
         if (!currentWorkspaceId) return;
         
         const currentLayout = workspaceLayouts[currentWorkspaceId] || createWorkspaceLayout();
+        const newLayout = { 
+          ...currentLayout, 
+          bottomPanelOpen: open,
+          bottomPanelHeight: open ? (currentLayout.bottomPanelHeight || 200) : 0,
+        };
+        
+        // Prevent unnecessary updates
+        if (JSON.stringify(currentLayout) === JSON.stringify(newLayout)) return;
+        
         set({
           workspaceLayouts: {
             ...workspaceLayouts,
-            [currentWorkspaceId]: { 
-              ...currentLayout, 
-              bottomPanelOpen: open,
-              bottomPanelHeight: open ? (currentLayout.bottomPanelHeight || 200) : 0,
-            },
+            [currentWorkspaceId]: newLayout,
           },
         });
       },
@@ -192,6 +207,10 @@ export const useSqlEditorStore = create<SqlEditorState>()(
         if (!currentWorkspaceId) return;
         
         const currentLayout = workspaceLayouts[currentWorkspaceId] || createWorkspaceLayout();
+        
+        // Prevent unnecessary updates
+        if (currentLayout.activeBottomTab === tab) return;
+        
         set({
           workspaceLayouts: {
             ...workspaceLayouts,
@@ -205,6 +224,10 @@ export const useSqlEditorStore = create<SqlEditorState>()(
         if (!currentWorkspaceId) return;
         
         const currentLayout = workspaceLayouts[currentWorkspaceId] || createWorkspaceLayout();
+        
+        // Prevent unnecessary updates
+        if (currentLayout.explorerCollapsed === collapsed) return;
+        
         set({
           workspaceLayouts: {
             ...workspaceLayouts,
@@ -218,6 +241,10 @@ export const useSqlEditorStore = create<SqlEditorState>()(
         if (!currentWorkspaceId) return;
         
         const currentLayout = workspaceLayouts[currentWorkspaceId] || createWorkspaceLayout();
+        
+        // Prevent unnecessary updates
+        if (currentLayout.lastProcedureId === procedureId) return;
+        
         set({
           workspaceLayouts: {
             ...workspaceLayouts,
@@ -321,11 +348,13 @@ export const useSqlEditorSelectors = {
       sidebarCollapsed: state.sidebarCollapsed,
     })),
 
-  // Workspace layout state
+  // Workspace layout state - optimized to prevent infinite loops
   useWorkspaceLayout: () =>
     useSqlEditorStore((state) => {
-      const layout = state.currentWorkspaceId 
-        ? (state.workspaceLayouts[state.currentWorkspaceId] || createWorkspaceLayout())
+      // Use a stable reference to prevent re-renders
+      const workspaceId = state.currentWorkspaceId;
+      const layout = workspaceId && state.workspaceLayouts[workspaceId] 
+        ? state.workspaceLayouts[workspaceId]
         : createWorkspaceLayout();
       
       return {

@@ -27,10 +27,14 @@ export function useCreateProcedure(workspaceSlug: string) {
   return useMutation({
     mutationFn: (data: CreateStoredProcedureDto) =>
       sqlEditorApi.createProcedure(workspaceSlug, data),
-    onSuccess: () => {
+    onSuccess: (createdProcedure) => {
       queryClient.invalidateQueries({
         queryKey: ['sql-editor', 'procedures', workspaceSlug],
       });
+      queryClient.setQueryData(
+        ['sql-editor', 'procedures', workspaceSlug, createdProcedure.id],
+        createdProcedure
+      );
     },
   });
 }
