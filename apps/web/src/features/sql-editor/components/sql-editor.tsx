@@ -18,7 +18,6 @@ import {
   Terminal,
   ShieldCheck,
   Lock,
-  FileEdit,
 } from 'lucide-react';
 import { useValidateSql } from '../hooks/use-sql-editor';
 import { useSqlEditorStore } from '../stores/sql-editor.store';

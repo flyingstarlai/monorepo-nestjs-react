@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   Download,
   FileText,
+  ChevronsUpDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -761,6 +762,27 @@ function SqlEditorPage() {
     });
   }, []);
 
+  // Smart toggle function for SQL Editor icon
+  const handleSqlEditorToggle = useCallback(() => {
+    // If both panels are open, close explorer first
+    if (!explorerCollapsed && bottomPanelOpen) {
+      storeState.setExplorerCollapsed(true);
+    }
+    // If only explorer is open, close it and open bottom panel
+    else if (!explorerCollapsed && !bottomPanelOpen) {
+      storeState.setExplorerCollapsed(true);
+      storeState.setBottomPanelOpen(true);
+    }
+    // If only bottom panel is open, close it
+    else if (explorerCollapsed && bottomPanelOpen) {
+      storeState.setBottomPanelOpen(false);
+    }
+    // If both are closed, open explorer
+    else {
+      storeState.setExplorerCollapsed(false);
+    }
+  }, [explorerCollapsed, bottomPanelOpen, storeState]);
+
   if (error) {
     return (
       <div className="space-y-6">
@@ -778,9 +800,34 @@ function SqlEditorPage() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b bg-background flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="bg-primary/10 p-2 rounded-lg">
-            <Database className="h-5 w-5 text-primary" />
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleSqlEditorToggle}
+                className="bg-primary/10 hover:bg-primary/20 p-2 rounded-lg transition-all duration-200"
+                aria-label="Toggle panels"
+              >
+                <div className="relative">
+                  <Database className="h-5 w-5 text-primary" />
+                  <ChevronsUpDown className="h-2 w-2 text-primary/60 absolute -bottom-1 -right-1" />
+                </div>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-sm font-medium">Toggle Panels</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {!explorerCollapsed && bottomPanelOpen
+                  ? 'Hide explorer'
+                  : explorerCollapsed && bottomPanelOpen
+                    ? 'Hide bottom panel'
+                    : explorerCollapsed && !bottomPanelOpen
+                      ? 'Show explorer'
+                      : 'Show bottom panel'}
+              </p>
+            </TooltipContent>
+          </Tooltip>
           <div>
             <h1 className="text-xl font-semibold">SQL Tools</h1>
             <p className="text-sm text-muted-foreground">

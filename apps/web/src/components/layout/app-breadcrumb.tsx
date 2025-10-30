@@ -17,6 +17,11 @@ export function AppBreadcrumb() {
   const getBreadcrumbItems = () => {
     const pathname = location.pathname;
 
+    // Hide breadcrumbs on SQL editor page for cleaner interface
+    if (pathname.endsWith('/sql-editor')) {
+      return [];
+    }
+
     // Handle workspace routes: /c/:slug/...
     const workspaceMatch = pathname.match(/^\/c\/([^/]+)(.*)$/);
     if (workspaceMatch) {
@@ -121,6 +126,11 @@ export function AppBreadcrumb() {
   };
 
   const items = getBreadcrumbItems();
+
+  // Don't render breadcrumbs if no items (e.g., SQL editor page)
+  if (items.length === 0) {
+    return null;
+  }
 
   // Add home breadcrumb if not already at root
   const allItems =
