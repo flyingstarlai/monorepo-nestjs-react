@@ -89,7 +89,7 @@ function DashboardLayout() {
             <AppBreadcrumb />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0 w-full max-w-7xl overflow-hidden">
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0 w-full overflow-hidden">
           <Outlet />
         </div>
       </SidebarInset>
