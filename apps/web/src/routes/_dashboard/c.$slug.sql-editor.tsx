@@ -10,7 +10,6 @@ import {
   AlertTriangle,
   Download,
   FileText,
-  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -34,6 +33,7 @@ import {
 import { ProcedureList } from '@/features/sql-editor/components/procedure-list';
 import { ProcedureDialog } from '@/features/sql-editor/components/procedure-dialog';
 import { ExecuteProcedureDialog } from '@/features/sql-editor/components/execute-dialog';
+import { PublishDialog } from '@/features/sql-editor/components/publish-dialog';
 
 import { SqlEditorComponent } from '@/features/sql-editor/components/sql-editor';
 import {
@@ -42,6 +42,7 @@ import {
   useUpdateProcedure,
   useUnpublishProcedure,
   useValidateSql,
+  usePublishProcedure,
 } from '@/features/sql-editor/hooks/use-sql-editor';
 import type {
   StoredProcedure,
@@ -167,6 +168,9 @@ function SqlEditorPage() {
     targetProcedureName: string;
   }>({ open: false, targetProcedureId: '', targetProcedureName: '' });
 
+  const [publishDialog, setPublishDialog] = useState(false);
+  const [moveToDraftDialog, setMoveToDraftDialog] = useState(false);
+
   // Create procedure-specific validation messages from store
   const currentValidationErrors = useMemo(
     () =>
@@ -238,6 +242,10 @@ function SqlEditorPage() {
     selectedProcedureId || ''
   );
   const unpublishProcedureMutation = useUnpublishProcedure(
+    slug,
+    selectedProcedureId || ''
+  );
+  const publishProcedureMutation = usePublishProcedure(
     slug,
     selectedProcedureId || ''
   );
@@ -353,6 +361,8 @@ function SqlEditorPage() {
     try {
       await unpublishProcedureMutation.mutateAsync();
       toast.success('Procedure moved to draft successfully');
+      setMoveToDraftDialog(false);
+      refetch();
     } catch {
       toast.error('Failed to move procedure to draft');
     }
@@ -370,6 +380,21 @@ function SqlEditorPage() {
       // Error is already handled by the hook's onError
     }
   }, [selectedProcedure, editorContent, validateMutation]);
+
+  const handlePublish = useCallback(() => {
+    setPublishDialog(true);
+  }, []);
+
+  const handlePublishConfirm = useCallback(async () => {
+    try {
+      await publishProcedureMutation.mutateAsync();
+      toast.success('Procedure published successfully');
+      setPublishDialog(false);
+      refetch();
+    } catch {
+      // Error is handled by the mutation
+    }
+  }, [publishProcedureMutation, refetch]);
 
   const handleExecuteProcedure = useCallback(
     (id: string) => {
@@ -420,6 +445,18 @@ function SqlEditorPage() {
           handleExecuteProcedure(selectedProcedure.id);
         }
       }
+
+      // Publish: Cmd/Ctrl+Shift+P
+      if ((e.metaKey || e.ctrlKey) && e.key === 'p' && e.shiftKey) {
+        e.preventDefault();
+        if (
+          selectedProcedure &&
+          selectedProcedure.status === 'draft' &&
+          currentValidationErrors.length === 0
+        ) {
+          handlePublish();
+        }
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -428,6 +465,7 @@ function SqlEditorPage() {
     selectedProcedure,
     handleSaveProcedure,
     handleExecuteProcedure,
+    handlePublish,
     readOnly,
   ]);
 
@@ -801,14 +839,6 @@ function SqlEditorPage() {
         </TooltipProvider>
       </div>
 
-      {/* Feature Flag Notice */}
-      <div className="px-4 py-2 bg-blue-50 border-b flex-shrink-0">
-        <p className="text-sm text-blue-800">
-          SQL Tools is currently in beta. Stored procedures are executed against
-          your workspace&apos;s configured database.
-        </p>
-      </div>
-
       {/* Main Content */}
       <div ref={containerRef} className="flex-1 flex overflow-hidden min-h-0">
         {/* Procedures List */}
@@ -851,8 +881,9 @@ function SqlEditorPage() {
                 onChange={setEditorContent}
                 onSave={handleSaveProcedure}
                 onExecute={() => handleExecuteProcedure(selectedProcedure.id)}
-                onMoveToDraft={handleMoveToDraft}
+                onMoveToDraft={() => setMoveToDraftDialog(true)}
                 onValidate={handleValidate}
+                onPublish={handlePublish}
                 height={
                   bottomPanelOpen && bottomPanelHeight > 0
                     ? `calc(100% - ${bottomPanelHeight}px)`
@@ -861,6 +892,7 @@ function SqlEditorPage() {
                 isDirty={isDirty}
                 readOnly={selectedProcedure?.status === 'published'}
                 workspaceSlug={slug}
+                isPublishing={publishProcedureMutation.isPending}
               />
             </div>
           ) : (
@@ -1279,7 +1311,7 @@ function SqlEditorPage() {
           <DialogHeader>
             <DialogTitle>Switch Procedure Context</DialogTitle>
             <DialogDescription>
-              You have unsaved changes in the current procedure. Would you like
+              You have unsaved changes in of current procedure. Would you like
               to save them before switching to execute &quot;
               {contextSwitchDialog.targetProcedureName}&quot;?
             </DialogDescription>
@@ -1296,6 +1328,47 @@ function SqlEditorPage() {
             </Button>
             <Button onClick={() => handleContextSwitchConfirm(true)}>
               Save & Switch
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Publish Dialog */}
+      <PublishDialog
+        open={publishDialog}
+        onOpenChange={setPublishDialog}
+        workspaceSlug={slug}
+        procedure={selectedProcedure || null}
+        onSuccess={handlePublishConfirm}
+      />
+
+      {/* Move to Draft Confirmation Dialog */}
+      <Dialog open={moveToDraftDialog} onOpenChange={setMoveToDraftDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Move to Draft</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to move &quot;{selectedProcedure?.name}
+              &quot; to draft? This will make the procedure editable but
+              unavailable for execution until published again.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setMoveToDraftDialog(false)}
+              disabled={unpublishProcedureMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleMoveToDraft}
+              disabled={unpublishProcedureMutation.isPending}
+            >
+              {unpublishProcedureMutation.isPending
+                ? 'Moving...'
+                : 'Move to Draft'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { FileCode, Trash2, MoreHorizontal, Plus } from 'lucide-react';
+import {
+  FileCode,
+  Trash2,
+  MoreHorizontal,
+  Plus,
+  CheckCircle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -169,8 +175,15 @@ export function ProcedureList({
                             ? 'default'
                             : 'secondary'
                         }
-                        className="text-[10px] px-1.5 py-0.5 h-4 font-medium"
+                        className={`text-[10px] px-2 py-0.5 h-4 font-medium flex items-center gap-1 transition-all duration-200 ${
+                          procedure.status === 'published'
+                            ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200'
+                            : ''
+                        }`}
                       >
+                        {procedure.status === 'published' && (
+                          <CheckCircle className="h-2.5 w-2.5" />
+                        )}
                         {procedure.status}
                       </Badge>
                     </div>

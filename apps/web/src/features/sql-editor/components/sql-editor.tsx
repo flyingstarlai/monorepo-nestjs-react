@@ -15,8 +15,10 @@ import {
   Loader2,
   Rocket,
   Save,
-  Edit,
-  Play,
+  Terminal,
+  ShieldCheck,
+  Lock,
+  FileEdit,
 } from 'lucide-react';
 import { useValidateSql } from '../hooks/use-sql-editor';
 import { useSqlEditorStore } from '../stores/sql-editor.store';
@@ -36,6 +38,7 @@ interface SqlEditorComponentProps {
 
   isDirty?: boolean;
   workspaceSlug: string;
+  isPublishing?: boolean;
 }
 
 export function SqlEditorComponent({
@@ -51,6 +54,7 @@ export function SqlEditorComponent({
   height = '400px',
   isDirty = false,
   workspaceSlug,
+  isPublishing = false,
 }: SqlEditorComponentProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const [isValidating, setIsValidating] = useState(false);
@@ -371,8 +375,58 @@ export function SqlEditorComponent({
           </div>
         )}
 
+        {/* Read-Only Banner for Published Procedures */}
+        {readOnly && procedure?.status === 'published' && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Lock className="h-4 w-4 text-amber-600" />
+                <span className="text-sm font-medium text-amber-800">
+                  Read-Only (Published)
+                </span>
+                <span className="text-sm text-amber-600">
+                  Switch to draft to make edits
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (onMoveToDraft) {
+                    onMoveToDraft();
+                  }
+                }}
+                className="border-amber-300 text-amber-700 hover:bg-amber-100 hover:border-amber-400 transition-all duration-200"
+              >
+                Switch to Draft
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Monaco Editor */}
-        <div className="flex-1">
+        <div className="flex-1 relative">
+          {/* Read-Only Lock Indicator */}
+          {readOnly && procedure?.status === 'published' && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="absolute top-2 right-2 z-10 flex items-center gap-2 bg-green-50/90 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-green-200 shadow-sm cursor-help transition-all duration-200 hover:bg-green-100/90 hover:border-green-300 hover:shadow-md">
+                  <ShieldCheck className="h-4 w-4 text-green-600" />
+                  <span className="text-xs font-medium text-green-700">
+                    Published
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-sm font-medium">
+                  This procedure is published and read-only
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Click "Move to Draft" button to edit
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          )}
           <Editor
             height={height}
             defaultLanguage="sql"
@@ -572,9 +626,13 @@ export function SqlEditorComponent({
                         variant="default"
                         size="sm"
                         onClick={onPublish}
-                        disabled={currentValidationErrors.length > 0}
+                        disabled={!validationResult.isValid || isPublishing}
                       >
-                        <Rocket className="h-4 w-4" />
+                        {isPublishing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Rocket className="h-4 w-4" />
+                        )}
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -582,6 +640,11 @@ export function SqlEditorComponent({
                       <p className="text-xs text-muted-foreground mt-1">
                         Make available for execution
                       </p>
+                      {!validationResult.isValid && (
+                        <p className="text-xs text-destructive mt-1">
+                          Fix validation errors first
+                        </p>
+                      )}
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -594,28 +657,6 @@ export function SqlEditorComponent({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (onMoveToDraft) {
-                          onMoveToDraft();
-                        }
-                      }}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-sm">Move to draft</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Create editable version
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
                       variant="secondary"
                       size="sm"
                       onClick={() => {
@@ -624,14 +665,15 @@ export function SqlEditorComponent({
                         }
                       }}
                       disabled={isValidating}
+                      className="bg-green-600 text-white hover:bg-green-700 border-green-600 transition-all duration-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Play className="h-4 w-4" />
+                      <Terminal className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-sm">Execute procedure</p>
+                    <p className="text-sm font-medium">Execute Procedure</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Run with parameters
+                      Run this procedure with custom parameters
                     </p>
                   </TooltipContent>
                 </Tooltip>
