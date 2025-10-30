@@ -87,7 +87,7 @@ export const sqlEditorApi = {
     data: UpdateStoredProcedureDto
   ): Promise<StoredProcedure> {
     try {
-      const response = await apiClient.patch<StoredProcedure>(
+      const response = await apiClient.put<StoredProcedure>(
         `/c/${workspaceSlug}/sql-editor/${id}`,
         data
       );
@@ -117,15 +117,19 @@ export const sqlEditorApi = {
 
   async publishProcedure(
     workspaceSlug: string,
-    id: string,
-    data: PublishStoredProcedureDto
+    id: string
   ): Promise<StoredProcedure> {
     try {
-      const response = await apiClient.post<StoredProcedure>(
+      const response = await apiClient.post<{ success: boolean; procedure?: StoredProcedure; error?: string }>(
         `/c/${workspaceSlug}/sql-editor/${id}/publish`,
-        data
+        {}
       );
-      return response.data;
+      
+      if (!response.data.success) {
+        throw new SqlEditorError(response.data.error || 'Failed to publish stored procedure');
+      }
+      
+      return response.data.procedure!;
     } catch (error) {
       if (error instanceof WorkspaceError || error instanceof SqlEditorError) {
         throw error;

@@ -22,7 +22,7 @@ export interface UpdateStoredProcedureDto {
 }
 
 export interface PublishStoredProcedureDto {
-  sqlDraft: string;
+  // No data needed - server loads SQL from database
 }
 
 export interface ExecuteStoredProcedureDto {

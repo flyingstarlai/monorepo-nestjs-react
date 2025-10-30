@@ -1,4 +1,11 @@
-import { IsString, IsOptional, IsObject, IsNumber, Max, Min } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsObject,
+  IsNumber,
+  Max,
+  Min,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateStoredProcedureDto {
@@ -24,19 +31,19 @@ export class UpdateStoredProcedureDto {
 }
 
 export class ExecuteStoredProcedureDto {
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     description: 'Parameters to pass to the stored procedure',
-    example: { param1: 'value1', param2: 123 }
+    example: { param1: 'value1', param2: 123 },
   })
   @IsOptional()
   @IsObject()
   parameters?: Record<string, any>;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
     description: 'Execution timeout in seconds (max 60)',
     example: 30,
     minimum: 1,
-    maximum: 60
+    maximum: 60,
   })
   @IsOptional()
   @IsNumber()
@@ -118,6 +125,10 @@ export class ValidationResultDto {
 
   @ApiPropertyOptional({ description: 'Error column number' })
   column?: number;
+}
+
+export class PublishProcedureDto {
+  // No data needed - server loads SQL from database
 }
 
 export class PublishProcedureResponseDto {

@@ -1,7 +1,15 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { StoredProcedure, StoredProcedureStatus } from '../entities/stored-procedure.entity';
+import {
+  StoredProcedure,
+  StoredProcedureStatus,
+} from '../entities/stored-procedure.entity';
 import { MssqlConnectionRegistry } from './mssql-connection-registry.service';
 import { ActivitiesService } from '../../activities/activities.service';
 import { ActivityType } from '../../activities/entities/activity.entity';
@@ -14,7 +22,7 @@ export class PublishService {
     @InjectRepository(StoredProcedure)
     private readonly storedProcedureRepository: Repository<StoredProcedure>,
     private readonly mssqlConnectionRegistry: MssqlConnectionRegistry,
-    private readonly activitiesService: ActivitiesService,
+    private readonly activitiesService: ActivitiesService
   ) {}
 
   async publishProcedure(
@@ -22,7 +30,9 @@ export class PublishService {
     workspaceId: string,
     userId: string
   ): Promise<StoredProcedure> {
-    this.logger.log(`Publishing stored procedure ${procedureId} for workspace ${workspaceId}`);
+    this.logger.log(
+      `Publishing stored procedure ${procedureId} for workspace ${workspaceId}`
+    );
 
     // Get the procedure
     const procedure = await this.storedProcedureRepository.findOne({
@@ -40,10 +50,17 @@ export class PublishService {
 
     try {
       // Get MSSQL connection
-      const connection = await this.mssqlConnectionRegistry.getConnectionForWorkspace(workspaceId);
+      const connection =
+        await this.mssqlConnectionRegistry.getConnectionForWorkspace(
+          workspaceId
+        );
 
       // Deploy to MSSQL using CREATE OR ALTER PROCEDURE
-      await this.deployProcedureToMssql(connection, procedure.name, procedure.sqlDraft);
+      await this.deployProcedureToMssql(
+        connection,
+        procedure.name,
+        procedure.sqlDraft
+      );
 
       // Update procedure in PostgreSQL
       await this.storedProcedureRepository.update(procedureId, {
@@ -70,11 +87,16 @@ export class PublishService {
         { procedureId: procedure.id, procedureName: procedure.name }
       );
 
-      this.logger.log(`Successfully published stored procedure ${procedure.name} for workspace ${workspaceId}`);
+      this.logger.log(
+        `Successfully published stored procedure ${procedure.name} for workspace ${workspaceId}`
+      );
       return updatedProcedure;
     } catch (error) {
-      this.logger.error(`Failed to publish stored procedure ${procedureId}:`, error);
-      
+      this.logger.error(
+        `Failed to publish stored procedure ${procedureId}:`,
+        error
+      );
+
       // Record failed publish activity
       const procedure = await this.storedProcedureRepository.findOne({
         where: { id: procedureId },
@@ -87,15 +109,17 @@ export class PublishService {
           ActivityType.SQL_PROCEDURE_PUBLISH_FAILED,
           `Failed to publish stored procedure "${procedure.name}" in workspace "${procedure.workspace.name}"`,
           workspaceId,
-          { 
-            procedureId: procedure.id, 
+          {
+            procedureId: procedure.id,
             procedureName: procedure.name,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : 'Unknown error',
           }
         );
       }
 
-      throw new Error(`Failed to publish stored procedure: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to publish stored procedure: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -104,7 +128,9 @@ export class PublishService {
     workspaceId: string,
     userId: string
   ): Promise<StoredProcedure> {
-    this.logger.log(`Unpublishing stored procedure ${procedureId} for workspace ${workspaceId}`);
+    this.logger.log(
+      `Unpublishing stored procedure ${procedureId} for workspace ${workspaceId}`
+    );
 
     const procedure = await this.storedProcedureRepository.findOne({
       where: { id: procedureId, workspaceId },
@@ -121,7 +147,10 @@ export class PublishService {
 
     try {
       // Get MSSQL connection
-      const connection = await this.mssqlConnectionRegistry.getConnectionForWorkspace(workspaceId);
+      const connection =
+        await this.mssqlConnectionRegistry.getConnectionForWorkspace(
+          workspaceId
+        );
 
       // Drop procedure from MSSQL
       await this.dropProcedureFromMssql(connection, procedure.name);
@@ -151,11 +180,18 @@ export class PublishService {
         { procedureId: procedure.id, procedureName: procedure.name }
       );
 
-      this.logger.log(`Successfully unpublished stored procedure ${procedure.name} for workspace ${workspaceId}`);
+      this.logger.log(
+        `Successfully unpublished stored procedure ${procedure.name} for workspace ${workspaceId}`
+      );
       return updatedProcedure;
     } catch (error) {
-      this.logger.error(`Failed to unpublish stored procedure ${procedureId}:`, error);
-      throw new Error(`Failed to unpublish stored procedure: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(
+        `Failed to unpublish stored procedure ${procedureId}:`,
+        error
+      );
+      throw new Error(
+        `Failed to unpublish stored procedure: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -166,15 +202,25 @@ export class PublishService {
   ): Promise<void> {
     try {
       // Create CREATE OR ALTER PROCEDURE statement
-      const createProcedureSql = this.buildCreateProcedureSql(procedureName, procedureSql);
+      const createProcedureSql = this.buildCreateProcedureSql(
+        procedureName,
+        procedureSql
+      );
 
       // Execute the deployment
       await connection.query(createProcedureSql);
 
-      this.logger.debug(`Successfully deployed procedure ${procedureName} to MSSQL`);
+      this.logger.debug(
+        `Successfully deployed procedure ${procedureName} to MSSQL`
+      );
     } catch (error) {
-      this.logger.error(`Failed to deploy procedure ${procedureName} to MSSQL:`, error);
-      throw new Error(`MSSQL deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(
+        `Failed to deploy procedure ${procedureName} to MSSQL:`,
+        error
+      );
+      throw new Error(
+        `MSSQL deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -197,30 +243,70 @@ export class PublishService {
       if (exists) {
         const dropSql = `DROP PROCEDURE IF EXISTS [${procedureName}]`;
         await connection.query(dropSql);
-        this.logger.debug(`Successfully dropped procedure ${procedureName} from MSSQL`);
+        this.logger.debug(
+          `Successfully dropped procedure ${procedureName} from MSSQL`
+        );
       } else {
-        this.logger.debug(`Procedure ${procedureName} does not exist in MSSQL, skipping drop`);
+        this.logger.debug(
+          `Procedure ${procedureName} does not exist in MSSQL, skipping drop`
+        );
       }
     } catch (error) {
-      this.logger.error(`Failed to drop procedure ${procedureName} from MSSQL:`, error);
-      throw new Error(`MSSQL drop failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(
+        `Failed to drop procedure ${procedureName} from MSSQL:`,
+        error
+      );
+      throw new Error(
+        `MSSQL drop failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
-  private buildCreateProcedureSql(procedureName: string, procedureSql: string): string {
-    // Extract the procedure body (everything after AS)
-    const asIndex = procedureSql.toLowerCase().lastIndexOf(' as ');
-    if (asIndex === -1) {
-      throw new Error('Procedure SQL must contain "AS" keyword');
+  private buildCreateProcedureSql(
+    procedureName: string,
+    procedureSql: string
+  ): string {
+    const sql = procedureSql.trim();
+
+    // Detect if the SQL already includes a full procedure definition
+    const hasHeader = /\bcreate\s+(or\s+alter\s+)?procedure\b/i.test(sql);
+
+    if (hasHeader) {
+      // If it's a full definition, execute it via sp_executesql to avoid
+      // "must be first statement in batch" issues and keep the batch clean.
+      // Remove GO batch separators if present.
+      const sanitized = sql.replace(/^\s*go\s*$/gim, '').trim();
+      const escaped = sanitized.replace(/'/g, "''");
+      return `
+        BEGIN TRY
+          EXEC sp_executesql N'${escaped}';
+        END TRY
+        BEGIN CATCH
+          THROW;
+        END CATCH
+      `;
     }
 
-    const procedureBody = procedureSql.substring(asIndex + 4).trim();
+    // Treat the input as the procedure body and wrap it in a proper definition
+    const body = sql;
+    const escapedBody = body.replace(/'/g, "''");
 
-    // Build CREATE OR ALTER PROCEDURE statement
-    return `CREATE OR ALTER PROCEDURE [${procedureName}] AS\n${procedureBody}`;
+    return `
+      DECLARE @sql NVARCHAR(MAX) = N'CREATE OR ALTER PROCEDURE [${procedureName}] AS\n${escapedBody}';
+      BEGIN TRY
+        EXEC sp_executesql @sql;
+      END TRY
+      BEGIN CATCH
+        THROW;
+      END CATCH
+    `;
   }
 
-  async canUserPublishProcedure(procedureId: string, workspaceId: string, userId: string): Promise<boolean> {
+  async canUserPublishProcedure(
+    procedureId: string,
+    workspaceId: string,
+    userId: string
+  ): Promise<boolean> {
     const procedure = await this.storedProcedureRepository.findOne({
       where: { id: procedureId, workspaceId },
     });

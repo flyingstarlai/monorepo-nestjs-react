@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { sqlEditorApi } from '../api/sql-editor.api';
+import { toast } from 'sonner';
 import type {
   CreateStoredProcedureDto,
   UpdateStoredProcedureDto,
@@ -36,6 +37,10 @@ export function useCreateProcedure(workspaceSlug: string) {
         createdProcedure
       );
     },
+    onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create procedure';
+      toast.error(errorMessage);
+    },
   });
 }
 
@@ -53,6 +58,10 @@ export function useUpdateProcedure(workspaceSlug: string, id: string) {
         queryKey: ['sql-editor', 'procedures', workspaceSlug, id],
       });
     },
+    onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update procedure';
+      toast.error(errorMessage);
+    },
   });
 }
 
@@ -66,6 +75,10 @@ export function useDeleteProcedure(workspaceSlug: string) {
         queryKey: ['sql-editor', 'procedures', workspaceSlug],
       });
     },
+    onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete procedure';
+      toast.error(errorMessage);
+    },
   });
 }
 
@@ -73,8 +86,8 @@ export function usePublishProcedure(workspaceSlug: string, id: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { sqlDraft: string }) =>
-      sqlEditorApi.publishProcedure(workspaceSlug, id, data),
+    mutationFn: () =>
+      sqlEditorApi.publishProcedure(workspaceSlug, id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['sql-editor', 'procedures', workspaceSlug],
@@ -82,6 +95,10 @@ export function usePublishProcedure(workspaceSlug: string, id: string) {
       queryClient.invalidateQueries({
         queryKey: ['sql-editor', 'procedures', workspaceSlug, id],
       });
+    },
+    onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to publish procedure';
+      toast.error(errorMessage);
     },
   });
 }
@@ -108,5 +125,9 @@ export function useValidateSql(workspaceSlug: string) {
   return useMutation({
     mutationFn: (data: { sql: string }) =>
       sqlEditorApi.validateSql(workspaceSlug, data),
+    onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : 'Validation failed';
+      toast.error(errorMessage);
+    },
   });
 }
