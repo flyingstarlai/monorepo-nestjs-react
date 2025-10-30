@@ -1,5 +1,15 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { StoredProcedure } from '../types';
+
+interface WorkspaceLayoutState {
+  explorerWidth: number;
+  bottomPanelHeight: number;
+  bottomPanelOpen: boolean;
+  activeBottomTab: 'results' | 'messages';
+  explorerCollapsed: boolean;
+  lastProcedureId: string | null;
+}
 
 interface SqlEditorState {
   // Current editing state
@@ -23,6 +33,10 @@ interface SqlEditorState {
   validationErrors: string[];
   validationWarnings: string[];
 
+  // Workspace-scoped layout state (persisted)
+  workspaceLayouts: Record<string, WorkspaceLayoutState>;
+  currentWorkspaceId: string | null;
+
   // Actions
   setSelectedProcedureId: (id: string | null) => void;
   setEditorContent: (content: string) => void;
@@ -41,86 +55,234 @@ interface SqlEditorState {
   setValidationErrors: (errors: string[]) => void;
   setValidationWarnings: (warnings: string[]) => void;
 
+  // Workspace layout actions
+  setCurrentWorkspace: (workspaceId: string) => void;
+  setExplorerWidth: (width: number) => void;
+  setBottomPanelHeight: (height: number) => void;
+  setBottomPanelOpen: (open: boolean) => void;
+  setActiveBottomTab: (tab: 'results' | 'messages') => void;
+  setExplorerCollapsed: (collapsed: boolean) => void;
+  setLastProcedureId: (procedureId: string | null) => void;
+
+  // Workspace layout helpers
+  getCurrentWorkspaceLayout: () => WorkspaceLayoutState;
+  updateCurrentWorkspaceLayout: (updates: Partial<WorkspaceLayoutState>) => void;
+
   // Reset functions
   resetEditor: () => void;
   resetValidation: () => void;
   closeAllDialogs: () => void;
 }
 
-export const useSqlEditorStore = create<SqlEditorState>((set, get) => ({
-  // Initial state
-  selectedProcedureId: null,
-  editorContent: '',
-  isDirty: false,
+const createWorkspaceLayout = (): WorkspaceLayoutState => ({
+  explorerWidth: 320,
+  bottomPanelHeight: 0,
+  bottomPanelOpen: false,
+  activeBottomTab: 'results',
+  explorerCollapsed: false,
+  lastProcedureId: null,
+});
 
-  createDialogOpen: false,
-  editDialogOpen: false,
-  executeDialogOpen: false,
-  publishDialogOpen: false,
-
-  editingProcedure: null,
-  executingProcedure: null,
-  publishingProcedure: null,
-
-  sidebarCollapsed: false,
-  validationErrors: [],
-  validationWarnings: [],
-
-  // Actions
-  setSelectedProcedureId: (id) => set({ selectedProcedureId: id }),
-
-  setEditorContent: (content) => {
-    const currentContent = get().editorContent;
-    const isDirty = content !== currentContent;
-    set({
-      editorContent: content,
-      isDirty,
-    });
-  },
-
-  setIsDirty: (dirty) => set({ isDirty: dirty }),
-
-  setCreateDialogOpen: (open) => set({ createDialogOpen: open }),
-  setEditDialogOpen: (open) => set({ editDialogOpen: open }),
-  setExecuteDialogOpen: (open) => set({ executeDialogOpen: open }),
-  setPublishDialogOpen: (open) => set({ publishDialogOpen: open }),
-
-  setEditingProcedure: (procedure) => set({ editingProcedure: procedure }),
-  setExecutingProcedure: (procedure) => set({ executingProcedure: procedure }),
-  setPublishingProcedure: (procedure) =>
-    set({ publishingProcedure: procedure }),
-
-  setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
-  setValidationErrors: (errors) => set({ validationErrors: errors }),
-  setValidationWarnings: (warnings) => set({ validationWarnings: warnings }),
-
-  // Reset functions
-  resetEditor: () =>
-    set({
+export const useSqlEditorStore = create<SqlEditorState>()(
+  persist(
+    (set, get) => ({
+      // Initial state
       selectedProcedureId: null,
       editorContent: '',
       isDirty: false,
-      validationErrors: [],
-      validationWarnings: [],
-    }),
 
-  resetValidation: () =>
-    set({
-      validationErrors: [],
-      validationWarnings: [],
-    }),
-
-  closeAllDialogs: () =>
-    set({
       createDialogOpen: false,
       editDialogOpen: false,
       executeDialogOpen: false,
       publishDialogOpen: false,
+
       editingProcedure: null,
       executingProcedure: null,
       publishingProcedure: null,
+
+      sidebarCollapsed: false,
+      validationErrors: [],
+      validationWarnings: [],
+
+      // Workspace layout state
+      workspaceLayouts: {},
+      currentWorkspaceId: null,
+
+      // Actions
+      setSelectedProcedureId: (id) => set({ selectedProcedureId: id }),
+
+      setEditorContent: (content) => {
+        const currentContent = get().editorContent;
+        const isDirty = content !== currentContent;
+        set({
+          editorContent: content,
+          isDirty,
+        });
+      },
+
+      setIsDirty: (dirty) => set({ isDirty: dirty }),
+
+      setCreateDialogOpen: (open) => set({ createDialogOpen: open }),
+      setEditDialogOpen: (open) => set({ editDialogOpen: open }),
+      setExecuteDialogOpen: (open) => set({ executeDialogOpen: open }),
+      setPublishDialogOpen: (open) => set({ publishDialogOpen: open }),
+
+      setEditingProcedure: (procedure) => set({ editingProcedure: procedure }),
+      setExecutingProcedure: (procedure) => set({ executingProcedure: procedure }),
+      setPublishingProcedure: (procedure) =>
+        set({ publishingProcedure: procedure }),
+
+      setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
+      setValidationErrors: (errors) => set({ validationErrors: errors }),
+      setValidationWarnings: (warnings) => set({ validationWarnings: warnings }),
+
+      // Workspace layout actions
+      setCurrentWorkspace: (workspaceId) =>
+        set({ currentWorkspaceId: workspaceId }),
+
+      setExplorerWidth: (width) => {
+        const { currentWorkspaceId, workspaceLayouts } = get();
+        if (!currentWorkspaceId) return;
+        
+        const currentLayout = workspaceLayouts[currentWorkspaceId] || createWorkspaceLayout();
+        set({
+          workspaceLayouts: {
+            ...workspaceLayouts,
+            [currentWorkspaceId]: { ...currentLayout, explorerWidth: width },
+          },
+        });
+      },
+
+      setBottomPanelHeight: (height) => {
+        const { currentWorkspaceId, workspaceLayouts } = get();
+        if (!currentWorkspaceId) return;
+        
+        const currentLayout = workspaceLayouts[currentWorkspaceId] || createWorkspaceLayout();
+        set({
+          workspaceLayouts: {
+            ...workspaceLayouts,
+            [currentWorkspaceId]: { 
+              ...currentLayout, 
+              bottomPanelHeight: height,
+              bottomPanelOpen: height > 0,
+            },
+          },
+        });
+      },
+
+      setBottomPanelOpen: (open) => {
+        const { currentWorkspaceId, workspaceLayouts } = get();
+        if (!currentWorkspaceId) return;
+        
+        const currentLayout = workspaceLayouts[currentWorkspaceId] || createWorkspaceLayout();
+        set({
+          workspaceLayouts: {
+            ...workspaceLayouts,
+            [currentWorkspaceId]: { 
+              ...currentLayout, 
+              bottomPanelOpen: open,
+              bottomPanelHeight: open ? (currentLayout.bottomPanelHeight || 200) : 0,
+            },
+          },
+        });
+      },
+
+      setActiveBottomTab: (tab) => {
+        const { currentWorkspaceId, workspaceLayouts } = get();
+        if (!currentWorkspaceId) return;
+        
+        const currentLayout = workspaceLayouts[currentWorkspaceId] || createWorkspaceLayout();
+        set({
+          workspaceLayouts: {
+            ...workspaceLayouts,
+            [currentWorkspaceId]: { ...currentLayout, activeBottomTab: tab },
+          },
+        });
+      },
+
+      setExplorerCollapsed: (collapsed) => {
+        const { currentWorkspaceId, workspaceLayouts } = get();
+        if (!currentWorkspaceId) return;
+        
+        const currentLayout = workspaceLayouts[currentWorkspaceId] || createWorkspaceLayout();
+        set({
+          workspaceLayouts: {
+            ...workspaceLayouts,
+            [currentWorkspaceId]: { ...currentLayout, explorerCollapsed: collapsed },
+          },
+        });
+      },
+
+      setLastProcedureId: (procedureId) => {
+        const { currentWorkspaceId, workspaceLayouts } = get();
+        if (!currentWorkspaceId) return;
+        
+        const currentLayout = workspaceLayouts[currentWorkspaceId] || createWorkspaceLayout();
+        set({
+          workspaceLayouts: {
+            ...workspaceLayouts,
+            [currentWorkspaceId]: { ...currentLayout, lastProcedureId: procedureId },
+          },
+        });
+      },
+
+      // Reset functions
+      resetEditor: () =>
+        set({
+          selectedProcedureId: null,
+          editorContent: '',
+          isDirty: false,
+          validationErrors: [],
+          validationWarnings: [],
+        }),
+
+      resetValidation: () =>
+        set({
+          validationErrors: [],
+          validationWarnings: [],
+        }),
+
+      closeAllDialogs: () =>
+        set({
+          createDialogOpen: false,
+          editDialogOpen: false,
+          executeDialogOpen: false,
+          publishDialogOpen: false,
+          editingProcedure: null,
+          executingProcedure: null,
+          publishingProcedure: null,
+        }),
+
+      // Workspace layout helpers
+      getCurrentWorkspaceLayout: () => {
+        const { currentWorkspaceId, workspaceLayouts } = get();
+        if (!currentWorkspaceId) return createWorkspaceLayout();
+        return workspaceLayouts[currentWorkspaceId] || createWorkspaceLayout();
+      },
+
+      updateCurrentWorkspaceLayout: (updates) => {
+        const { currentWorkspaceId, workspaceLayouts } = get();
+        if (!currentWorkspaceId) return;
+        
+        const currentLayout = workspaceLayouts[currentWorkspaceId] || createWorkspaceLayout();
+        set({
+          workspaceLayouts: {
+            ...workspaceLayouts,
+            [currentWorkspaceId]: { ...currentLayout, ...updates },
+          },
+        });
+      },
     }),
-}));
+    {
+      name: 'sql-editor-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        workspaceLayouts: state.workspaceLayouts,
+        currentWorkspaceId: state.currentWorkspaceId,
+      }),
+    }
+  )
+);
 
 // Selectors for common combinations
 export const useSqlEditorSelectors = {
@@ -157,5 +319,34 @@ export const useSqlEditorSelectors = {
   useUIState: () =>
     useSqlEditorStore((state) => ({
       sidebarCollapsed: state.sidebarCollapsed,
+    })),
+
+  // Workspace layout state
+  useWorkspaceLayout: () =>
+    useSqlEditorStore((state) => {
+      const layout = state.currentWorkspaceId 
+        ? (state.workspaceLayouts[state.currentWorkspaceId] || createWorkspaceLayout())
+        : createWorkspaceLayout();
+      
+      return {
+        explorerWidth: layout.explorerWidth,
+        bottomPanelHeight: layout.bottomPanelHeight,
+        bottomPanelOpen: layout.bottomPanelOpen,
+        activeBottomTab: layout.activeBottomTab,
+        explorerCollapsed: layout.explorerCollapsed,
+        lastProcedureId: layout.lastProcedureId,
+      };
+    }),
+
+  useWorkspaceLayoutActions: () =>
+    useSqlEditorStore((state) => ({
+      setCurrentWorkspace: state.setCurrentWorkspace,
+      setExplorerWidth: state.setExplorerWidth,
+      setBottomPanelHeight: state.setBottomPanelHeight,
+      setBottomPanelOpen: state.setBottomPanelOpen,
+      setActiveBottomTab: state.setActiveBottomTab,
+      setExplorerCollapsed: state.setExplorerCollapsed,
+      setLastProcedureId: state.setLastProcedureId,
+      updateCurrentWorkspaceLayout: state.updateCurrentWorkspaceLayout,
     })),
 };

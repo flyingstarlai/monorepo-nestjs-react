@@ -1,6 +1,6 @@
 import { createFileRoute, useParams, useBlocker } from '@tanstack/react-router';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Database, Minimize2, Maximize2 } from 'lucide-react';
+import { Database, Minimize2, Maximize2, PanelLeft, PanelRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -16,7 +16,7 @@ import {
   useDeleteProcedure,
   useUpdateProcedure,
 } from '@/features/sql-editor/hooks/use-sql-editor';
-import { useSqlEditorStore } from '@/features/sql-editor/stores/sql-editor.store';
+import { useSqlEditorStore, useSqlEditorSelectors } from '@/features/sql-editor/stores/sql-editor.store';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/_dashboard/c/$slug/sql-editor')({
@@ -25,13 +25,28 @@ export const Route = createFileRoute('/_dashboard/c/$slug/sql-editor')({
 
 function SqlEditorPage() {
   const { slug } = useParams({ from: '/_dashboard/c/$slug/sql-editor' });
-  const [explorerWidth, setExplorerWidth] = useState(320); // Default width
   const [isResizing, setIsResizing] = useState(false);
-  const [bottomPanelHeight, setBottomPanelHeight] = useState(0); // 0 = closed
-  const [activeBottomTab, setActiveBottomTab] = useState<
-    'results' | 'messages'
-  >('results');
   const [isBottomResizing, setIsBottomResizing] = useState(false);
+
+  // Workspace layout state from Zustand
+  const {
+    explorerWidth,
+    bottomPanelHeight,
+    bottomPanelOpen,
+    activeBottomTab,
+    explorerCollapsed,
+    lastProcedureId,
+  } = useSqlEditorSelectors.useWorkspaceLayout();
+  
+  const {
+    setCurrentWorkspace,
+    setExplorerWidth,
+    setBottomPanelHeight,
+    setBottomPanelOpen,
+    setActiveBottomTab,
+    setExplorerCollapsed,
+    setLastProcedureId,
+  } = useSqlEditorSelectors.useWorkspaceLayoutActions();
   const [executionResults, setExecutionResults] = useState<
     Record<string, unknown>[]
   >([]);
@@ -82,6 +97,36 @@ function SqlEditorPage() {
     (p) => p.id === selectedProcedureId
   );
   const readOnly = selectedProcedure?.status === 'published';
+
+  // Initialize workspace and restore last procedure
+  useEffect(() => {
+    setCurrentWorkspace(slug);
+    
+    // Restore last selected procedure if available
+    if (lastProcedureId && procedures?.some(p => p.id === lastProcedureId)) {
+      setSelectedProcedureId(lastProcedureId);
+    }
+  }, [slug, setCurrentWorkspace, lastProcedureId, procedures, setSelectedProcedureId]);
+
+  // Responsive behavior: collapse explorer on small screens
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024 && !explorerCollapsed) {
+        setExplorerCollapsed(true);
+      }
+    };
+
+    handleResize(); // Check on mount
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [explorerCollapsed, setExplorerCollapsed]);
+
+  // Update last procedure when selection changes
+  useEffect(() => {
+    if (selectedProcedureId) {
+      setLastProcedureId(selectedProcedureId);
+    }
+  }, [selectedProcedureId, setLastProcedureId]);
 
   // Update editor content when selected procedure changes
   useEffect(() => {
@@ -201,7 +246,8 @@ function SqlEditorPage() {
     error?: string;
   }) => {
     // Show bottom panel if hidden
-    if (bottomPanelHeight === 0) {
+    if (!bottomPanelOpen) {
+      setBottomPanelOpen(true);
       setBottomPanelHeight(200);
     }
 
@@ -228,7 +274,8 @@ function SqlEditorPage() {
 
   const handleValidationError = (errors: string[], warnings: string[]) => {
     // Show bottom panel if hidden and there are errors
-    if (bottomPanelHeight === 0 && (errors.length > 0 || warnings.length > 0)) {
+    if (!bottomPanelOpen && (errors.length > 0 || warnings.length > 0)) {
+      setBottomPanelOpen(true);
       setBottomPanelHeight(200);
     }
 
@@ -347,16 +394,28 @@ function SqlEditorPage() {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => setExplorerCollapsed(!explorerCollapsed)}
+          >
+            {explorerCollapsed ? (
+              <PanelRight className="h-4 w-4 mr-2" />
+            ) : (
+              <PanelLeft className="h-4 w-4 mr-2" />
+            )}
+            {explorerCollapsed ? 'Show Explorer' : 'Hide Explorer'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() =>
-              setBottomPanelHeight(bottomPanelHeight === 0 ? 200 : 0)
+              setBottomPanelOpen(!bottomPanelOpen)
             }
           >
-            {bottomPanelHeight === 0 ? (
+            {!bottomPanelOpen ? (
               <Maximize2 className="h-4 w-4 mr-2" />
             ) : (
               <Minimize2 className="h-4 w-4 mr-2" />
             )}
-            {bottomPanelHeight === 0 ? 'Show Panel' : 'Hide Panel'}
+            {!bottomPanelOpen ? 'Show Panel' : 'Hide Panel'}
           </Button>
           <Button onClick={handleCreateProcedure}>Create Procedure</Button>
         </div>
@@ -374,8 +433,11 @@ function SqlEditorPage() {
       <div ref={containerRef} className="flex-1 flex overflow-hidden">
         {/* Procedures List */}
         <div
-          style={{ width: `${explorerWidth}px` }}
-          className="border-r bg-muted/20 overflow-y-auto flex-shrink-0"
+          style={{ 
+            width: explorerCollapsed ? 0 : `${explorerWidth}px`,
+            display: explorerCollapsed ? 'none' : 'block'
+          }}
+          className="border-r bg-muted/20 overflow-y-auto flex-shrink-0 transition-all duration-200"
         >
           <ProcedureList
             procedures={procedures}
@@ -406,7 +468,7 @@ function SqlEditorPage() {
               onChange={setEditorContent}
               onSave={handleSaveProcedure}
               height={
-                bottomPanelHeight > 0
+                bottomPanelOpen && bottomPanelHeight > 0
                   ? `calc(100% - ${bottomPanelHeight}px)`
                   : '100%'
               }
@@ -426,7 +488,7 @@ function SqlEditorPage() {
           )}
 
           {/* Bottom Panel */}
-          {bottomPanelHeight > 0 && (
+          {bottomPanelOpen && bottomPanelHeight > 0 && (
             <>
               {/* Resizer */}
               <div
