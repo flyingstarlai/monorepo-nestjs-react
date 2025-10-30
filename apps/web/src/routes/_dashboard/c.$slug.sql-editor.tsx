@@ -10,8 +10,6 @@ import {
   AlertTriangle,
   Download,
   FileText,
-  Save,
-  Rocket,
   Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -770,44 +768,6 @@ function SqlEditorPage() {
 
             <div className="w-px h-5 bg-border mx-1" />
 
-          <TooltipProvider>
-                <TooltipProvider>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setPublishDialogOpen(true)}
-                        disabled={!selectedProcedure || selectedProcedure.status === 'published'}
-                        aria-label="Publish procedure"
-                      >
-                        <Rocket className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Publish procedure</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                </TooltipProvider>
-          </TooltipProvider>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleSaveProcedure}
-                  disabled={!selectedProcedure || readOnly || !isDirty}
-                  aria-label="Save (Cmd/Ctrl+S)"
-                >
-                  <Save className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {readOnly ? 'Published procedures are read-only' : 'Save (Cmd/Ctrl+S)'}
-              </TooltipContent>
-            </Tooltip>
-
             {selectedProcedure?.status === 'published' && (
               <TooltipProvider>
                 <Tooltip>
@@ -826,22 +786,7 @@ function SqlEditorPage() {
               </TooltipProvider>
             )}
 
-            {selectedProcedure?.status === 'draft' && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handlePublishProcedure(selectedProcedure.id)}
-                    disabled={!editorContent.trim()}
-                    aria-label="Publish"
-                  >
-                    <Rocket className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Publish</TooltipContent>
-              </Tooltip>
-            )}
+
           </div>
         </TooltipProvider>
       </div>
