@@ -809,10 +809,7 @@ function SqlEditorPage() {
                 className="bg-primary/10 hover:bg-primary/20 p-2 rounded-lg transition-all duration-200"
                 aria-label="Toggle panels"
               >
-                <div className="relative">
-                  <Database className="h-5 w-5 text-primary" />
-                  <ChevronsUpDown className="h-2 w-2 text-primary/60 absolute -bottom-1 -right-1" />
-                </div>
+                <ChevronsUpDown className="h-4 w-4 text-primary" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -828,6 +825,9 @@ function SqlEditorPage() {
               </p>
             </TooltipContent>
           </Tooltip>
+          <div className="bg-primary/10 p-2 rounded-lg">
+            <Database className="h-5 w-5 text-primary" />
+          </div>
           <div>
             <h1 className="text-xl font-semibold">SQL Tools</h1>
             <p className="text-sm text-muted-foreground">
