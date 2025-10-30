@@ -172,7 +172,7 @@ export function WorkspaceSwitcher() {
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="gap-2 p-2"
               onClick={() => {
                 router.navigate({
@@ -183,9 +183,7 @@ export function WorkspaceSwitcher() {
               <div className="flex size-6 items-center justify-center rounded-md border bg-muted">
                 <Plus className="size-4" />
               </div>
-              <div className="font-medium">
-                Create workspace
-              </div>
+              <div className="font-medium">Create workspace</div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

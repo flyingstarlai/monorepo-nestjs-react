@@ -11,7 +11,9 @@ export class WorkspaceAuthController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('profile')
-  async getProfile(@Request() req: { user: User; membership: any; workspace: any }) {
+  async getProfile(
+    @Request() req: { user: User; membership: any; workspace: any }
+  ) {
     const { user, membership, workspace } = req;
 
     // Set last active workspace when profile is accessed successfully

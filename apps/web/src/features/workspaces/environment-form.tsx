@@ -71,15 +71,15 @@ export function EnvironmentForm({
   useEffect(() => {
     if (testSuccessful && !environment && testedValues) {
       const currentValues = form.state.values;
-      
+
       // Only reset test success if critical connection fields change from what was tested
-      const criticalFieldsChanged = 
+      const criticalFieldsChanged =
         currentValues.host !== testedValues.host ||
         currentValues.port !== testedValues.port ||
         currentValues.username !== testedValues.username ||
         currentValues.password !== testedValues.password ||
         currentValues.database !== testedValues.database;
-      
+
       if (criticalFieldsChanged) {
         setTestSuccessful(false);
         setTestedValues(null);
@@ -97,7 +97,7 @@ export function EnvironmentForm({
         if (response.environment) {
           // Reset tested values for existing environments
           setTestedValues(null);
-          
+
           // Populate form with existing data (mask password for security)
           form.setFieldValue('host', response.environment.host);
           form.setFieldValue('port', response.environment.port);
@@ -215,7 +215,7 @@ export function EnvironmentForm({
         if (!environment) {
           setTestedValues(formData);
         }
-        
+
         toast.success(
           '✅ Connection test successful! Database is reachable and credentials are valid.'
         );

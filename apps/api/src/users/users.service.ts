@@ -127,7 +127,8 @@ export class UsersService {
     workspaceId?: string;
     workspaceRole?: string;
   }): Promise<User> {
-    const { username, name, password, roleName, workspaceId, workspaceRole } = userData;
+    const { username, name, password, roleName, workspaceId, workspaceRole } =
+      userData;
 
     // Check if username already exists
     const existingUser = await this.findByUsername(username);
@@ -170,20 +171,27 @@ export class UsersService {
       }
     } else if (!workspaceId && workspaceRole) {
       // Attempt default workspace assignment
-      await this.assignDefaultWorkspace(createdUser.id, workspaceRole as WorkspaceRole);
+      await this.assignDefaultWorkspace(
+        createdUser.id,
+        workspaceRole as WorkspaceRole
+      );
     }
 
     return createdUser;
   }
 
-  private async assignDefaultWorkspace(userId: string, role: WorkspaceRole): Promise<void> {
+  private async assignDefaultWorkspace(
+    userId: string,
+    role: WorkspaceRole
+  ): Promise<void> {
     const defaultWorkspaceSlug = process.env.DEFAULT_WORKSPACE_SLUG;
     if (!defaultWorkspaceSlug) {
       return; // No default workspace configured, skip assignment
     }
 
     try {
-      const defaultWorkspace = await this.workspacesService.findBySlug(defaultWorkspaceSlug);
+      const defaultWorkspace =
+        await this.workspacesService.findBySlug(defaultWorkspaceSlug);
       if (defaultWorkspace && defaultWorkspace.isActive) {
         await this.workspacesService.addOrUpdateMember(
           defaultWorkspace.id,
@@ -220,7 +228,10 @@ export class UsersService {
     }
   }
 
-  async setLastActiveWorkspace(userId: string, workspaceId: string): Promise<void> {
+  async setLastActiveWorkspace(
+    userId: string,
+    workspaceId: string
+  ): Promise<void> {
     await this.usersRepository.update(userId, {
       lastActiveWorkspaceId: workspaceId,
       lastActiveWorkspaceAt: new Date(),
@@ -267,8 +278,11 @@ export class UsersService {
   }
 
   async getFallbackWorkspaceSlug(userId: string): Promise<string | null> {
-    const memberships = await this.workspacesService.findMembershipsByUser(userId);
-    const activeMemberships = memberships.filter(m => m.isActive && m.workspace.isActive);
+    const memberships =
+      await this.workspacesService.findMembershipsByUser(userId);
+    const activeMemberships = memberships.filter(
+      (m) => m.isActive && m.workspace.isActive
+    );
 
     if (activeMemberships.length === 0) {
       return null;
@@ -277,15 +291,17 @@ export class UsersService {
     // Prefer DEFAULT_WORKSPACE_SLUG if user is a member
     const defaultSlug = process.env.DEFAULT_WORKSPACE_SLUG;
     if (defaultSlug) {
-      const defaultMembership = activeMemberships.find(m => m.workspace.slug === defaultSlug);
+      const defaultMembership = activeMemberships.find(
+        (m) => m.workspace.slug === defaultSlug
+      );
       if (defaultMembership) {
         return defaultMembership.workspace.slug;
       }
     }
 
     // Otherwise, select by earliest joinedAt
-    const sortedMemberships = activeMemberships.sort((a, b) => 
-      new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()
+    const sortedMemberships = activeMemberships.sort(
+      (a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()
     );
 
     return sortedMemberships[0].workspace.slug;

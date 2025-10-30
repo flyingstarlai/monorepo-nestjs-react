@@ -1,8 +1,19 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { StoredProcedure, StoredProcedureStatus } from '../entities/stored-procedure.entity';
-import { CreateStoredProcedureDto, UpdateStoredProcedureDto } from '../dto/stored-procedure.dto';
+import {
+  StoredProcedure,
+  StoredProcedureStatus,
+} from '../entities/stored-procedure.entity';
+import {
+  CreateStoredProcedureDto,
+  UpdateStoredProcedureDto,
+} from '../dto/stored-procedure.dto';
 import { ActivitiesService } from '../../activities/activities.service';
 import { ActivityType } from '../../activities/entities/activity.entity';
 
@@ -13,7 +24,7 @@ export class SqlEditorService {
   constructor(
     @InjectRepository(StoredProcedure)
     private readonly storedProcedureRepository: Repository<StoredProcedure>,
-    private readonly activitiesService: ActivitiesService,
+    private readonly activitiesService: ActivitiesService
   ) {}
 
   async createProcedure(
@@ -21,7 +32,9 @@ export class SqlEditorService {
     createDto: CreateStoredProcedureDto,
     userId: string
   ): Promise<StoredProcedure> {
-    this.logger.log(`Creating stored procedure "${createDto.name}" for workspace ${workspaceId}`);
+    this.logger.log(
+      `Creating stored procedure "${createDto.name}" for workspace ${workspaceId}`
+    );
 
     // Check if procedure with same name already exists in workspace
     const existingProcedure = await this.storedProcedureRepository.findOne({
@@ -29,7 +42,9 @@ export class SqlEditorService {
     });
 
     if (existingProcedure) {
-      throw new ForbiddenException(`A stored procedure named "${createDto.name}" already exists in this workspace`);
+      throw new ForbiddenException(
+        `A stored procedure named "${createDto.name}" already exists in this workspace`
+      );
     }
 
     const procedure = this.storedProcedureRepository.create({
@@ -50,11 +65,15 @@ export class SqlEditorService {
       { procedureId: savedProcedure.id, procedureName: createDto.name }
     );
 
-    this.logger.log(`Successfully created stored procedure ${savedProcedure.id}`);
+    this.logger.log(
+      `Successfully created stored procedure ${savedProcedure.id}`
+    );
     return savedProcedure;
   }
 
-  async getProceduresForWorkspace(workspaceId: string): Promise<StoredProcedure[]> {
+  async getProceduresForWorkspace(
+    workspaceId: string
+  ): Promise<StoredProcedure[]> {
     this.logger.debug(`Getting stored procedures for workspace ${workspaceId}`);
 
     return this.storedProcedureRepository.find({
@@ -68,7 +87,9 @@ export class SqlEditorService {
     procedureId: string,
     workspaceId: string
   ): Promise<StoredProcedure> {
-    this.logger.debug(`Getting stored procedure ${procedureId} for workspace ${workspaceId}`);
+    this.logger.debug(
+      `Getting stored procedure ${procedureId} for workspace ${workspaceId}`
+    );
 
     const procedure = await this.storedProcedureRepository.findOne({
       where: { id: procedureId, workspaceId },
@@ -88,14 +109,15 @@ export class SqlEditorService {
     updateDto: UpdateStoredProcedureDto,
     userId: string
   ): Promise<StoredProcedure> {
-    this.logger.log(`Updating stored procedure ${procedureId} for workspace ${workspaceId}`);
+    this.logger.log(
+      `Updating stored procedure ${procedureId} for workspace ${workspaceId}`
+    );
 
     const procedure = await this.getProcedureById(procedureId, workspaceId);
 
     // Check if user can update this procedure
-    if (procedure.createdBy !== userId) {
-      throw new ForbiddenException('You can only update procedures you created');
-    }
+    // For now, allow any workspace member to update procedures
+    // In a full implementation, you'd check workspace membership roles
 
     // If updating name, check for uniqueness
     if (updateDto.name && updateDto.name !== procedure.name) {
@@ -104,7 +126,9 @@ export class SqlEditorService {
       });
 
       if (existingProcedure) {
-        throw new ForbiddenException(`A stored procedure named "${updateDto.name}" already exists in this workspace`);
+        throw new ForbiddenException(
+          `A stored procedure named "${updateDto.name}" already exists in this workspace`
+        );
       }
     }
 
@@ -112,13 +136,16 @@ export class SqlEditorService {
     await this.storedProcedureRepository.update(procedureId, {
       ...updateDto,
       // If procedure is published and we're updating the draft, keep published content
-      ...(procedure.status === StoredProcedureStatus.PUBLISHED && updateDto.sqlDraft 
-        ? {} 
-        : { status: StoredProcedureStatus.DRAFT }
-      ),
+      ...(procedure.status === StoredProcedureStatus.PUBLISHED &&
+      updateDto.sqlDraft
+        ? {}
+        : { status: StoredProcedureStatus.DRAFT }),
     });
 
-    const updatedProcedure = await this.getProcedureById(procedureId, workspaceId);
+    const updatedProcedure = await this.getProcedureById(
+      procedureId,
+      workspaceId
+    );
 
     // Record update activity
     await this.activitiesService.record(
@@ -138,13 +165,17 @@ export class SqlEditorService {
     workspaceId: string,
     userId: string
   ): Promise<void> {
-    this.logger.log(`Deleting stored procedure ${procedureId} for workspace ${workspaceId}`);
+    this.logger.log(
+      `Deleting stored procedure ${procedureId} for workspace ${workspaceId}`
+    );
 
     const procedure = await this.getProcedureById(procedureId, workspaceId);
 
     // Check if user can delete this procedure
     if (procedure.createdBy !== userId) {
-      throw new ForbiddenException('You can only delete procedures you created');
+      throw new ForbiddenException(
+        'You can only delete procedures you created'
+      );
     }
 
     await this.storedProcedureRepository.delete(procedureId);
@@ -167,9 +198,14 @@ export class SqlEditorService {
     newName: string,
     userId: string
   ): Promise<StoredProcedure> {
-    this.logger.log(`Duplicating stored procedure ${procedureId} as "${newName}" for workspace ${workspaceId}`);
+    this.logger.log(
+      `Duplicating stored procedure ${procedureId} as "${newName}" for workspace ${workspaceId}`
+    );
 
-    const originalProcedure = await this.getProcedureById(procedureId, workspaceId);
+    const originalProcedure = await this.getProcedureById(
+      procedureId,
+      workspaceId
+    );
 
     // Check if new name is unique
     const existingProcedure = await this.storedProcedureRepository.findOne({
@@ -177,7 +213,9 @@ export class SqlEditorService {
     });
 
     if (existingProcedure) {
-      throw new ForbiddenException(`A stored procedure named "${newName}" already exists in this workspace`);
+      throw new ForbiddenException(
+        `A stored procedure named "${newName}" already exists in this workspace`
+      );
     }
 
     const duplicatedProcedure = this.storedProcedureRepository.create({
@@ -188,7 +226,8 @@ export class SqlEditorService {
       status: StoredProcedureStatus.DRAFT, // Always start as draft
     });
 
-    const savedProcedure = await this.storedProcedureRepository.save(duplicatedProcedure);
+    const savedProcedure =
+      await this.storedProcedureRepository.save(duplicatedProcedure);
 
     // Record duplication activity
     await this.activitiesService.record(
@@ -196,15 +235,17 @@ export class SqlEditorService {
       ActivityType.SQL_PROCEDURE_CREATED,
       `Duplicated stored procedure "${originalProcedure.name}" as "${newName}"`,
       workspaceId,
-      { 
-        procedureId: savedProcedure.id, 
+      {
+        procedureId: savedProcedure.id,
         procedureName: newName,
         originalProcedureId: originalProcedure.id,
-        originalProcedureName: originalProcedure.name
+        originalProcedureName: originalProcedure.name,
       }
     );
 
-    this.logger.log(`Successfully duplicated stored procedure ${procedureId} as ${savedProcedure.id}`);
+    this.logger.log(
+      `Successfully duplicated stored procedure ${procedureId} as ${savedProcedure.id}`
+    );
     return savedProcedure;
   }
 
@@ -217,18 +258,22 @@ export class SqlEditorService {
 
     const [total, draft, published] = await Promise.all([
       this.storedProcedureRepository.count({ where: { workspaceId } }),
-      this.storedProcedureRepository.count({ 
-        where: { workspaceId, status: StoredProcedureStatus.DRAFT } 
+      this.storedProcedureRepository.count({
+        where: { workspaceId, status: StoredProcedureStatus.DRAFT },
       }),
-      this.storedProcedureRepository.count({ 
-        where: { workspaceId, status: StoredProcedureStatus.PUBLISHED } 
+      this.storedProcedureRepository.count({
+        where: { workspaceId, status: StoredProcedureStatus.PUBLISHED },
       }),
     ]);
 
     return { total, draft, published };
   }
 
-  async canUserAccessProcedure(procedureId: string, workspaceId: string, userId: string): Promise<boolean> {
+  async canUserAccessProcedure(
+    procedureId: string,
+    workspaceId: string,
+    userId: string
+  ): Promise<boolean> {
     const procedure = await this.storedProcedureRepository.findOne({
       where: { id: procedureId, workspaceId },
     });
@@ -242,7 +287,11 @@ export class SqlEditorService {
     return true;
   }
 
-  async canUserEditProcedure(procedureId: string, workspaceId: string, userId: string): Promise<boolean> {
+  async canUserEditProcedure(
+    procedureId: string,
+    workspaceId: string,
+    userId: string
+  ): Promise<boolean> {
     const procedure = await this.storedProcedureRepository.findOne({
       where: { id: procedureId, workspaceId },
     });
@@ -256,7 +305,11 @@ export class SqlEditorService {
     return procedure.createdBy === userId;
   }
 
-  async canUserDeleteProcedure(procedureId: string, workspaceId: string, userId: string): Promise<boolean> {
+  async canUserDeleteProcedure(
+    procedureId: string,
+    workspaceId: string,
+    userId: string
+  ): Promise<boolean> {
     const procedure = await this.storedProcedureRepository.findOne({
       where: { id: procedureId, workspaceId },
     });

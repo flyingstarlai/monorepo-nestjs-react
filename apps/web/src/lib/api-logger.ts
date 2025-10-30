@@ -55,11 +55,14 @@ interface PerformanceMetrics {
   };
   errorRate: number;
   statusCodes: Record<number, number>;
-  endpoints: Record<string, {
-    count: number;
-    averageTime: number;
-    errors: number;
-  }>;
+  endpoints: Record<
+    string,
+    {
+      count: number;
+      averageTime: number;
+      errors: number;
+    }
+  >;
 }
 
 // Default configuration
@@ -166,12 +169,12 @@ function addLogEntry(entry: LogEntry): void {
   const levels = ['debug', 'info', 'warn', 'error'];
   const currentLevelIndex = levels.indexOf(loggerConfig.level);
   const entryLevelIndex = levels.indexOf(entry.level);
-  
+
   if (entryLevelIndex < currentLevelIndex) return;
 
   // Add to memory storage
   logEntries.push(entry);
-  
+
   // Trim old entries if exceeding max
   if (logEntries.length > loggerConfig.maxLogEntries) {
     logEntries = logEntries.slice(-loggerConfig.maxLogEntries);
@@ -179,19 +182,26 @@ function addLogEntry(entry: LogEntry): void {
 
   // Log to console
   if (loggerConfig.logToConsole) {
-    const consoleMethod = entry.level === 'error' ? 'error' :
-                       entry.level === 'warn' ? 'warn' :
-                       entry.level === 'info' ? 'info' : 'debug';
-    
+    const consoleMethod =
+      entry.level === 'error'
+        ? 'error'
+        : entry.level === 'warn'
+          ? 'warn'
+          : entry.level === 'info'
+            ? 'info'
+            : 'debug';
+
     const logData = {
       ...entry,
       // Include request/response body only if configured
-      ...(loggerConfig.includeRequestBody && entry.metadata?.requestBody && {
-        requestBody: entry.metadata.requestBody
-      }),
-      ...(loggerConfig.includeResponseBody && entry.metadata?.responseBody && {
-        responseBody: entry.metadata.responseBody
-      }),
+      ...(loggerConfig.includeRequestBody &&
+        entry.metadata?.requestBody && {
+          requestBody: entry.metadata.requestBody,
+        }),
+      ...(loggerConfig.includeResponseBody &&
+        entry.metadata?.responseBody && {
+          responseBody: entry.metadata.responseBody,
+        }),
     };
 
     console[consoleMethod](`[API Logger] ${entry.type.toUpperCase()}`, logData);
@@ -203,12 +213,12 @@ function addLogEntry(entry: LogEntry): void {
       const storageKey = 'api_logs';
       const existingLogs = JSON.parse(localStorage.getItem(storageKey) || '[]');
       existingLogs.push(entry);
-      
+
       // Keep only recent logs in storage
       if (existingLogs.length > 500) {
         existingLogs.splice(0, existingLogs.length - 500);
       }
-      
+
       localStorage.setItem(storageKey, JSON.stringify(existingLogs));
     } catch (error) {
       console.warn('Failed to save logs to localStorage:', error);
@@ -225,7 +235,7 @@ function addLogEntry(entry: LogEntry): void {
 function updatePerformanceMetrics(entry: LogEntry): void {
   if (entry.type === 'response' && entry.duration !== undefined) {
     performanceMetrics.totalRequests++;
-    
+
     if (entry.status && entry.status >= 200 && entry.status < 400) {
       performanceMetrics.successfulRequests++;
     } else {
@@ -233,8 +243,12 @@ function updatePerformanceMetrics(entry: LogEntry): void {
     }
 
     // Update average response time
-    const totalTime = performanceMetrics.averageResponseTime * (performanceMetrics.totalRequests - 1) + entry.duration;
-    performanceMetrics.averageResponseTime = totalTime / performanceMetrics.totalRequests;
+    const totalTime =
+      performanceMetrics.averageResponseTime *
+        (performanceMetrics.totalRequests - 1) +
+      entry.duration;
+    performanceMetrics.averageResponseTime =
+      totalTime / performanceMetrics.totalRequests;
 
     // Update slowest/fastest requests
     if (entry.duration > performanceMetrics.slowestRequest.duration) {
@@ -254,11 +268,13 @@ function updatePerformanceMetrics(entry: LogEntry): void {
     }
 
     // Update error rate
-    performanceMetrics.errorRate = performanceMetrics.failedRequests / performanceMetrics.totalRequests;
+    performanceMetrics.errorRate =
+      performanceMetrics.failedRequests / performanceMetrics.totalRequests;
 
     // Update status codes
     if (entry.status) {
-      performanceMetrics.statusCodes[entry.status] = (performanceMetrics.statusCodes[entry.status] || 0) + 1;
+      performanceMetrics.statusCodes[entry.status] =
+        (performanceMetrics.statusCodes[entry.status] || 0) + 1;
     }
 
     // Update endpoint metrics
@@ -273,8 +289,11 @@ function updatePerformanceMetrics(entry: LogEntry): void {
 
     const endpointMetrics = performanceMetrics.endpoints[endpoint];
     endpointMetrics.count++;
-    
-    const newAverageTime = (endpointMetrics.averageTime * (endpointMetrics.count - 1) + entry.duration) / endpointMetrics.count;
+
+    const newAverageTime =
+      (endpointMetrics.averageTime * (endpointMetrics.count - 1) +
+        entry.duration) /
+      endpointMetrics.count;
     endpointMetrics.averageTime = newAverageTime;
 
     if (entry.status && (entry.status < 200 || entry.status >= 400)) {
@@ -289,42 +308,51 @@ function updatePerformanceMetrics(entry: LogEntry): void {
 export function setupApiLogging(): void {
   // Request interceptor
   apiClient.interceptors.addRequest(async (config) => {
-    const requestId = (config.headers as Record<string, string>)?.['X-Request-ID'];
+    const requestId = (config.headers as Record<string, string>)?.[
+      'X-Request-ID'
+    ];
     const url = (config as any).url || '';
     const method = config.method?.toUpperCase();
 
-    addLogEntry(createLogEntry('info', 'request', {
-      url,
-      method,
-      requestId,
-      metadata: {
-        headers: config.headers,
-        ...(loggerConfig.includeRequestBody && config.body && {
-          requestBody: config.body,
-        }),
-      },
-    }));
+    addLogEntry(
+      createLogEntry('info', 'request', {
+        url,
+        method,
+        requestId,
+        metadata: {
+          headers: config.headers,
+          ...(loggerConfig.includeRequestBody &&
+            config.body && {
+              requestBody: config.body,
+            }),
+        },
+      })
+    );
 
     return config;
   });
 
   // Response interceptor
   apiClient.interceptors.addResponse(async (response) => {
-    const requestId = Object.fromEntries(response.headers.entries())['x-request-id'];
+    const requestId = Object.fromEntries(response.headers.entries())[
+      'x-request-id'
+    ];
     const url = (response as any).url || '';
     const method = 'GET'; // We don't have method info in response
 
-    addLogEntry(createLogEntry('info', 'response', {
-      url,
-      method,
-      status: response.status,
-      requestId,
-      metadata: {
-        ...(loggerConfig.includeResponseBody && {
-          responseBody: response.data,
-        }),
-      },
-    }));
+    addLogEntry(
+      createLogEntry('info', 'response', {
+        url,
+        method,
+        status: response.status,
+        requestId,
+        metadata: {
+          ...(loggerConfig.includeResponseBody && {
+            responseBody: response.data,
+          }),
+        },
+      })
+    );
 
     return response;
   });
@@ -335,17 +363,19 @@ export function setupApiLogging(): void {
     const url = (error as any).url || '';
     const method = (error as any).method?.toUpperCase();
 
-    addLogEntry(createLogEntry('error', 'error', {
-      url,
-      method,
-      requestId,
-      status: (error as ApiError).statusCode,
-      error: {
-        message: error.message,
-        code: (error as ApiError).code,
-        stack: error.stack,
-      },
-    }));
+    addLogEntry(
+      createLogEntry('error', 'error', {
+        url,
+        method,
+        requestId,
+        status: (error as ApiError).statusCode,
+        error: {
+          message: error.message,
+          code: (error as ApiError).code,
+          stack: error.stack,
+        },
+      })
+    );
 
     return error;
   });
@@ -365,23 +395,27 @@ export function getLogEntries(filter?: {
 
   if (filter) {
     if (filter.level) {
-      filtered = filtered.filter(entry => entry.level === filter.level);
+      filtered = filtered.filter((entry) => entry.level === filter.level);
     }
     if (filter.type) {
-      filtered = filtered.filter(entry => entry.type === filter.type);
+      filtered = filtered.filter((entry) => entry.type === filter.type);
     }
     if (filter.url) {
-      filtered = filtered.filter(entry => entry.url.includes(filter.url!));
+      filtered = filtered.filter((entry) => entry.url.includes(filter.url!));
     }
     if (filter.requestId) {
-      filtered = filtered.filter(entry => entry.requestId === filter.requestId);
+      filtered = filtered.filter(
+        (entry) => entry.requestId === filter.requestId
+      );
     }
     if (filter.limit) {
       filtered = filtered.slice(-filter.limit);
     }
   }
 
-  return filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return filtered.sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
 }
 
 /**
@@ -422,7 +456,7 @@ export function clearLogs(): void {
 export function exportLogs(): void {
   const logs = getLogEntries();
   const metrics = getPerformanceMetrics();
-  
+
   const exportData = {
     timestamp: new Date().toISOString(),
     config: loggerConfig,
@@ -430,16 +464,18 @@ export function exportLogs(): void {
     metrics,
   };
 
-  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+    type: 'application/json',
+  });
   const url = URL.createObjectURL(blob);
-  
+
   const a = document.createElement('a');
   a.href = url;
   a.download = `api-logs-${new Date().toISOString().split('T')[0]}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  
+
   URL.revokeObjectURL(url);
 }
 
@@ -450,7 +486,7 @@ export function loadPersistedLogs(): void {
   try {
     const storageKey = 'api_logs';
     const persistedLogs = JSON.parse(localStorage.getItem(storageKey) || '[]');
-    
+
     if (Array.isArray(persistedLogs)) {
       logEntries = persistedLogs.map((entry: any) => ({
         ...entry,

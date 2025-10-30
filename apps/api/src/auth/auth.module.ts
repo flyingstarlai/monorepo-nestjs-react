@@ -28,7 +28,13 @@ import { PlatformAdminGuard } from './guards/platform-admin.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard, PlatformAdminGuard],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtAuthGuard,
+    RolesGuard,
+    PlatformAdminGuard,
+  ],
   exports: [AuthService, JwtAuthGuard, RolesGuard, PlatformAdminGuard],
 })
 export class AuthModule {}

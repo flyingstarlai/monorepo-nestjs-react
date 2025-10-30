@@ -143,4 +143,3 @@ The system SHALL allow Platform Admins to manage user workspace memberships acro
 - WHEN Platform Admin removes user from workspace
 - THEN the user loses access to that workspace
 - BUT their global account remains active
-

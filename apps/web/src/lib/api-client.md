@@ -27,14 +27,14 @@ const response = await apiClient.get('/users');
 console.log(response.data); // Typed response data
 
 // POST request
-const newUser = await apiClient.post('/users', { 
-  name: 'John Doe', 
-  email: 'john@example.com' 
+const newUser = await apiClient.post('/users', {
+  name: 'John Doe',
+  email: 'john@example.com',
 });
 
 // PUT request
-const updatedUser = await apiClient.put('/users/1', { 
-  name: 'Jane Doe' 
+const updatedUser = await apiClient.put('/users/1', {
+  name: 'Jane Doe',
 });
 
 // DELETE request
@@ -48,12 +48,13 @@ import { apiClient } from '@/lib/api-client';
 
 // Request with custom configuration
 const response = await apiClient.get('/users', {
-  timeout: 10000,        // Custom timeout
-  retries: 2,            // Custom retry count
-  skipAuth: false,       // Skip authentication
-  headers: {             // Custom headers
-    'X-Custom-Header': 'value'
-  }
+  timeout: 10000, // Custom timeout
+  retries: 2, // Custom retry count
+  skipAuth: false, // Skip authentication
+  headers: {
+    // Custom headers
+    'X-Custom-Header': 'value',
+  },
 });
 ```
 
@@ -68,8 +69,8 @@ The API client automatically handles authentication tokens:
 const response = await apiClient.get('/protected-data');
 
 // Skip authentication for public endpoints
-const publicData = await apiClient.get('/public-data', { 
-  skipAuth: true 
+const publicData = await apiClient.get('/public-data', {
+  skipAuth: true,
 });
 ```
 
@@ -80,7 +81,7 @@ import { apiClient } from '@/lib/api-client';
 
 // Skip automatic refresh for this request
 const response = await apiClient.get('/data', {
-  skipRefresh: true
+  skipRefresh: true,
 });
 ```
 
@@ -153,7 +154,7 @@ apiClient.interceptors.removeRequest(interceptorId);
 const interceptorId = apiClient.interceptors.addResponse(async (response) => {
   // Modify response
   console.log('Response received:', response.status);
-  
+
   return {
     ...response,
     data: {
@@ -174,7 +175,7 @@ const interceptorId = apiClient.interceptors.addError(async (error) => {
     // Redirect to login on auth error
     window.location.href = '/login';
   }
-  
+
   return error;
 });
 ```
@@ -456,7 +457,7 @@ apiClient.interceptors.addRequest(myInterceptor);
 // Before
 const response = await fetch('/api/users', {
   headers: {
-    'Authorization': `Bearer ${token}`,
+    Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
   },
 });
@@ -475,7 +476,7 @@ import axios from 'axios';
 
 const response = await axios.get('/api/users', {
   headers: {
-    'Authorization': `Bearer ${token}`,
+    Authorization: `Bearer ${token}`,
   },
 });
 const data = response.data;

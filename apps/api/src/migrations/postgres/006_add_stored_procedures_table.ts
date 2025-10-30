@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddStoredProceduresTable1698494400006 implements MigrationInterface {
+export class AddStoredProceduresTable1698494400006
+  implements MigrationInterface
+{
   name = 'AddStoredProceduresTable1698494400006';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -41,7 +43,9 @@ export class AddStoredProceduresTable1698494400006 implements MigrationInterface
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE "stored_procedures" DROP CONSTRAINT "CHK_stored_procedures_status"`);
+    await queryRunner.query(
+      `ALTER TABLE "stored_procedures" DROP CONSTRAINT "CHK_stored_procedures_status"`
+    );
     await queryRunner.query(`DROP INDEX "IDX_stored_procedures_updated_at"`);
     await queryRunner.query(`DROP INDEX "IDX_stored_procedures_workspace_id"`);
     await queryRunner.query(`DROP TABLE "stored_procedures"`);

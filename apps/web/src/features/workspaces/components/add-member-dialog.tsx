@@ -91,17 +91,17 @@ export function AddMemberDialog({ children }: AddMemberDialogProps) {
       queryClient.invalidateQueries({
         queryKey: workspaceKeys.members(currentWorkspace?.slug || ''),
       });
-      
+
       // Invalidate workspace profile to update member counts
       queryClient.invalidateQueries({
         queryKey: workspaceKeys.profile(currentWorkspace?.slug || ''),
       });
-      
+
       // Invalidate activities to show new member addition
       queryClient.invalidateQueries({
         queryKey: workspaceKeys.activities(currentWorkspace?.slug || ''),
       });
-      
+
       toast({
         title: 'Success',
         description: 'Member added successfully',

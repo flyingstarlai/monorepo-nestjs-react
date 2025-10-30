@@ -150,8 +150,8 @@ function WorkspaceSettings() {
         </Card>
       </div>
 
-      <EnvironmentForm 
-        workspaceSlug={currentWorkspace.slug} 
+      <EnvironmentForm
+        workspaceSlug={currentWorkspace.slug}
         userRole={workspaceProfile?.workspaceRole}
       />
     </div>

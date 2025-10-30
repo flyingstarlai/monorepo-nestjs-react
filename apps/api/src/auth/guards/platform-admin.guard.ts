@@ -13,14 +13,15 @@ export class PlatformAdminGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const { user } = context.switchToHttp().getRequest();
-    
+
     if (!user) {
       throw new ForbiddenException('User not authenticated');
     }
 
     // Check if user has Admin role type
     // Handle both string role and object role formats
-    const userRole = typeof user.role === 'string' ? user.role : user.role?.name;
+    const userRole =
+      typeof user.role === 'string' ? user.role : user.role?.name;
     if (userRole !== RoleType.ADMIN) {
       throw new ForbiddenException('Platform admin access required');
     }

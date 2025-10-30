@@ -17,12 +17,12 @@ class MemberCountCache {
   get(workspaceId: string): number | null {
     const entry = this.cache.get(workspaceId);
     if (!entry) return null;
-    
+
     if (Date.now() - entry.timestamp > this.TTL) {
       this.cache.delete(workspaceId);
       return null;
     }
-    
+
     return entry.count;
   }
 
@@ -85,15 +85,15 @@ export class WorkspacesService {
       isActive: true,
     });
     const savedMember = await this.memberRepository.save(member);
-    
+
     // Update member count
     await this.updateMemberCount(workspaceId);
-    
+
     // Get workspace details for activity message
     const workspace = await this.workspaceRepository.findOne({
       where: { id: workspaceId },
     });
-    
+
     // Record member addition activity
     await this.activitiesService.record(
       userId,
@@ -101,7 +101,7 @@ export class WorkspacesService {
       `Member joined workspace "${workspace?.name || 'Unknown'}"`,
       workspaceId
     );
-    
+
     return savedMember;
   }
 
@@ -111,12 +111,12 @@ export class WorkspacesService {
     role: WorkspaceRole
   ): Promise<WorkspaceMember | null> {
     await this.memberRepository.update({ workspaceId, userId }, { role });
-    
+
     // Get workspace details for activity message
     const workspace = await this.workspaceRepository.findOne({
       where: { id: workspaceId },
     });
-    
+
     // Record role change activity
     await this.activitiesService.record(
       userId,
@@ -124,9 +124,9 @@ export class WorkspacesService {
       `Member role changed to "${role}" in workspace "${workspace?.name || 'Unknown'}"`,
       workspaceId
     );
-    
+
     // Note: Member count doesn't change on role update, so no cache invalidation needed
-    
+
     return this.memberRepository.findOne({
       where: { workspaceId, userId },
       relations: ['workspace', 'user'],
@@ -139,10 +139,10 @@ export class WorkspacesService {
     isActive: boolean
   ): Promise<WorkspaceMember | null> {
     await this.memberRepository.update({ workspaceId, userId }, { isActive });
-    
+
     // Update member count since active status changed
     await this.updateMemberCount(workspaceId);
-    
+
     return this.memberRepository.findOne({
       where: { workspaceId, userId },
       relations: ['workspace', 'user'],
@@ -192,12 +192,12 @@ export class WorkspacesService {
       existing.role = role;
       existing.isActive = true;
       const savedMember = await this.memberRepository.save(existing);
-      
+
       // Update member count if member was previously inactive
       if (wasInactive) {
         await this.updateMemberCount(workspaceId);
       }
-      
+
       return savedMember;
     } else {
       // Create new membership
@@ -208,10 +208,10 @@ export class WorkspacesService {
         isActive: true,
       });
       const savedMember = await this.memberRepository.save(member);
-      
+
       // Update member count
       await this.updateMemberCount(workspaceId);
-      
+
       return savedMember;
     }
   }
@@ -231,10 +231,10 @@ export class WorkspacesService {
 
     member.isActive = !member.isActive;
     const savedMember = await this.memberRepository.save(member);
-    
+
     // Update member count since active status changed
     await this.updateMemberCount(workspaceId);
-    
+
     return savedMember;
   }
 
@@ -277,14 +277,14 @@ export class WorkspacesService {
 
     // Cache the result
     this.memberCountCache.set(workspaceId, count);
-    
+
     return count;
   }
 
   async updateMemberCount(workspaceId: string): Promise<void> {
     // Invalidate cache and recalculate
     this.memberCountCache.invalidate(workspaceId);
-    
+
     const count = await this.memberRepository.count({
       where: {
         workspaceId,
@@ -308,7 +308,7 @@ export class WorkspacesService {
   }): Promise<Workspace> {
     const workspace = this.workspaceRepository.create(data);
     const savedWorkspace = await this.workspaceRepository.save(workspace);
-    
+
     // If creatorId is provided, add them as an owner
     if (data.creatorId) {
       await this.addOrUpdateMember(
@@ -316,10 +316,10 @@ export class WorkspacesService {
         data.creatorId,
         WorkspaceRole.OWNER
       );
-      
+
       // Update member count
       await this.updateMemberCount(savedWorkspace.id);
-      
+
       // Record workspace creation activity
       await this.activitiesService.record(
         data.creatorId,
@@ -328,7 +328,7 @@ export class WorkspacesService {
         savedWorkspace.id
       );
     }
-    
+
     return savedWorkspace;
   }
 
@@ -345,15 +345,15 @@ export class WorkspacesService {
       ...data,
       updatedAt: new Date(),
     });
-    
+
     const updatedWorkspace = await this.workspaceRepository.findOne({
       where: { id: workspaceId },
     });
-    
+
     if (!updatedWorkspace) {
       throw new Error('Workspace not found');
     }
-    
+
     return updatedWorkspace;
   }
 
@@ -363,13 +363,10 @@ export class WorkspacesService {
       isActive: false,
       updatedAt: new Date(),
     });
-    
+
     // Also deactivate all memberships
-    await this.memberRepository.update(
-      { workspaceId },
-      { isActive: false }
-    );
-    
+    await this.memberRepository.update({ workspaceId }, { isActive: false });
+
     // Clear cache
     this.memberCountCache.invalidate(workspaceId);
   }
@@ -388,12 +385,7 @@ export class WorkspacesService {
       totalPages: number;
     };
   }> {
-    const {
-      page = 1,
-      limit = 20,
-      search,
-      isActive = true,
-    } = params;
+    const { page = 1, limit = 20, search, isActive = true } = params;
 
     const queryBuilder = this.workspaceRepository
       .createQueryBuilder('workspace')
@@ -436,17 +428,32 @@ export class WorkspacesService {
       .createQueryBuilder('member')
       .leftJoin('member.user', 'user')
       .select('COUNT(*)', 'totalMembers')
-      .addSelect('COUNT(CASE WHEN member.isActive = true THEN 1 END)', 'activeMembers')
-      .addSelect('COUNT(CASE WHEN member.role = :owner AND member.isActive = true THEN 1 END)', 'owners')
-      .addSelect('COUNT(CASE WHEN member.role = :author AND member.isActive = true THEN 1 END)', 'authors')
-      .addSelect('COUNT(CASE WHEN member.role = :member AND member.isActive = true THEN 1 END)', 'members')
-      .addSelect('COUNT(CASE WHEN member.isActive = true AND user.lastLoginAt >= :date THEN 1 END)', 'recentlyActive')
-      .where('member.workspaceId = :workspaceId', { 
+      .addSelect(
+        'COUNT(CASE WHEN member.isActive = true THEN 1 END)',
+        'activeMembers'
+      )
+      .addSelect(
+        'COUNT(CASE WHEN member.role = :owner AND member.isActive = true THEN 1 END)',
+        'owners'
+      )
+      .addSelect(
+        'COUNT(CASE WHEN member.role = :author AND member.isActive = true THEN 1 END)',
+        'authors'
+      )
+      .addSelect(
+        'COUNT(CASE WHEN member.role = :member AND member.isActive = true THEN 1 END)',
+        'members'
+      )
+      .addSelect(
+        'COUNT(CASE WHEN member.isActive = true AND user.lastLoginAt >= :date THEN 1 END)',
+        'recentlyActive'
+      )
+      .where('member.workspaceId = :workspaceId', {
         workspaceId,
         owner: WorkspaceRole.OWNER,
         author: WorkspaceRole.AUTHOR,
         member: WorkspaceRole.MEMBER,
-        date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // 30 days ago
+        date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
       })
       .getRawOne();
 

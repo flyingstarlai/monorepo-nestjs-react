@@ -8,9 +8,13 @@ export const AuthError = BaseAuthError;
 export const authApi = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post<AuthResponse>('/auth/login', credentials, {
-        skipAuth: true, // Login doesn't require authentication
-      });
+      const response = await apiClient.post<AuthResponse>(
+        '/auth/login',
+        credentials,
+        {
+          skipAuth: true, // Login doesn't require authentication
+        }
+      );
       return response.data;
     } catch (error) {
       if (error instanceof AuthError) {
@@ -84,7 +88,7 @@ export const authApi = {
   }): Promise<User> {
     try {
       const response = await apiClient.put<User>('/users/profile', profileData);
-      
+
       // Keep the console logs for debugging (can be removed later)
       console.log('Profile update response status:', response.status);
       console.log('Profile update response headers:', response.headers);

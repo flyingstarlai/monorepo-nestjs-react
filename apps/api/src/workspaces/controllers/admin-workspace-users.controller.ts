@@ -37,8 +37,6 @@ interface UpdateRoleData {
   role: WorkspaceRole;
 }
 
-
-
 @Controller('admin/c/:slug/users')
 @UseGuards(JwtAuthGuard, PlatformAdminGuard, WorkspaceResolverGuard)
 export class AdminWorkspaceUsersController {
@@ -252,7 +250,9 @@ export class AdminWorkspaceUsersController {
     );
 
     if (!newOwnerMembership) {
-      throw new NotFoundException('New owner is not a member of this workspace');
+      throw new NotFoundException(
+        'New owner is not a member of this workspace'
+      );
     }
 
     if (!newOwnerMembership.isActive) {
@@ -260,9 +260,11 @@ export class AdminWorkspaceUsersController {
     }
 
     // Find current owners
-    const currentOwners = await this.workspacesService.getWorkspaceMembers(
-      req.workspace.id
-    ).then(members => members.filter(m => m.role === WorkspaceRole.OWNER && m.isActive));
+    const currentOwners = await this.workspacesService
+      .getWorkspaceMembers(req.workspace.id)
+      .then((members) =>
+        members.filter((m) => m.role === WorkspaceRole.OWNER && m.isActive)
+      );
 
     if (currentOwners.length === 0) {
       throw new BadRequestException('No active owners found in this workspace');
@@ -298,7 +300,7 @@ export class AdminWorkspaceUsersController {
         newOwnerId: newOwnerMembership.user.id,
         newOwnerUsername: newOwnerMembership.user.username,
         newOwnerName: newOwnerMembership.user.name,
-        previousOwners: currentOwners.map(owner => ({
+        previousOwners: currentOwners.map((owner) => ({
           id: owner.user.id,
           username: owner.user.username,
           name: owner.user.name,

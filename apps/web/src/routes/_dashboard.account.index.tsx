@@ -126,7 +126,7 @@ function AccountOverview() {
             columns={activityColumns}
             data={activitiesData?.items || []}
             isLoading={activitiesLoading}
-            error={activitiesError ? "Failed to load activities" : undefined}
+            error={activitiesError ? 'Failed to load activities' : undefined}
             searchPlaceholder="Search activities..."
             searchValue={search}
             onSearchChange={setSearch}

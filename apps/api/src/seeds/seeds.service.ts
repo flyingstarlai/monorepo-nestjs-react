@@ -63,7 +63,7 @@ export class SeedsService implements OnModuleInit {
 
     // Seed workspace memberships
     await this.seedWorkspaceMemberships();
-    
+
     console.log('🎉 Database seeding completed!');
   }
 
@@ -98,7 +98,7 @@ export class SeedsService implements OnModuleInit {
         defaultWorkspace.id,
         adminUser.id
       );
-      
+
       if (!adminMembership) {
         await this.workspacesService.addOrUpdateMember(
           defaultWorkspace.id,
@@ -117,7 +117,7 @@ export class SeedsService implements OnModuleInit {
         defaultWorkspace.id,
         regularUser.id
       );
-      
+
       if (!userMembership) {
         await this.workspacesService.addOrUpdateMember(
           defaultWorkspace.id,
@@ -126,7 +126,9 @@ export class SeedsService implements OnModuleInit {
         );
         console.log('✅ Regular user added as Member to default workspace');
       } else {
-        console.log('ℹ️ Regular user already has membership in default workspace');
+        console.log(
+          'ℹ️ Regular user already has membership in default workspace'
+        );
       }
     }
 

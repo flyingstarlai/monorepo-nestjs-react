@@ -12,15 +12,17 @@ import { AppMetricsModule } from '../modules/metrics/metrics.module';
 @Injectable()
 export class HttpMetricsInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const request = context.switchToHttp().getRequest<Request & { workspace?: { id: string } }>();
+    const request = context
+      .switchToHttp()
+      .getRequest<Request & { workspace?: { id: string } }>();
     const response = context.switchToHttp().getResponse<Response>();
     const method = request.method;
     const route = this.getRoutePattern(request);
     const controller = request.route?.path?.split('/')[1] || 'unknown';
-    
+
     // Extract workspace ID if available
     const workspaceId = request.workspace?.id;
-    
+
     // Capture start time
     const startTime = Date.now();
 
@@ -32,7 +34,7 @@ export class HttpMetricsInterceptor implements NestInterceptor {
     };
 
     // Add workspace_id if available
-    const labels = workspaceId 
+    const labels = workspaceId
       ? { ...baseLabels, workspace_id: workspaceId.toString() }
       : baseLabels;
 
@@ -43,7 +45,7 @@ export class HttpMetricsInterceptor implements NestInterceptor {
           const statusCode = response.statusCode.toString();
 
           // Record metrics with workspace ID if available
-          const finalLabels = workspaceId 
+          const finalLabels = workspaceId
             ? { ...labels, status_code: statusCode }
             : { ...baseLabels, status_code: statusCode };
 
@@ -58,7 +60,7 @@ export class HttpMetricsInterceptor implements NestInterceptor {
           const statusCode = response.statusCode?.toString() || '500';
 
           // Record metrics with workspace ID if available
-          const finalLabels = workspaceId 
+          const finalLabels = workspaceId
             ? { ...labels, status_code: statusCode }
             : { ...baseLabels, status_code: statusCode };
 

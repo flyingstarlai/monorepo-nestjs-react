@@ -81,7 +81,7 @@ describe('ActivitiesService', () => {
       const result = await service.record(
         'user-id',
         ActivityType.LOGIN_SUCCESS,
-        'Successfully logged in',
+        'Successfully logged in'
       );
 
       expect(repository.create).toHaveBeenCalledWith({

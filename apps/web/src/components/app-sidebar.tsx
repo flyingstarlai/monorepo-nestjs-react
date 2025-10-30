@@ -8,6 +8,7 @@ import {
   User,
   Shield,
   Activity,
+  Database,
 } from 'lucide-react';
 import React from 'react';
 
@@ -36,6 +37,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: 'Overview',
       url: currentWorkspace ? `/c/${currentWorkspace.slug}` : '/account',
       icon: LayoutDashboard,
+    },
+    {
+      title: 'SQL Tools',
+      url: currentWorkspace
+        ? `/c/${currentWorkspace.slug}/sql-editor`
+        : '/account',
+      icon: Database,
     },
     {
       title: 'Members',

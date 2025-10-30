@@ -109,7 +109,10 @@ export const workspaceApi = {
   // Create workspace
   async createWorkspace(payload: CreateWorkspacePayload): Promise<Workspace> {
     try {
-      const response = await apiClient.post<Workspace>('/admin/workspaces', payload);
+      const response = await apiClient.post<Workspace>(
+        '/admin/workspaces',
+        payload
+      );
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceApiError) {
@@ -140,7 +143,10 @@ export const workspaceApi = {
     payload: UpdateWorkspacePayload
   ): Promise<Workspace> {
     try {
-      const response = await apiClient.patch<Workspace>(`/admin/c/${slug}`, payload);
+      const response = await apiClient.patch<Workspace>(
+        `/admin/c/${slug}`,
+        payload
+      );
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceApiError) {
@@ -157,7 +163,9 @@ export const workspaceApi = {
     slug: string
   ): Promise<{ message: string; id: string }> {
     try {
-      const response = await apiClient.delete<{ message: string; id: string }>(`/admin/c/${slug}`);
+      const response = await apiClient.delete<{ message: string; id: string }>(
+        `/admin/c/${slug}`
+      );
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceApiError) {
@@ -172,7 +180,9 @@ export const workspaceApi = {
   // Get workspace stats
   async getWorkspaceStats(slug: string): Promise<WorkspaceStats> {
     try {
-      const response = await apiClient.get<WorkspaceStats>(`/admin/c/${slug}/stats`);
+      const response = await apiClient.get<WorkspaceStats>(
+        `/admin/c/${slug}/stats`
+      );
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceApiError) {
@@ -185,7 +195,9 @@ export const workspaceApi = {
   // Get workspace members
   async getWorkspaceMembers(slug: string): Promise<WorkspaceMember[]> {
     try {
-      const response = await apiClient.get<WorkspaceMember[]>(`/admin/c/${slug}/users`);
+      const response = await apiClient.get<WorkspaceMember[]>(
+        `/admin/c/${slug}/users`
+      );
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceApiError) {
@@ -201,14 +213,19 @@ export const workspaceApi = {
     payload: AddWorkspaceMemberPayload
   ): Promise<WorkspaceMember> {
     try {
-      const response = await apiClient.post<WorkspaceMember>(`/admin/c/${slug}/users`, payload);
+      const response = await apiClient.post<WorkspaceMember>(
+        `/admin/c/${slug}/users`,
+        payload
+      );
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceApiError) {
         throw error;
       }
       throw new WorkspaceApiError(
-        error instanceof Error ? error.message : 'Failed to add workspace member'
+        error instanceof Error
+          ? error.message
+          : 'Failed to add workspace member'
       );
     }
   },
@@ -250,7 +267,9 @@ export const workspaceApi = {
         throw error;
       }
       throw new WorkspaceApiError(
-        error instanceof Error ? error.message : 'Failed to update member status'
+        error instanceof Error
+          ? error.message
+          : 'Failed to update member status'
       );
     }
   },

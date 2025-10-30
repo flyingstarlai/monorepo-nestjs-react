@@ -38,7 +38,7 @@ export function NavUser({
 
   const handleLogout = () => {
     logout();
-    router.navigate({ to: '/login', search: { redirect: location.href } }, );
+    router.navigate({ to: '/login', search: { redirect: location.href } });
   };
 
   return (

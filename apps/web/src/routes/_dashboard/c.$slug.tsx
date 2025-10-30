@@ -1,7 +1,6 @@
 import { createFileRoute, useParams, Outlet } from '@tanstack/react-router';
 import { useWorkspace, useWorkspaceActions } from '@/features/workspaces';
-import { Badge } from '@/components/ui/badge';
-import { Building2 } from 'lucide-react';
+
 import { useEffect } from 'react';
 
 export const Route = createFileRoute('/_dashboard/c/$slug')({
@@ -96,19 +95,6 @@ function WorkspaceLayout() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <div className="bg-primary/10 p-3 rounded-lg">
-          <Building2 className="h-6 w-6 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold">{currentWorkspace.name}</h1>
-          <p className="text-muted-foreground">{currentWorkspace.slug}</p>
-        </div>
-        <Badge variant="outline" className="ml-auto">
-          {workspaceProfile?.workspaceRole || 'Loading...'}
-        </Badge>
-      </div>
-
       <Outlet />
     </div>
   );

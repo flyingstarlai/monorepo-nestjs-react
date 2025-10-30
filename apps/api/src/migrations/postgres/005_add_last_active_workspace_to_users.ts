@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddLastActiveWorkspaceToUsers1698494400005 implements MigrationInterface {
+export class AddLastActiveWorkspaceToUsers1698494400005
+  implements MigrationInterface
+{
   name = 'AddLastActiveWorkspaceToUsers1698494400005';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -35,9 +37,17 @@ export class AddLastActiveWorkspaceToUsers1698494400005 implements MigrationInte
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Remove columns and constraints in reverse order
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_users_last_active_workspace"`);
-    await queryRunner.query(`ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "FK_users_last_active_workspace"`);
-    await queryRunner.query(`ALTER TABLE "users" DROP COLUMN IF EXISTS "last_active_workspace_at"`);
-    await queryRunner.query(`ALTER TABLE "users" DROP COLUMN IF EXISTS "last_active_workspace_id"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_users_last_active_workspace"`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" DROP CONSTRAINT IF EXISTS "FK_users_last_active_workspace"`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" DROP COLUMN IF EXISTS "last_active_workspace_at"`
+    );
+    await queryRunner.query(
+      `ALTER TABLE "users" DROP COLUMN IF EXISTS "last_active_workspace_id"`
+    );
   }
 }

@@ -21,6 +21,7 @@ import { Route as DashboardAdminUsersRouteImport } from './routes/_dashboard/adm
 import { Route as DashboardAccountSecurityRouteImport } from './routes/_dashboard.account.security'
 import { Route as DashboardAccountProfileRouteImport } from './routes/_dashboard.account.profile'
 import { Route as DashboardCSlugIndexRouteImport } from './routes/_dashboard/c.$slug.index'
+import { Route as DashboardCSlugSqlEditorRouteImport } from './routes/_dashboard/c.$slug.sql-editor'
 import { Route as DashboardCSlugSettingsRouteImport } from './routes/_dashboard/c.$slug.settings'
 import { Route as DashboardCSlugMembersRouteImport } from './routes/_dashboard/c.$slug.members'
 
@@ -85,6 +86,11 @@ const DashboardCSlugIndexRoute = DashboardCSlugIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardCSlugRoute,
 } as any)
+const DashboardCSlugSqlEditorRoute = DashboardCSlugSqlEditorRouteImport.update({
+  id: '/sql-editor',
+  path: '/sql-editor',
+  getParentRoute: () => DashboardCSlugRoute,
+} as any)
 const DashboardCSlugSettingsRoute = DashboardCSlugSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof DashboardAdminIndexRoute
   '/c/$slug/members': typeof DashboardCSlugMembersRoute
   '/c/$slug/settings': typeof DashboardCSlugSettingsRoute
+  '/c/$slug/sql-editor': typeof DashboardCSlugSqlEditorRoute
   '/c/$slug/': typeof DashboardCSlugIndexRoute
 }
 export interface FileRoutesByTo {
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/admin': typeof DashboardAdminIndexRoute
   '/c/$slug/members': typeof DashboardCSlugMembersRoute
   '/c/$slug/settings': typeof DashboardCSlugSettingsRoute
+  '/c/$slug/sql-editor': typeof DashboardCSlugSqlEditorRoute
   '/c/$slug': typeof DashboardCSlugIndexRoute
 }
 export interface FileRoutesById {
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/_dashboard/admin/': typeof DashboardAdminIndexRoute
   '/_dashboard/c/$slug/members': typeof DashboardCSlugMembersRoute
   '/_dashboard/c/$slug/settings': typeof DashboardCSlugSettingsRoute
+  '/_dashboard/c/$slug/sql-editor': typeof DashboardCSlugSqlEditorRoute
   '/_dashboard/c/$slug/': typeof DashboardCSlugIndexRoute
 }
 export interface FileRouteTypes {
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/c/$slug/members'
     | '/c/$slug/settings'
+    | '/c/$slug/sql-editor'
     | '/c/$slug/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/c/$slug/members'
     | '/c/$slug/settings'
+    | '/c/$slug/sql-editor'
     | '/c/$slug'
   id:
     | '__root__'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/_dashboard/admin/'
     | '/_dashboard/c/$slug/members'
     | '/_dashboard/c/$slug/settings'
+    | '/_dashboard/c/$slug/sql-editor'
     | '/_dashboard/c/$slug/'
   fileRoutesById: FileRoutesById
 }
@@ -282,6 +294,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCSlugIndexRouteImport
       parentRoute: typeof DashboardCSlugRoute
     }
+    '/_dashboard/c/$slug/sql-editor': {
+      id: '/_dashboard/c/$slug/sql-editor'
+      path: '/sql-editor'
+      fullPath: '/c/$slug/sql-editor'
+      preLoaderRoute: typeof DashboardCSlugSqlEditorRouteImport
+      parentRoute: typeof DashboardCSlugRoute
+    }
     '/_dashboard/c/$slug/settings': {
       id: '/_dashboard/c/$slug/settings'
       path: '/settings'
@@ -302,12 +321,14 @@ declare module '@tanstack/react-router' {
 interface DashboardCSlugRouteChildren {
   DashboardCSlugMembersRoute: typeof DashboardCSlugMembersRoute
   DashboardCSlugSettingsRoute: typeof DashboardCSlugSettingsRoute
+  DashboardCSlugSqlEditorRoute: typeof DashboardCSlugSqlEditorRoute
   DashboardCSlugIndexRoute: typeof DashboardCSlugIndexRoute
 }
 
 const DashboardCSlugRouteChildren: DashboardCSlugRouteChildren = {
   DashboardCSlugMembersRoute: DashboardCSlugMembersRoute,
   DashboardCSlugSettingsRoute: DashboardCSlugSettingsRoute,
+  DashboardCSlugSqlEditorRoute: DashboardCSlugSqlEditorRoute,
   DashboardCSlugIndexRoute: DashboardCSlugIndexRoute,
 }
 

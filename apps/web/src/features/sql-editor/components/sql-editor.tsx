@@ -3,7 +3,7 @@ import Editor from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2, Rocket } from 'lucide-react';
 import { useValidateSql } from '../hooks/use-sql-editor';
 import { useSqlEditorStore } from '../stores/sql-editor.store';
 import type { StoredProcedure } from '../types';
@@ -13,10 +13,12 @@ interface SqlEditorComponentProps {
   value: string;
   onChange: (value: string) => void;
   onSave?: () => void;
+  onPublish?: () => void;
   readOnly?: boolean;
   height?: string;
-  onValidationError?: (errors: string[], warnings: string[]) => void;
+
   isDirty?: boolean;
+  workspaceSlug: string;
 }
 
 export function SqlEditorComponent({
@@ -24,10 +26,11 @@ export function SqlEditorComponent({
   value,
   onChange,
   onSave,
+  onPublish,
   readOnly = false,
-  height = '500px',
-  onValidationError,
+  height = '400px',
   isDirty = false,
+  workspaceSlug,
 }: SqlEditorComponentProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const [isValidating, setIsValidating] = useState(false);
@@ -35,13 +38,23 @@ export function SqlEditorComponent({
 
   // Zustand store for validation state
   const {
-    validationErrors,
-    validationWarnings,
     setValidationErrors,
     setValidationWarnings,
+    clearValidationForProcedure,
+    selectedProcedureId,
+    validationErrors: allValidationErrors,
+    validationWarnings: allValidationWarnings,
   } = useSqlEditorStore();
 
-  const validateMutation = useValidateSql(procedure?.workspaceId || '');
+  // Get procedure-scoped validation state
+  const validationErrors = selectedProcedureId
+    ? allValidationErrors[selectedProcedureId] || []
+    : [];
+  const validationWarnings = selectedProcedureId
+    ? allValidationWarnings[selectedProcedureId] || []
+    : [];
+
+  const validateMutation = useValidateSql(workspaceSlug);
 
   // Computed validation result from store
   const validationResult = {
@@ -50,21 +63,69 @@ export function SqlEditorComponent({
     warnings: validationWarnings,
   };
 
+  // Debounced validation function
+  const validationTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const lastValidationRef = useRef<string | null>(null);
+
+  const validateSql = useCallback(
+    async (sqlContent: string) => {
+      if (!workspaceSlug) return;
+
+      // Prevent duplicate validations
+      if (sqlContent === lastValidationRef.current) {
+        return;
+      }
+
+      setIsValidating(true);
+      setValidationErrors([]);
+      setValidationWarnings([]);
+
+      try {
+        // Create a timeout promise
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Validation timeout')), 10000); // 10 second timeout
+        });
+
+        // Race between validation and timeout
+        const result = (await Promise.race([
+          validateMutation.mutateAsync({ sql: sqlContent }),
+          timeoutPromise,
+        ])) as any;
+
+        lastValidationRef.current = sqlContent;
+
+        if (result.valid) {
+          setValidationErrors([]);
+          setValidationWarnings(result.warnings || []);
+        } else {
+          setValidationErrors(result.errors || []);
+          setValidationWarnings(result.warnings || []);
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Validation failed';
+        setValidationErrors([errorMessage]);
+        setValidationWarnings([]);
+      } finally {
+        setIsValidating(false);
+      }
+    },
+    [workspaceSlug, validateMutation]
+  );
+
   const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
     editorRef.current = editor;
 
     // Configure SQL language features
     const model = editor.getModel();
     if (model) {
-      // Set basic SQL validation
-      editor.onDidChangeModelContent(() => {
-        const value = model.getValue();
-        if (value.trim()) {
-          debouncedValidate(value);
-        } else {
-          setValidationErrors([]);
-          setValidationWarnings([]);
-        }
+      // Track caret position only - disable auto validation for now
+      editor.onDidChangeCursorPosition((e) => {
+        const position = e.position;
+        setCaretPosition({
+          line: position.lineNumber,
+          column: position.column,
+        });
       });
 
       // Track caret position
@@ -78,48 +139,34 @@ export function SqlEditorComponent({
     }
   };
 
-  // Debounced validation function
-  const validationTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const debouncedValidate = (sql: string) => {
-    clearTimeout(validationTimeoutRef.current);
-    setIsValidating(true);
-
-    validationTimeoutRef.current = setTimeout(() => {
-      validateSql(sql);
-    }, 1000); // 1 second debounce
-  };
-
-  // Validate on mount if there's content
+  // Auto-validation with debouncing and timeout
   useEffect(() => {
-    if (value && value.trim()) {
-      debouncedValidate(value);
+    if (!value.trim() || !workspaceSlug) {
+      setValidationErrors([]);
+      setValidationWarnings([]);
+      setIsValidating(false);
+      return;
     }
-  }, [value, debouncedValidate]);
 
-  const validateSql = useCallback(
-    async (sql: string) => {
-      if (!procedure?.workspaceId) return;
+    // Clear previous timeout
+    if (validationTimeoutRef.current) {
+      clearTimeout(validationTimeoutRef.current);
+    }
 
-      try {
-        const result = await validateMutation.mutateAsync({ sql });
-        setValidationErrors(result.errors);
-        setValidationWarnings(result.warnings);
-
-        // Emit validation errors to parent
-        onValidationError?.(result.errors, result.warnings);
-      } catch {
-        const errors = ['Validation failed'];
-        setValidationErrors(errors);
-        setValidationWarnings([]);
-
-        // Emit validation errors to parent
-        onValidationError?.(errors, []);
-      } finally {
-        setIsValidating(false);
+    // Set new timeout for debounced validation
+    validationTimeoutRef.current = setTimeout(() => {
+      // Only validate if content has changed since last validation
+      if (value !== lastValidationRef.current) {
+        validateSql(value);
       }
-    },
-    [procedure?.workspaceId, validateMutation, onValidationError]
-  );
+    }, 1500); // 1.5 second delay
+
+    return () => {
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current);
+      }
+    };
+  }, [value, workspaceSlug]);
 
   const handleSave = () => {
     if (onSave) {
@@ -128,16 +175,42 @@ export function SqlEditorComponent({
   };
 
   const handleValidate = () => {
-    if (value.trim() && procedure?.workspaceId) {
+    if (value.trim() && workspaceSlug) {
       validateSql(value);
     }
   };
 
   useEffect(() => {
     return () => {
-      clearTimeout(validationTimeoutRef.current);
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current);
+      }
     };
   }, []);
+
+  // Clear validation errors when procedure changes or component mounts
+  useEffect(() => {
+    if (procedure?.id) {
+      clearValidationForProcedure(procedure.id);
+    }
+    setIsValidating(false);
+    lastValidationRef.current = null;
+  }, [procedure?.id, clearValidationForProcedure]);
+
+  // Also clear validation when editor content changes significantly (new procedure loaded)
+  useEffect(() => {
+    if (value && value.trim() && procedure?.id) {
+      // Check if this looks like a fresh procedure load vs user typing
+      const isProcedureTemplate =
+        value.includes('CREATE OR ALTER PROCEDURE') &&
+        value.includes('-- TODO: Add logic for');
+
+      if (isProcedureTemplate) {
+        clearValidationForProcedure(procedure.id);
+        lastValidationRef.current = null;
+      }
+    }
+  }, [value, procedure?.id, clearValidationForProcedure]);
 
   // Listen for validation shortcut
   useEffect(() => {
@@ -245,6 +318,21 @@ export function SqlEditorComponent({
           >
             Validate
           </Button>
+
+          {onPublish && procedure?.status === 'draft' && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onPublish}
+              disabled={
+                !value.trim() || isValidating || !validationResult.isValid
+              }
+              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200 hover:border-green-300"
+            >
+              <Rocket className="h-3.5 w-3.5 mr-1.5" />
+              Publish
+            </Button>
+          )}
 
           {onSave && !readOnly && (
             <Button size="sm" onClick={handleSave}>

@@ -28,7 +28,9 @@ export const workspacesApi = {
 
   async getWorkspaceProfile(slug: string): Promise<WorkspaceProfile> {
     try {
-      const response = await apiClient.get<WorkspaceProfile>(`/c/${slug}/auth/profile`);
+      const response = await apiClient.get<WorkspaceProfile>(
+        `/c/${slug}/auth/profile`
+      );
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceError) {
@@ -40,7 +42,9 @@ export const workspacesApi = {
 
   async getWorkspaceMembers(slug: string): Promise<WorkspaceMember[]> {
     try {
-      const response = await apiClient.get<WorkspaceMember[]>(`/c/${slug}/users`);
+      const response = await apiClient.get<WorkspaceMember[]>(
+        `/c/${slug}/users`
+      );
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceError) {
@@ -65,7 +69,9 @@ export const workspacesApi = {
         throw error;
       }
       throw new WorkspaceError(
-        error instanceof Error ? error.message : 'Failed to add workspace member'
+        error instanceof Error
+          ? error.message
+          : 'Failed to add workspace member'
       );
     }
   },
@@ -75,16 +81,20 @@ export const workspacesApi = {
     memberId: string
   ): Promise<{ id: string; username: string; isActive: boolean }> {
     try {
-      const response = await apiClient.patch<{ id: string; username: string; isActive: boolean }>(
-        `/c/${slug}/users/${memberId}/status`
-      );
+      const response = await apiClient.patch<{
+        id: string;
+        username: string;
+        isActive: boolean;
+      }>(`/c/${slug}/users/${memberId}/status`);
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceError) {
         throw error;
       }
       throw new WorkspaceError(
-        error instanceof Error ? error.message : 'Failed to update member status'
+        error instanceof Error
+          ? error.message
+          : 'Failed to update member status'
       );
     }
   },
@@ -95,10 +105,11 @@ export const workspacesApi = {
     role: WorkspaceRole
   ): Promise<{ id: string; username: string; role: WorkspaceRole }> {
     try {
-      const response = await apiClient.patch<{ id: string; username: string; role: WorkspaceRole }>(
-        `/c/${slug}/users/${memberId}/role`,
-        { role }
-      );
+      const response = await apiClient.patch<{
+        id: string;
+        username: string;
+        role: WorkspaceRole;
+      }>(`/c/${slug}/users/${memberId}/role`, { role });
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceError) {

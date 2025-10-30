@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ActivitiesResponseDto, ActivityDto } from './dto/activity.dto';
-import { Activity, ActivityScope, ActivityType } from './entities/activity.entity';
+import {
+  Activity,
+  ActivityScope,
+  ActivityType,
+} from './entities/activity.entity';
 
 @Injectable()
 export class ActivitiesService {
@@ -21,7 +25,7 @@ export class ActivitiesService {
   ): Promise<Activity> {
     // Infer scope from activity type if not provided
     const inferredScope = scope || this.inferScopeFromActivityType(type);
-    
+
     const activity = this.activityRepository.create({
       ownerId,
       type,
@@ -140,7 +144,9 @@ export class ActivitiesService {
       ActivityType.WORKSPACE_ACTIVATED,
     ];
 
-    return workspaceActivityTypes.includes(type) ? ActivityScope.WORKSPACE : ActivityScope.USER;
+    return workspaceActivityTypes.includes(type)
+      ? ActivityScope.WORKSPACE
+      : ActivityScope.USER;
   }
 
   private toDto(activity: Activity): ActivityDto {

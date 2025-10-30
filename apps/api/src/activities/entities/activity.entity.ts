@@ -36,6 +36,15 @@ export enum ActivityType {
   ENVIRONMENT_UPDATED = 'environment_updated',
   ENVIRONMENT_DELETED = 'environment_deleted',
   ENVIRONMENT_CONNECTION_TESTED = 'environment_connection_tested',
+  // SQL Editor events
+  SQL_PROCEDURE_CREATED = 'sql_procedure_created',
+  SQL_PROCEDURE_UPDATED = 'sql_procedure_updated',
+  SQL_PROCEDURE_DELETED = 'sql_procedure_deleted',
+  SQL_PROCEDURE_PUBLISHED = 'sql_procedure_published',
+  SQL_PROCEDURE_UNPUBLISHED = 'sql_procedure_unpublished',
+  SQL_PROCEDURE_PUBLISH_FAILED = 'sql_procedure_publish_failed',
+  SQL_PROCEDURE_EXECUTED = 'sql_procedure_executed',
+  SQL_PROCEDURE_EXECUTION_FAILED = 'sql_procedure_execution_failed',
 }
 
 @Entity('activities')
@@ -79,6 +88,10 @@ export class Activity {
   @Column({ type: 'jsonb', nullable: true })
   metadata?: Record<string, any>;
 
-  @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({
+    name: 'created_at',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   createdAt: Date;
 }

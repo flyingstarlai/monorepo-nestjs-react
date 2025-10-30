@@ -13,8 +13,16 @@ import {
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { WorkspaceResolverGuard } from '../guards/workspace-resolver.guard';
 import { WorkspaceMembershipGuard } from '../guards/workspace-membership.guard';
-import { EnvironmentEditGuard, RequireEnvironmentEdit } from '../guards/environment-edit.guard';
-import { EnvironmentService, CreateEnvironmentDto, UpdateEnvironmentDto, TestConnectionDto } from '../environment.service';
+import {
+  EnvironmentEditGuard,
+  RequireEnvironmentEdit,
+} from '../guards/environment-edit.guard';
+import {
+  EnvironmentService,
+  CreateEnvironmentDto,
+  UpdateEnvironmentDto,
+  TestConnectionDto,
+} from '../environment.service';
 
 @Controller('c/:slug/environment')
 @UseGuards(JwtAuthGuard, WorkspaceResolverGuard, WorkspaceMembershipGuard)
@@ -25,16 +33,18 @@ export class WorkspaceEnvironmentController {
   async getEnvironment(@Request() req: { workspace: any; user: any }) {
     try {
       console.log('Finding environment for workspace:', req.workspace.id);
-      const environment = await this.environmentService.findByWorkspace(req.workspace.id);
+      const environment = await this.environmentService.findByWorkspace(
+        req.workspace.id
+      );
       console.log('Found environment:', environment);
-      
+
       if (!environment) {
         return { environment: null };
       }
-      
+
       // Don't expose password in response
       const { password, ...environmentWithoutPassword } = environment;
-      
+
       return { environment: environmentWithoutPassword };
     } catch (error) {
       console.error('Error in getEnvironment:', error);
@@ -57,7 +67,7 @@ export class WorkspaceEnvironmentController {
 
     // Don't expose password in response
     const { password, ...environmentWithoutPassword } = environment;
-    
+
     return { environment: environmentWithoutPassword };
   }
 
@@ -76,7 +86,7 @@ export class WorkspaceEnvironmentController {
 
     // Don't expose password in response
     const { password, ...environmentWithoutPassword } = environment;
-    
+
     return { environment: environmentWithoutPassword };
   }
 

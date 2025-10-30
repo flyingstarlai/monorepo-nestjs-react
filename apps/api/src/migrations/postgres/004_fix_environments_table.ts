@@ -6,7 +6,7 @@ export class FixEnvironmentsTable1698494400004 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Drop the existing table
     await queryRunner.query(`DROP TABLE IF EXISTS "environments" CASCADE`);
-    
+
     // Recreate with correct structure
     await queryRunner.query(`
       CREATE TABLE "environments" (

@@ -33,14 +33,17 @@ export class WorkspaceConnectionManager {
     }, this.healthCheckInterval);
   }
 
-  async getConnection(workspaceId: string, environment: Environment): Promise<DataSource> {
+  async getConnection(
+    workspaceId: string,
+    environment: Environment
+  ): Promise<DataSource> {
     const connectionKey = workspaceId;
 
     // Check if connection already exists and is active
     const existingConnection = this.connections.get(connectionKey);
     if (existingConnection && existingConnection.isActive) {
       existingConnection.lastUsed = new Date();
-      
+
       // Test if connection is still valid
       if (await this.isConnectionHealthy(existingConnection.dataSource)) {
         return existingConnection.dataSource;
@@ -53,7 +56,7 @@ export class WorkspaceConnectionManager {
     // Check connection limit
     if (this.connections.size >= this.maxConnections) {
       await this.cleanupIdleConnections();
-      
+
       if (this.connections.size >= this.maxConnections) {
         throw new Error('Maximum workspace connections reached');
       }
@@ -65,7 +68,9 @@ export class WorkspaceConnectionManager {
 
     try {
       await dataSource.initialize();
-      this.logger.log(`Created new database connection for workspace: ${workspaceId}`);
+      this.logger.log(
+        `Created new database connection for workspace: ${workspaceId}`
+      );
 
       const workspaceConnection: WorkspaceConnection = {
         dataSource,
@@ -76,31 +81,38 @@ export class WorkspaceConnectionManager {
       this.connections.set(connectionKey, workspaceConnection);
       return dataSource;
     } catch (error) {
-      this.logger.error(`Failed to create connection for workspace ${workspaceId}:`, error);
-      throw new Error(`Failed to connect to workspace database: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(
+        `Failed to create connection for workspace ${workspaceId}:`,
+        error
+      );
+      throw new Error(
+        `Failed to connect to workspace database: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
-  async testConnection(config: ConnectionConfig): Promise<{ success: boolean; error?: string }> {
+  async testConnection(
+    config: ConnectionConfig
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       const connectionConfig = this.buildConnectionConfigFromConfig(config);
       const dataSource = new DataSource(connectionConfig);
 
       // Try to initialize the connection
       await dataSource.initialize();
-      
+
       // Simple query to test connectivity
       await dataSource.query('SELECT 1');
-      
+
       // Clean up test connection
       await dataSource.destroy();
-      
+
       return { success: true };
     } catch (error) {
       this.logger.error('Connection test failed:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -114,12 +126,18 @@ export class WorkspaceConnectionManager {
         this.connections.delete(workspaceId);
         this.logger.log(`Removed connection for workspace: ${workspaceId}`);
       } catch (error) {
-        this.logger.error(`Error removing connection for workspace ${workspaceId}:`, error);
+        this.logger.error(
+          `Error removing connection for workspace ${workspaceId}:`,
+          error
+        );
       }
     }
   }
 
-  async refreshConnection(workspaceId: string, environment: Environment): Promise<DataSource> {
+  async refreshConnection(
+    workspaceId: string,
+    environment: Environment
+  ): Promise<DataSource> {
     await this.removeConnection(workspaceId);
     return this.getConnection(workspaceId, environment);
   }
@@ -144,7 +162,9 @@ export class WorkspaceConnectionManager {
     };
   }
 
-  private buildConnectionConfigFromConfig(config: ConnectionConfig): DataSourceOptions {
+  private buildConnectionConfigFromConfig(
+    config: ConnectionConfig
+  ): DataSourceOptions {
     return {
       type: 'mssql' as any,
       host: config.host,
@@ -203,19 +223,23 @@ export class WorkspaceConnectionManager {
     }
 
     if (connectionsToRemove.length > 0) {
-      this.logger.log(`Cleaned up ${connectionsToRemove.length} workspace connections`);
+      this.logger.log(
+        `Cleaned up ${connectionsToRemove.length} workspace connections`
+      );
     }
   }
 
   private async cleanupIdleConnections(): Promise<void> {
     const now = new Date();
-    const connectionsByLastUsed = Array.from(this.connections.entries())
-      .sort(([, a], [, b]) => a.lastUsed.getTime() - b.lastUsed.getTime());
+    const connectionsByLastUsed = Array.from(this.connections.entries()).sort(
+      ([, a], [, b]) => a.lastUsed.getTime() - b.lastUsed.getTime()
+    );
 
     // Remove idle connections first
     for (const [workspaceId, connection] of connectionsByLastUsed) {
       const idleTime = now.getTime() - connection.lastUsed.getTime();
-      if (idleTime > this.connectionTimeout / 2) { // Remove connections idle for more than 15 minutes
+      if (idleTime > this.connectionTimeout / 2) {
+        // Remove connections idle for more than 15 minutes
         await this.removeConnection(workspaceId);
         if (this.connections.size < this.maxConnections) {
           break;
@@ -227,24 +251,32 @@ export class WorkspaceConnectionManager {
   getConnectionStats(): {
     totalConnections: number;
     activeConnections: number;
-    connectionDetails: Array<{ workspaceId: string; lastUsed: Date; isActive: boolean }>;
+    connectionDetails: Array<{
+      workspaceId: string;
+      lastUsed: Date;
+      isActive: boolean;
+    }>;
   } {
-    const connectionDetails = Array.from(this.connections.entries()).map(([workspaceId, connection]) => ({
-      workspaceId,
-      lastUsed: connection.lastUsed,
-      isActive: connection.isActive,
-    }));
+    const connectionDetails = Array.from(this.connections.entries()).map(
+      ([workspaceId, connection]) => ({
+        workspaceId,
+        lastUsed: connection.lastUsed,
+        isActive: connection.isActive,
+      })
+    );
 
     return {
       totalConnections: this.connections.size,
-      activeConnections: Array.from(this.connections.values()).filter(c => c.isActive).length,
+      activeConnections: Array.from(this.connections.values()).filter(
+        (c) => c.isActive
+      ).length,
       connectionDetails,
     };
   }
 
   async shutdown(): Promise<void> {
     this.logger.log('Shutting down all workspace connections...');
-    
+
     const shutdownPromises = Array.from(this.connections.entries()).map(
       async ([workspaceId]) => this.removeConnection(workspaceId)
     );

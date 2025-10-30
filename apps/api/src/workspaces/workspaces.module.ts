@@ -11,7 +11,10 @@ import { WorkspaceAuthController } from './controllers/workspace-auth.controller
 import { WorkspaceUsersController } from './controllers/workspace-users.controller';
 import { WorkspaceActivitiesController } from './controllers/workspace-activities.controller';
 import { AdminWorkspaceUsersController } from './controllers/admin-workspace-users.controller';
-import { AdminWorkspaceController, AdminWorkspacesListController } from './controllers/admin-workspace.controller';
+import {
+  AdminWorkspaceController,
+  AdminWorkspacesListController,
+} from './controllers/admin-workspace.controller';
 import { WorkspaceEnvironmentController } from './controllers/workspace-environment.controller';
 import { WorkspaceResolverGuard } from './guards/workspace-resolver.guard';
 import { WorkspaceMembershipGuard } from './guards/workspace-membership.guard';
@@ -21,7 +24,11 @@ import { UsersModule } from '../users/users.module';
 import { ActivitiesModule } from '../activities/activities.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Workspace, WorkspaceMember, Environment]), forwardRef(() => UsersModule), ActivitiesModule],
+  imports: [
+    TypeOrmModule.forFeature([Workspace, WorkspaceMember, Environment]),
+    forwardRef(() => UsersModule),
+    ActivitiesModule,
+  ],
   controllers: [
     WorkspacesController,
     WorkspaceAuthController,

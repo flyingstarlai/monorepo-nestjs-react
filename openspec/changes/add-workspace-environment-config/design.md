@@ -23,7 +23,7 @@ Workspaces currently share a single database connection. The requirement is to e
 ```typescript
 class WorkspaceConnectionManager {
   private connections = new Map<string, DataSource>();
-  
+
   async getConnection(workspaceId: string): Promise<DataSource> {
     // Return cached connection or create new one
     // Implement connection health checks
@@ -33,17 +33,20 @@ class WorkspaceConnectionManager {
 ```
 
 **Pros:**
+
 - Balanced performance (reuses connections)
 - Resource efficient (limits total connections)
 - Fast subsequent access
 - Connection health monitoring possible
 
 **Cons:**
+
 - Memory overhead for cached connections
 - Requires connection lifecycle management
 - More complex than dynamic connections
 
 **Rejected Alternatives:**
+
 - Option A (Dynamic): Too much overhead for frequent access
 - Option C (Pooling): Overkill for current scale, complex to manage
 
@@ -70,6 +73,7 @@ class WorkspaceConnectionManager {
 6. **Phase 6**: Documentation and deployment
 
 **Rollback Procedures:**
+
 - Database migration can be reverted if no environments are configured
 - API changes are backward compatible
 - Frontend changes are additive to existing settings

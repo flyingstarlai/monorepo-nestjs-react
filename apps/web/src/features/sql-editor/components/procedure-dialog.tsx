@@ -75,13 +75,13 @@ export function ProcedureDialog({
 
     try {
       let result: StoredProcedure | undefined;
-      
+
       if (isEditing && procedure) {
         result = await updateMutation.mutateAsync(formData);
       } else {
         result = await createMutation.mutateAsync(formData);
       }
-      
+
       onSuccess?.(result);
       onOpenChange(false);
       setFormData({ name: '', sqlDraft: '' });

@@ -20,7 +20,7 @@ const dataSource = new DataSource({
 async function dropAllTables() {
   await dataSource.initialize();
   console.log('Connected to database');
-  
+
   try {
     console.log('Dropping all tables...');
     await dataSource.query(`
@@ -41,7 +41,7 @@ async function dropAllTables() {
   } catch (error) {
     console.error('Error dropping tables:', error);
   }
-  
+
   await dataSource.destroy();
 }
 

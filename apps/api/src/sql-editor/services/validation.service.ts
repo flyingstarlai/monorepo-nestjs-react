@@ -1,4 +1,8 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { StoredProcedure } from '../entities/stored-procedure.entity';
@@ -19,14 +23,16 @@ export class ValidationService {
   constructor(
     @InjectRepository(StoredProcedure)
     private readonly storedProcedureRepository: Repository<StoredProcedure>,
-    private readonly mssqlConnectionRegistry: MssqlConnectionRegistry,
+    private readonly mssqlConnectionRegistry: MssqlConnectionRegistry
   ) {}
 
   async validateDraft(
     procedureId: string,
     workspaceId: string
   ): Promise<ValidationResult> {
-    this.logger.debug(`Validating draft for stored procedure ${procedureId} in workspace ${workspaceId}`);
+    this.logger.debug(
+      `Validating draft for stored procedure ${procedureId} in workspace ${workspaceId}`
+    );
 
     // Get procedure
     const procedure = await this.storedProcedureRepository.findOne({
@@ -46,19 +52,29 @@ export class ValidationService {
 
     try {
       // Get MSSQL connection
-      const connection = await this.mssqlConnectionRegistry.getConnectionForWorkspace(workspaceId);
+      const connection =
+        await this.mssqlConnectionRegistry.getConnectionForWorkspace(
+          workspaceId
+        );
 
       // Validate syntax using PARSEONLY/NOEXEC
-      const validationResult = await this.validateSqlSyntax(connection, procedure.sqlDraft);
+      const validationResult = await this.validateSqlSyntax(
+        connection,
+        procedure.sqlDraft
+      );
 
-      this.logger.debug(`Validation result for procedure ${procedureId}: ${validationResult.valid ? 'valid' : 'invalid'}`);
+      this.logger.debug(
+        `Validation result for procedure ${procedureId}: ${validationResult.valid ? 'valid' : 'invalid'}`
+      );
       return validationResult;
     } catch (error) {
       this.logger.error(`Failed to validate procedure ${procedureId}:`, error);
-      
+
       return {
         valid: false,
-        errors: [`Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        errors: [
+          `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ],
       };
     }
   }
@@ -78,19 +94,32 @@ export class ValidationService {
 
     try {
       // Get MSSQL connection
-      const connection = await this.mssqlConnectionRegistry.getConnectionForWorkspace(workspaceId);
+      const connection =
+        await this.mssqlConnectionRegistry.getConnectionForWorkspace(
+          workspaceId
+        );
 
       // Validate syntax using PARSEONLY/NOEXEC
-      const validationResult = await this.validateSqlSyntax(connection, sqlContent);
+      const validationResult = await this.validateSqlSyntax(
+        connection,
+        sqlContent
+      );
 
-      this.logger.debug(`SQL validation result for workspace ${workspaceId}: ${validationResult.valid ? 'valid' : 'invalid'}`);
+      this.logger.debug(
+        `SQL validation result for workspace ${workspaceId}: ${validationResult.valid ? 'valid' : 'invalid'}`
+      );
       return validationResult;
     } catch (error) {
-      this.logger.error(`Failed to validate SQL content for workspace ${workspaceId}:`, error);
-      
+      this.logger.error(
+        `Failed to validate SQL content for workspace ${workspaceId}:`,
+        error
+      );
+
       return {
         valid: false,
-        errors: [`Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+        errors: [
+          `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        ],
       };
     }
   }
@@ -104,7 +133,9 @@ export class ValidationService {
       if (!this.isStoredProcedure(sqlContent)) {
         return {
           valid: false,
-          errors: ['SQL content must be a stored procedure (CREATE PROCEDURE or ALTER PROCEDURE)'],
+          errors: [
+            'SQL content must be a stored procedure (CREATE PROCEDURE or ALTER PROCEDURE)',
+          ],
         };
       }
 
@@ -130,8 +161,9 @@ export class ValidationService {
       };
     } catch (error) {
       // Parse MSSQL error message for better feedback
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
       return {
         valid: false,
         errors: [this.parseMssqlError(errorMessage)],
@@ -140,12 +172,21 @@ export class ValidationService {
   }
 
   private buildValidationSql(sqlContent: string): string {
-    // Wrap the SQL in a batch with PARSEONLY and NOEXEC for syntax validation
+    // Escape single quotes in the SQL content for dynamic SQL
+    const escapedSql = sqlContent.replace(/'/g, "''");
+    
+    // Use dynamic SQL to avoid batch boundary issues with CREATE/ALTER PROCEDURE
     return `
       SET PARSEONLY ON;
       SET NOEXEC ON;
       
-      ${sqlContent}
+      BEGIN TRY
+        EXEC sp_executesql N'${escapedSql}'
+      END TRY
+      BEGIN CATCH
+        -- Re-throw the error to be caught by our catch block
+        THROW;
+      END CATCH
       
       SET PARSEONLY OFF;
       SET NOEXEC OFF;
@@ -158,55 +199,78 @@ export class ValidationService {
       normalizedSql.startsWith('create procedure') ||
       normalizedSql.startsWith('create proc') ||
       normalizedSql.startsWith('alter procedure') ||
-      normalizedSql.startsWith('alter proc')
+      normalizedSql.startsWith('alter proc') ||
+      normalizedSql.startsWith('create or alter procedure') ||
+      normalizedSql.startsWith('create or alter proc')
     );
   }
 
   private extractProcedureName(sqlContent: string): string | null {
-    // Extract procedure name from CREATE/ALTER PROCEDURE statement
+    // Extract procedure name from CREATE/ALTER/CREATE OR ALTER PROCEDURE statement
     const normalizedSql = sqlContent.trim().toLowerCase();
-    
+
+    // Match CREATE OR ALTER PROCEDURE [schema.]procedure_name
+    const createOrAlterMatch = normalizedSql.match(
+      /create\s+or\s+alter\s+(?:procedure|proc)\s+(?:\w+\.)?(\w+)/i
+    );
+    if (createOrAlterMatch) {
+      return createOrAlterMatch[1];
+    }
+
     // Match CREATE PROCEDURE [schema.]procedure_name
-    const createMatch = normalizedSql.match(/create\s+(?:procedure|proc)\s+(?:\w+\.)?(\w+)/i);
+    const createMatch = normalizedSql.match(
+      /create\s+(?:procedure|proc)\s+(?:\w+\.)?(\w+)/i
+    );
     if (createMatch) {
       return createMatch[1];
     }
-    
+
     // Match ALTER PROCEDURE [schema.]procedure_name
-    const alterMatch = normalizedSql.match(/alter\s+(?:procedure|proc)\s+(?:\w+\.)?(\w+)/i);
+    const alterMatch = normalizedSql.match(
+      /alter\s+(?:procedure|proc)\s+(?:\w+\.)?(\w+)/i
+    );
     if (alterMatch) {
       return alterMatch[1];
     }
-    
+
     return null;
   }
 
   private parseMssqlError(errorMessage: string): string {
     // Try to extract line and column information from MSSQL error messages
     // Format: "Incorrect syntax near 'XYZ'." or "Line X: Incorrect syntax near 'XYZ'."
-    
+
     const lineMatch = errorMessage.match(/line\s+(\d+):/i);
     const line = lineMatch ? parseInt(lineMatch[1]) : undefined;
-    
+
     const nearMatch = errorMessage.match(/near\s+'([^']+)'/i);
-    const nearText = nearMatch ? nearMatch[1] : undefined;
-    
+
     // Clean up common MSSQL error messages
     let cleanError = errorMessage;
-    
+
     // Remove SQL Server specific prefixes
-    cleanError = cleanError.replace(/^Msg\s+\d+,\s+Level\s+\d+,\s+State\s+\d+,\s+Line\s+\d+:\s*/i, '');
-    cleanError = cleanError.replace(/^Microsoft\s+SQL\s+Server\s+Error\s+\d+:\s*/i, '');
-    
+    cleanError = cleanError.replace(
+      /^Msg\s+\d+,\s+Level\s+\d+,\s+State\s+\d+,\s+Line\s+\d+:\s*/i,
+      ''
+    );
+    cleanError = cleanError.replace(
+      /^Microsoft\s+SQL\s+Server\s+Error\s+\d+:\s*/i,
+      ''
+    );
+
     // Remove duplicate line information
     if (line && cleanError.includes(`Line ${line}:`)) {
       cleanError = cleanError.replace(/Line\s+\d+:\s*/i, '');
     }
-    
+
     return cleanError.trim();
   }
 
-  async canUserValidateProcedure(procedureId: string, workspaceId: string, userId: string): Promise<boolean> {
+  async canUserValidateProcedure(
+    procedureId: string,
+    workspaceId: string,
+    _userId: string
+  ): Promise<boolean> {
     const procedure = await this.storedProcedureRepository.findOne({
       where: { id: procedureId, workspaceId },
     });
@@ -221,7 +285,9 @@ export class ValidationService {
   }
 
   // Additional validation helpers for common procedure issues
-  async validateProcedureStructure(sqlContent: string): Promise<ValidationResult> {
+  async validateProcedureStructure(
+    sqlContent: string
+  ): Promise<ValidationResult> {
     const warnings: string[] = [];
     const errors: string[] = [];
 
@@ -233,7 +299,9 @@ export class ValidationService {
     }
 
     if (normalizedSql.includes('select *')) {
-      warnings.push('Avoid using SELECT * in stored procedures - specify explicit columns');
+      warnings.push(
+        'Avoid using SELECT * in stored procedures - specify explicit columns'
+      );
     }
 
     if (!normalizedSql.includes('set nocount')) {
@@ -242,7 +310,7 @@ export class ValidationService {
 
     // Check for required elements
     if (!this.isStoredProcedure(sqlContent)) {
-      errors.push('SQL must be a CREATE or ALTER PROCEDURE statement');
+      errors.push('SQL must be a CREATE, ALTER, or CREATE OR ALTER PROCEDURE statement');
     }
 
     return {

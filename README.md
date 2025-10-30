@@ -44,10 +44,11 @@ pnpm test
 ### PostgreSQL (Recommended)
 
 1. **Using Docker Compose** (Recommended):
+
    ```bash
    # Start PostgreSQL container
    docker-compose up -d postgres
-   
+
    # Set environment variables
    DB_TYPE=postgres
    DB_HOST=localhost
@@ -58,10 +59,11 @@ pnpm test
    ```
 
 2. **Manual PostgreSQL Setup**:
+
    ```bash
    # Install PostgreSQL and create database
    createdb dashboard
-   
+
    # Set environment variables
    DB_TYPE=postgres
    DB_HOST=localhost
@@ -74,10 +76,11 @@ pnpm test
 ### MSSQL (Legacy Support)
 
 1. **Using Docker Compose**:
+
    ```bash
    # Start MSSQL container (if you have MSSQL service defined)
    docker-compose up -d mssql
-   
+
    # Set environment variables
    DB_TYPE=mssql
    DB_HOST=localhost

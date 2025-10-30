@@ -22,7 +22,6 @@ export interface CreateEnvironmentDto {
   password: string;
   database: string;
   connectionTimeout?: number;
-
 }
 
 export interface UpdateEnvironmentDto {
@@ -32,7 +31,6 @@ export interface UpdateEnvironmentDto {
   password?: string;
   database?: string;
   connectionTimeout?: number;
-
 }
 
 export interface TestConnectionDto {
@@ -42,7 +40,6 @@ export interface TestConnectionDto {
   password: string;
   database: string;
   connectionTimeout?: number;
-
 }
 
 export interface TestConnectionResult {
@@ -53,9 +50,13 @@ export interface TestConnectionResult {
 
 export const environmentApi = {
   // Get environment configuration
-  async getEnvironment(slug: string): Promise<{ environment: Environment | null }> {
+  async getEnvironment(
+    slug: string
+  ): Promise<{ environment: Environment | null }> {
     try {
-      const response = await apiClient.get<{ environment: Environment | null }>(`/c/${slug}/environment`);
+      const response = await apiClient.get<{ environment: Environment | null }>(
+        `/c/${slug}/environment`
+      );
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceError) {
@@ -66,31 +67,47 @@ export const environmentApi = {
   },
 
   // Create environment configuration
-  async createEnvironment(slug: string, payload: CreateEnvironmentDto): Promise<{ environment: Environment }> {
+  async createEnvironment(
+    slug: string,
+    payload: CreateEnvironmentDto
+  ): Promise<{ environment: Environment }> {
     try {
-      const response = await apiClient.post<{ environment: Environment }>(`/c/${slug}/environment`, payload);
+      const response = await apiClient.post<{ environment: Environment }>(
+        `/c/${slug}/environment`,
+        payload
+      );
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceError) {
         throw error;
       }
       throw new WorkspaceError(
-        error instanceof Error ? error.message : 'Failed to create environment configuration'
+        error instanceof Error
+          ? error.message
+          : 'Failed to create environment configuration'
       );
     }
   },
 
   // Update environment configuration
-  async updateEnvironment(slug: string, payload: UpdateEnvironmentDto): Promise<{ environment: Environment }> {
+  async updateEnvironment(
+    slug: string,
+    payload: UpdateEnvironmentDto
+  ): Promise<{ environment: Environment }> {
     try {
-      const response = await apiClient.put<{ environment: Environment }>(`/c/${slug}/environment`, payload);
+      const response = await apiClient.put<{ environment: Environment }>(
+        `/c/${slug}/environment`,
+        payload
+      );
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceError) {
         throw error;
       }
       throw new WorkspaceError(
-        error instanceof Error ? error.message : 'Failed to update environment configuration'
+        error instanceof Error
+          ? error.message
+          : 'Failed to update environment configuration'
       );
     }
   },
@@ -98,7 +115,9 @@ export const environmentApi = {
   // Delete environment configuration
   async deleteEnvironment(slug: string): Promise<{ message: string }> {
     try {
-      const response = await apiClient.delete<{ message: string }>(`/c/${slug}/environment`);
+      const response = await apiClient.delete<{ message: string }>(
+        `/c/${slug}/environment`
+      );
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceError) {
@@ -109,9 +128,15 @@ export const environmentApi = {
   },
 
   // Test environment connection
-  async testConnection(slug: string, payload: TestConnectionDto): Promise<TestConnectionResult> {
+  async testConnection(
+    slug: string,
+    payload: TestConnectionDto
+  ): Promise<TestConnectionResult> {
     try {
-      const response = await apiClient.post<TestConnectionResult>(`/c/${slug}/environment/test`, payload);
+      const response = await apiClient.post<TestConnectionResult>(
+        `/c/${slug}/environment/test`,
+        payload
+      );
       return response.data;
     } catch (error) {
       if (error instanceof WorkspaceError) {

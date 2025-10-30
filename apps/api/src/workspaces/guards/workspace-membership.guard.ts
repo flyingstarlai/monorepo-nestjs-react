@@ -35,7 +35,8 @@ export class WorkspaceMembershipGuard implements CanActivate {
 
     // Check if user is a platform admin (global role Admin)
     // Handle both string role and object role formats
-    const userRole = typeof user.role === 'string' ? user.role : user.role?.name;
+    const userRole =
+      typeof user.role === 'string' ? user.role : user.role?.name;
     if (userRole === 'Admin') {
       // Platform admins can access any workspace
       // Still attach a membership record for consistency

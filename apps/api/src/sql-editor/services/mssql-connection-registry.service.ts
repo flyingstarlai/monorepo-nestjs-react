@@ -9,29 +9,43 @@ export class MssqlConnectionRegistry {
 
   constructor(
     private readonly environmentService: EnvironmentService,
-    private readonly connectionManager: WorkspaceConnectionManager,
+    private readonly connectionManager: WorkspaceConnectionManager
   ) {}
 
   async getConnectionForWorkspace(workspaceId: string): Promise<DataSource> {
     this.logger.debug(`Getting MSSQL connection for workspace: ${workspaceId}`);
 
-    const environment = await this.environmentService.findByWorkspace(workspaceId);
+    const environment =
+      await this.environmentService.findByWorkspace(workspaceId);
     if (!environment) {
-      throw new Error(`No environment configuration found for workspace: ${workspaceId}`);
+      throw new Error(
+        `No environment configuration found for workspace: ${workspaceId}`
+      );
     }
 
     try {
-      return await this.connectionManager.getConnection(workspaceId, environment);
+      return await this.connectionManager.getConnection(
+        workspaceId,
+        environment
+      );
     } catch (error) {
-      this.logger.error(`Failed to get MSSQL connection for workspace ${workspaceId}:`, error);
-      throw new Error(`Failed to connect to workspace database: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(
+        `Failed to get MSSQL connection for workspace ${workspaceId}:`,
+        error
+      );
+      throw new Error(
+        `Failed to connect to workspace database: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
-  async testConnectionForWorkspace(workspaceId: string): Promise<{ success: boolean; message: string; error?: string }> {
+  async testConnectionForWorkspace(
+    workspaceId: string
+  ): Promise<{ success: boolean; message: string; error?: string }> {
     this.logger.debug(`Testing MSSQL connection for workspace: ${workspaceId}`);
 
-    const environment = await this.environmentService.findByWorkspace(workspaceId);
+    const environment =
+      await this.environmentService.findByWorkspace(workspaceId);
     if (!environment) {
       return {
         success: false,
@@ -63,7 +77,10 @@ export class MssqlConnectionRegistry {
         };
       }
     } catch (error) {
-      this.logger.error(`MSSQL connection test failed for workspace ${workspaceId}:`, error);
+      this.logger.error(
+        `MSSQL connection test failed for workspace ${workspaceId}:`,
+        error
+      );
       return {
         success: false,
         message: 'MSSQL connection test failed',
@@ -72,19 +89,34 @@ export class MssqlConnectionRegistry {
     }
   }
 
-  async refreshConnectionForWorkspace(workspaceId: string): Promise<DataSource> {
-    this.logger.debug(`Refreshing MSSQL connection for workspace: ${workspaceId}`);
+  async refreshConnectionForWorkspace(
+    workspaceId: string
+  ): Promise<DataSource> {
+    this.logger.debug(
+      `Refreshing MSSQL connection for workspace: ${workspaceId}`
+    );
 
-    const environment = await this.environmentService.findByWorkspace(workspaceId);
+    const environment =
+      await this.environmentService.findByWorkspace(workspaceId);
     if (!environment) {
-      throw new Error(`No environment configuration found for workspace: ${workspaceId}`);
+      throw new Error(
+        `No environment configuration found for workspace: ${workspaceId}`
+      );
     }
 
     try {
-      return await this.connectionManager.refreshConnection(workspaceId, environment);
+      return await this.connectionManager.refreshConnection(
+        workspaceId,
+        environment
+      );
     } catch (error) {
-      this.logger.error(`Failed to refresh MSSQL connection for workspace ${workspaceId}:`, error);
-      throw new Error(`Failed to refresh workspace database connection: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(
+        `Failed to refresh MSSQL connection for workspace ${workspaceId}:`,
+        error
+      );
+      throw new Error(
+        `Failed to refresh workspace database connection: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -93,7 +125,10 @@ export class MssqlConnectionRegistry {
       const testResult = await this.testConnectionForWorkspace(workspaceId);
       return testResult.success;
     } catch (error) {
-      this.logger.warn(`Error checking workspace connectivity for ${workspaceId}:`, error);
+      this.logger.warn(
+        `Error checking workspace connectivity for ${workspaceId}:`,
+        error
+      );
       return false;
     }
   }

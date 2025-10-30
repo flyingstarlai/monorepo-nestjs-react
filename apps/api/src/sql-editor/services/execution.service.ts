@@ -1,7 +1,15 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { StoredProcedure, StoredProcedureStatus } from '../entities/stored-procedure.entity';
+import {
+  StoredProcedure,
+  StoredProcedureStatus,
+} from '../entities/stored-procedure.entity';
 import { MssqlConnectionRegistry } from './mssql-connection-registry.service';
 import { ActivitiesService } from '../../activities/activities.service';
 import { ActivityType } from '../../activities/entities/activity.entity';
@@ -30,7 +38,7 @@ export class ExecutionService {
     @InjectRepository(StoredProcedure)
     private readonly storedProcedureRepository: Repository<StoredProcedure>,
     private readonly mssqlConnectionRegistry: MssqlConnectionRegistry,
-    private readonly activitiesService: ActivitiesService,
+    private readonly activitiesService: ActivitiesService
   ) {}
 
   async executeProcedure(
@@ -40,7 +48,9 @@ export class ExecutionService {
     options: ExecuteProcedureDto = {}
   ): Promise<ProcedureExecutionResult> {
     const startTime = Date.now();
-    this.logger.log(`Executing stored procedure ${procedureId} for workspace ${workspaceId}`);
+    this.logger.log(
+      `Executing stored procedure ${procedureId} for workspace ${workspaceId}`
+    );
 
     // Get procedure
     const procedure = await this.storedProcedureRepository.findOne({
@@ -54,11 +64,15 @@ export class ExecutionService {
 
     // Check if procedure is published
     if (procedure.status !== StoredProcedureStatus.PUBLISHED) {
-      throw new BadRequestException('Cannot execute procedure in draft status. Please publish the procedure first.');
+      throw new BadRequestException(
+        'Cannot execute procedure in draft status. Please publish the procedure first.'
+      );
     }
 
     if (!procedure.sqlPublished || procedure.sqlPublished.trim() === '') {
-      throw new BadRequestException('Procedure has no published content to execute');
+      throw new BadRequestException(
+        'Procedure has no published content to execute'
+      );
     }
 
     const timeout = Math.min(
@@ -68,7 +82,10 @@ export class ExecutionService {
 
     try {
       // Get MSSQL connection
-      const connection = await this.mssqlConnectionRegistry.getConnectionForWorkspace(workspaceId);
+      const connection =
+        await this.mssqlConnectionRegistry.getConnectionForWorkspace(
+          workspaceId
+        );
 
       // Execute procedure with timeout
       const result = await this.executeProcedureWithTimeout(
@@ -86,16 +103,18 @@ export class ExecutionService {
         ActivityType.SQL_PROCEDURE_EXECUTED,
         `Executed stored procedure "${procedure.name}" in workspace "${procedure.workspace.name}"`,
         workspaceId,
-        { 
-          procedureId: procedure.id, 
+        {
+          procedureId: procedure.id,
           procedureName: procedure.name,
           executionTime,
           rowCount: result.rowCount,
-          parameters: this.sanitizeParameters(options.parameters || {})
+          parameters: this.sanitizeParameters(options.parameters || {}),
         }
       );
 
-      this.logger.log(`Successfully executed stored procedure ${procedure.name} in ${executionTime}ms`);
+      this.logger.log(
+        `Successfully executed stored procedure ${procedure.name} in ${executionTime}ms`
+      );
       return {
         success: true,
         data: result.data,
@@ -105,8 +124,11 @@ export class ExecutionService {
       };
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      
-      this.logger.error(`Failed to execute stored procedure ${procedureId}:`, error);
+
+      this.logger.error(
+        `Failed to execute stored procedure ${procedureId}:`,
+        error
+      );
 
       // Record failed execution activity
       await this.activitiesService.record(
@@ -114,12 +136,12 @@ export class ExecutionService {
         ActivityType.SQL_PROCEDURE_EXECUTION_FAILED,
         `Failed to execute stored procedure "${procedure.name}" in workspace "${procedure.workspace.name}"`,
         workspaceId,
-        { 
-          procedureId: procedure.id, 
+        {
+          procedureId: procedure.id,
           procedureName: procedure.name,
           executionTime,
           error: error instanceof Error ? error.message : 'Unknown error',
-          parameters: this.sanitizeParameters(options.parameters || {})
+          parameters: this.sanitizeParameters(options.parameters || {}),
         }
       );
 
@@ -136,18 +158,22 @@ export class ExecutionService {
     procedureName: string,
     parameters: Record<string, any>,
     timeoutMs: number
-  ): Promise<{ data: any[]; columns: Array<{ name: string; type: string }>; rowCount: number }> {
+  ): Promise<{
+    data: any[];
+    columns: Array<{ name: string; type: string }>;
+    rowCount: number;
+  }> {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error(`Procedure execution timed out after ${timeoutMs}ms`));
       }, timeoutMs);
 
       this.executeProcedureInternal(connection, procedureName, parameters)
-        .then(result => {
+        .then((result) => {
           clearTimeout(timeoutId);
           resolve(result);
         })
-        .catch(error => {
+        .catch((error) => {
           clearTimeout(timeoutId);
           reject(error);
         });
@@ -158,10 +184,17 @@ export class ExecutionService {
     connection: DataSource,
     procedureName: string,
     parameters: Record<string, any>
-  ): Promise<{ data: any[]; columns: Array<{ name: string; type: string }>; rowCount: number }> {
+  ): Promise<{
+    data: any[];
+    columns: Array<{ name: string; type: string }>;
+    rowCount: number;
+  }> {
     try {
       // Build parameterized EXEC statement
-      const { execSql, paramValues } = this.buildParameterizedExec(procedureName, parameters);
+      const { execSql, paramValues } = this.buildParameterizedExec(
+        procedureName,
+        parameters
+      );
 
       // Execute the procedure
       const result = await connection.query(execSql, paramValues);
@@ -173,26 +206,30 @@ export class ExecutionService {
 
       if (Array.isArray(result) && result.length > 0) {
         // Handle result set with metadata
-        if (result[0] && typeof result[0] === 'object' && !Array.isArray(result[0])) {
+        if (
+          result[0] &&
+          typeof result[0] === 'object' &&
+          !Array.isArray(result[0])
+        ) {
           // Single result set
           data = this.limitResultRows(result);
           rowCount = data.length;
-          
+
           if (data.length > 0) {
-            columns = Object.keys(data[0]).map(key => ({
+            columns = Object.keys(data[0]).map((key) => ({
               name: key,
-              type: this.inferColumnType(data[0][key])
+              type: this.inferColumnType(data[0][key]),
             }));
           }
         } else if (Array.isArray(result[0])) {
           // Multiple result sets or different format
           data = this.limitResultRows(result[0]);
           rowCount = data.length;
-          
+
           if (data.length > 0) {
-            columns = Object.keys(data[0]).map(key => ({
+            columns = Object.keys(data[0]).map((key) => ({
               name: key,
-              type: this.inferColumnType(data[0][key])
+              type: this.inferColumnType(data[0][key]),
             }));
           }
         }
@@ -200,8 +237,13 @@ export class ExecutionService {
 
       return { data, columns, rowCount };
     } catch (error) {
-      this.logger.error(`Internal execution error for procedure ${procedureName}:`, error);
-      throw new Error(`Procedure execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(
+        `Internal execution error for procedure ${procedureName}:`,
+        error
+      );
+      throw new Error(
+        `Procedure execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -215,7 +257,7 @@ export class ExecutionService {
     if (paramNames.length === 0) {
       return {
         execSql: `EXEC [${procedureName}]`,
-        paramValues: []
+        paramValues: [],
       };
     }
 
@@ -226,13 +268,13 @@ export class ExecutionService {
     paramNames.forEach((paramName, index) => {
       const paramValue = parameters[paramName];
       const paramNameSafe = `@param_${index}`;
-      
+
       // Add parameter declaration (simplified - in production you'd want better type inference)
       declarations.push(`${paramNameSafe} NVARCHAR(MAX)`);
-      
+
       // Add parameter assignment
       assignments.push(`${paramNameSafe} = @p${index}`);
-      
+
       // Add to values array for parameterized query
       paramValues.push(paramValue);
     });
@@ -250,8 +292,10 @@ export class ExecutionService {
     if (data.length <= this.maxResultRows) {
       return data;
     }
-    
-    this.logger.warn(`Result set truncated to ${this.maxResultRows} rows (original: ${data.length} rows)`);
+
+    this.logger.warn(
+      `Result set truncated to ${this.maxResultRows} rows (original: ${data.length} rows)`
+    );
     return data.slice(0, this.maxResultRows);
   }
 
@@ -266,14 +310,18 @@ export class ExecutionService {
     return 'unknown';
   }
 
-  private sanitizeParameters(parameters: Record<string, any>): Record<string, any> {
+  private sanitizeParameters(
+    parameters: Record<string, any>
+  ): Record<string, any> {
     const sanitized: Record<string, any> = {};
-    
+
     for (const [key, value] of Object.entries(parameters)) {
       // Remove sensitive data from logs
-      if (key.toLowerCase().includes('password') || 
-          key.toLowerCase().includes('secret') || 
-          key.toLowerCase().includes('token')) {
+      if (
+        key.toLowerCase().includes('password') ||
+        key.toLowerCase().includes('secret') ||
+        key.toLowerCase().includes('token')
+      ) {
         sanitized[key] = '[REDACTED]';
       } else if (typeof value === 'string' && value.length > 100) {
         // Truncate long string values
@@ -282,11 +330,15 @@ export class ExecutionService {
         sanitized[key] = value;
       }
     }
-    
+
     return sanitized;
   }
 
-  async canUserExecuteProcedure(procedureId: string, workspaceId: string, userId: string): Promise<boolean> {
+  async canUserExecuteProcedure(
+    procedureId: string,
+    workspaceId: string,
+    userId: string
+  ): Promise<boolean> {
     const procedure = await this.storedProcedureRepository.findOne({
       where: { id: procedureId, workspaceId },
     });

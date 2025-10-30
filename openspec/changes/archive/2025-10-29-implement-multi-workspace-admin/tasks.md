@@ -11,7 +11,6 @@
 - [x] 1.2.2 PATCH /admin/c/:slug (update workspace details)
 - [x] 1.2.3 DELETE /admin/c/:slug (soft delete with deactivation)
 
-
 - [x] 1.3 Add workspace member management for Owners and Platform Admins
 - [x] 1.3.1 Workspace-scoped: GET /c/:slug/users (Owners can list members)
 - [x] 1.3.2 Workspace-scoped: POST /c/:slug/users (Owners can add members)
@@ -46,7 +45,7 @@
 - [x] 2.1.1 AdminLayout component with sidebar navigation
 - [x] 2.1.2 AdminSidebar component with Users/Workspaces/Settings sections
 - [x] 2.1.3 AdminDashboard with feature-specific quick actions
-- [x] 2.1.4 Route structure: /admin/users/*, /admin/workspaces/* (listing and creation), /admin/c/:slug* (workspace details), /admin/settings/*
+- [x] 2.1.4 Route structure: /admin/users/_, /admin/workspaces/_ (listing and creation), /admin/c/:slug* (workspace details), /admin/settings/*
 
 - [x] 2.2 Create Users management section
 - [x] 2.2.1 /admin/users/create (enhanced user creation with workspace assignment)

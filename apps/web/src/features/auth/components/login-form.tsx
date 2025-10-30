@@ -38,11 +38,11 @@ export function LoginForm() {
       setIsLoading(true);
       try {
         const response = await login(value);
-        
+
         // Determine redirect target
         const searchParams = router.state.location.search;
         const redirectParam = searchParams?.redirect as string;
-        
+
         if (redirectParam && redirectParam.startsWith('/')) {
           // Honor explicit redirect parameter if it's a safe internal path
           router.navigate({ to: redirectParam });

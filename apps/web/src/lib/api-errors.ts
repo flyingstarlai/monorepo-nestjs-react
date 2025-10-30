@@ -63,7 +63,10 @@ export class NetworkError extends ApiError {
 }
 
 export class ValidationError extends ApiError {
-  constructor(message: string, public field?: string) {
+  constructor(
+    message: string,
+    public field?: string
+  ) {
     super(message, 'VALIDATION_ERROR', 400);
     this.name = 'ValidationError';
   }
@@ -93,7 +96,11 @@ export class ServerError extends ApiError {
 /**
  * Utility function to create appropriate error based on HTTP status
  */
-export function createApiError(status: number, message?: string, response?: any): ApiError {
+export function createApiError(
+  status: number,
+  message?: string,
+  response?: any
+): ApiError {
   switch (status) {
     case 400:
       return new ValidationError(message || 'Bad request');
@@ -109,6 +116,11 @@ export function createApiError(status: number, message?: string, response?: any)
     case 504:
       return new ServerError(message || 'Server error');
     default:
-      return new ApiError(message || `HTTP ${status}`, undefined, status, response);
+      return new ApiError(
+        message || `HTTP ${status}`,
+        undefined,
+        status,
+        response
+      );
   }
 }

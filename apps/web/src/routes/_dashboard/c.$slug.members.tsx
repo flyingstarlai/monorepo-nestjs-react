@@ -48,9 +48,7 @@ function WorkspaceMembers() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="font-medium truncate">{member.name}</h3>
-                  <Badge
-                    variant={member.isActive ? 'default' : 'secondary'}
-                  >
+                  <Badge variant={member.isActive ? 'default' : 'secondary'}>
                     {member.isActive ? 'Active' : 'Inactive'}
                   </Badge>
                 </div>
@@ -93,11 +91,7 @@ function WorkspaceMembers() {
             <div className="h-4 w-64 bg-muted animate-pulse rounded" />
           </CardHeader>
           <CardContent>
-            <DataTable
-              columns={columns}
-              data={[]}
-              isLoading={true}
-            />
+            <DataTable columns={columns} data={[]} isLoading={true} />
           </CardContent>
         </Card>
       </div>
@@ -132,7 +126,7 @@ function WorkspaceMembers() {
                 Manage members and their roles in {currentWorkspace.name}
               </CardDescription>
             </div>
-              {canManageWorkspace && (
+            {canManageWorkspace && (
               <AddMemberDialog>
                 <Button>
                   <UserPlus className="mr-2 h-4 w-4" />
@@ -147,13 +141,17 @@ function WorkspaceMembers() {
             columns={columns}
             data={members || []}
             isLoading={false}
-            error={membersError ? `Failed to load members: ${membersError.message}` : undefined}
+            error={
+              membersError
+                ? `Failed to load members: ${membersError.message}`
+                : undefined
+            }
             searchPlaceholder="Search members..."
             searchValue={search}
             onSearchChange={setSearch}
             emptyStateMessage={
-              !members || members.length === 0 
-                ? "No members found in this workspace" 
+              !members || members.length === 0
+                ? 'No members found in this workspace'
                 : undefined
             }
           />

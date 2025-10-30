@@ -50,14 +50,15 @@ function RootRedirect() {
               <Loader2 className="h-6 w-6 text-primary animate-spin" />
             </div>
             <div className="space-y-2">
-              <h1 className="text-xl font-semibold">Setting up your workspace</h1>
+              <h1 className="text-xl font-semibold">
+                Setting up your workspace
+              </h1>
               <p className="text-muted-foreground">
-                {currentWorkspace 
+                {currentWorkspace
                   ? `Redirecting to ${currentWorkspace.name}...`
-                  : workspaces?.items?.length 
+                  : workspaces?.items?.length
                     ? 'Finding your workspace...'
-                    : 'Preparing your dashboard...'
-                }
+                    : 'Preparing your dashboard...'}
               </p>
             </div>
             <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">

@@ -55,7 +55,9 @@ export function DataTable<TData, TValue>({
   className,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
   const [globalFilter, setGlobalFilter] = React.useState('');
 
   // Update global filter when searchValue changes
@@ -103,7 +105,13 @@ export function DataTable<TData, TValue>({
   const renderPagination = () => {
     if (!pagination) return null;
 
-    const { page, pageSize = 10, totalPages, onPageChange, onPageSizeChange } = pagination;
+    const {
+      page,
+      pageSize = 10,
+      totalPages,
+      onPageChange,
+      onPageSizeChange,
+    } = pagination;
     const canPreviousPage = page > 1;
     const canNextPage = page < totalPages;
 
@@ -193,12 +201,8 @@ export function DataTable<TData, TValue>({
             <div className="text-destructive mb-4">
               <MoreHorizontal className="h-12 w-12" />
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-2">
-              Error
-            </h3>
-            <p className="text-muted-foreground mb-4">
-              {error}
-            </p>
+            <h3 className="text-lg font-medium text-foreground mb-2">Error</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
           </div>
         </div>
       </div>
@@ -208,7 +212,7 @@ export function DataTable<TData, TValue>({
   return (
     <div className={cn('w-full space-y-4', className)}>
       {renderSearch()}
-      
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>

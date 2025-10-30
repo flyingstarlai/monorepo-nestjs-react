@@ -40,11 +40,13 @@ export class AdminWorkspaceController {
   @Get()
   async getWorkspace(@Request() req: { workspace: any }) {
     const workspace = req.workspace;
-    
+
     // Get member count
-    const members = await this.workspacesService.getWorkspaceMembers(workspace.id);
-    const activeMembers = members.filter(m => m.isActive);
-    
+    const members = await this.workspacesService.getWorkspaceMembers(
+      workspace.id
+    );
+    const activeMembers = members.filter((m) => m.isActive);
+
     return {
       id: workspace.id,
       name: workspace.name,
@@ -70,9 +72,10 @@ export class AdminWorkspaceController {
 
     // Validate that if deactivating, there are no active members
     if (isActive === false) {
-      const activeMembers = await this.workspacesService.getWorkspaceMembers(workspaceId)
-        .then(members => members.filter(m => m.isActive));
-      
+      const activeMembers = await this.workspacesService
+        .getWorkspaceMembers(workspaceId)
+        .then((members) => members.filter((m) => m.isActive));
+
       if (activeMembers.length > 0) {
         throw new BadRequestException(
           'Cannot deactivate workspace with active members. Remove all members first.'
@@ -90,11 +93,14 @@ export class AdminWorkspaceController {
     }
 
     // Update workspace using service method
-    const updatedWorkspace = await this.workspacesService.updateWorkspace(workspaceId, {
-      name,
-      isActive,
-      updatedBy: userId,
-    });
+    const updatedWorkspace = await this.workspacesService.updateWorkspace(
+      workspaceId,
+      {
+        name,
+        isActive,
+        updatedBy: userId,
+      }
+    );
 
     // Record workspace update activity
     await this.activitiesService.record(
@@ -121,9 +127,10 @@ export class AdminWorkspaceController {
     const workspaceName = req.workspace.name;
 
     // Check if there are any active members
-    const activeMembers = await this.workspacesService.getWorkspaceMembers(workspaceId)
-      .then(members => members.filter(m => m.isActive));
-    
+    const activeMembers = await this.workspacesService
+      .getWorkspaceMembers(workspaceId)
+      .then((members) => members.filter((m) => m.isActive));
+
     if (activeMembers.length > 0) {
       throw new BadRequestException(
         'Cannot delete workspace with active members. Remove all members first.'
@@ -145,7 +152,7 @@ export class AdminWorkspaceController {
         actorId: userId,
       }
     );
-    
+
     return {
       message: 'Workspace deleted successfully',
       id: workspaceId,
@@ -155,7 +162,7 @@ export class AdminWorkspaceController {
   @Get('stats')
   async getWorkspaceStats(@Request() req: { workspace: any }) {
     const workspaceId = req.workspace.id;
-    
+
     // Use service method for stats
     return this.workspacesService.getWorkspaceStats(workspaceId);
   }
@@ -179,7 +186,8 @@ export class AdminWorkspacesListController {
   ) {
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 20;
-    const isActiveBool = isActive !== undefined ? isActive === 'true' : undefined;
+    const isActiveBool =
+      isActive !== undefined ? isActive === 'true' : undefined;
 
     return this.workspacesService.listWorkspaces({
       page: pageNum,

@@ -3,7 +3,7 @@ import { AppDataSource } from './data-source';
 async function runMigrations() {
   await AppDataSource.initialize();
   console.log('Database connected');
-  
+
   try {
     console.log('Running migrations...');
     await AppDataSource.runMigrations();
@@ -11,7 +11,7 @@ async function runMigrations() {
   } catch (error) {
     console.error('Migration error:', error);
   }
-  
+
   await AppDataSource.destroy();
 }
 

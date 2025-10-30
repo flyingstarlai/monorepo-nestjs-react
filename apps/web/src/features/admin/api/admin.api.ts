@@ -109,7 +109,9 @@ export const adminApi = {
 
   async setUserActive(userId: string, isActive: boolean): Promise<User> {
     try {
-      const response = await apiClient.patch<User>(`/users/${userId}/status`, { isActive });
+      const response = await apiClient.patch<User>(`/users/${userId}/status`, {
+        isActive,
+      });
       return response.data;
     } catch (error) {
       if (error instanceof AdminApiError) {
@@ -123,7 +125,9 @@ export const adminApi = {
 
   async setUserRole(userId: string, roleName: 'Admin' | 'User'): Promise<User> {
     try {
-      const response = await apiClient.patch<User>(`/users/${userId}/role`, { roleName });
+      const response = await apiClient.patch<User>(`/users/${userId}/role`, {
+        roleName,
+      });
       return response.data;
     } catch (error) {
       if (error instanceof AdminApiError) {
@@ -177,7 +181,10 @@ export const adminApi = {
 
   async createWorkspace(data: CreateWorkspaceDto): Promise<Workspace> {
     try {
-      const response = await apiClient.post<Workspace>('/admin/workspaces', data);
+      const response = await apiClient.post<Workspace>(
+        '/admin/workspaces',
+        data
+      );
       return response.data;
     } catch (error) {
       if (error instanceof AdminApiError) {
@@ -194,7 +201,10 @@ export const adminApi = {
     data: UpdateWorkspaceDto
   ): Promise<Workspace> {
     try {
-      const response = await apiClient.patch<Workspace>(`/admin/workspaces/${id}`, data);
+      const response = await apiClient.patch<Workspace>(
+        `/admin/workspaces/${id}`,
+        data
+      );
       return response.data;
     } catch (error) {
       if (error instanceof AdminApiError) {
@@ -221,7 +231,9 @@ export const adminApi = {
 
   async getWorkspaceStats(id: string): Promise<WorkspaceStats> {
     try {
-      const response = await apiClient.get<WorkspaceStats>(`/admin/workspaces/${id}/stats`);
+      const response = await apiClient.get<WorkspaceStats>(
+        `/admin/workspaces/${id}/stats`
+      );
       return response.data;
     } catch (error) {
       if (error instanceof AdminApiError) {

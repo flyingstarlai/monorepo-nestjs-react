@@ -21,7 +21,6 @@ import {
 } from '@/components/ui/select';
 import { DataTable } from '@/components/ui/data-table';
 
-
 import {
   workspaceApi,
   type Workspace,
@@ -49,8 +48,6 @@ export const Route = createFileRoute('/_dashboard/admin/workspaces')({
   component: AdminWorkspaces,
 });
 
-
-
 function AdminWorkspaces() {
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
@@ -58,7 +55,6 @@ function AdminWorkspaces() {
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(
     undefined
   );
-
 
   // Check for create action in URL
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(() => {
@@ -162,8 +158,6 @@ function AdminWorkspaces() {
     []
   );
 
-
-
   return (
     <div className="flex-1 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -255,7 +249,6 @@ function AdminWorkspaces() {
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 items-end">
-
             <div className="w-40">
               <label className="text-sm font-medium mb-2 block">Status</label>
               <Select
@@ -300,7 +293,7 @@ function AdminWorkspaces() {
             columns={columns}
             data={workspaces}
             isLoading={isLoading}
-            error={error ? "Failed to load workspaces" : undefined}
+            error={error ? 'Failed to load workspaces' : undefined}
             pagination={{
               page,
               totalPages: pagination.totalPages,

@@ -6,7 +6,8 @@
 import { ApiError, AuthError } from './api-errors';
 
 // Single source of truth for API base URL
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+export const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 // Default request timeout in milliseconds
 export const DEFAULT_TIMEOUT = 30000;
@@ -113,7 +114,7 @@ async function refreshToken(): Promise<string> {
  */
 async function performTokenRefresh(): Promise<string> {
   const refreshToken = localStorage.getItem('refresh_token');
-  
+
   if (!refreshToken) {
     throw new AuthError('No refresh token available');
   }
@@ -133,21 +134,21 @@ async function performTokenRefresh(): Promise<string> {
 
     const data = await response.json();
     const newToken = data.access_token;
-    
+
     if (data.refresh_token) {
       localStorage.setItem('refresh_token', data.refresh_token);
     }
-    
+
     setAuthToken(newToken);
     return newToken;
   } catch (error) {
     // If refresh fails, clear tokens and redirect to login
     removeAuthToken();
     localStorage.removeItem('refresh_token');
-    
+
     // Dispatch event for global auth state handling
     window.dispatchEvent(new CustomEvent('auth:logout'));
-    
+
     throw new AuthError('Token refresh failed');
   }
 }
@@ -166,7 +167,7 @@ async function createHeaders(config: ApiRequestConfig): Promise<HeadersInit> {
   // Add authentication header if not skipped
   if (!config.skipAuth) {
     let token = getAuthToken();
-    
+
     // If token is expired and refresh is not skipped, try to refresh
     if (token && isTokenExpired(token) && !config.skipRefresh) {
       try {
@@ -176,7 +177,7 @@ async function createHeaders(config: ApiRequestConfig): Promise<HeadersInit> {
         token = null;
       }
     }
-    
+
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
@@ -191,7 +192,7 @@ async function createHeaders(config: ApiRequestConfig): Promise<HeadersInit> {
 function createAbortController(timeout?: number): AbortController {
   const controller = new AbortController();
   const timeoutMs = timeout || apiClientState.defaultTimeout;
-  
+
   setTimeout(() => {
     controller.abort();
   }, timeoutMs);
@@ -202,26 +203,30 @@ function createAbortController(timeout?: number): AbortController {
 /**
  * Apply request interceptors
  */
-async function applyRequestInterceptors(config: ApiRequestConfig): Promise<ApiRequestConfig> {
+async function applyRequestInterceptors(
+  config: ApiRequestConfig
+): Promise<ApiRequestConfig> {
   let processedConfig = { ...config };
-  
+
   for (const interceptor of apiClientState.requestInterceptors) {
     processedConfig = await interceptor(processedConfig);
   }
-  
+
   return processedConfig;
 }
 
 /**
  * Apply response interceptors
  */
-async function applyResponseInterceptors<T>(response: ApiResponse<T>): Promise<ApiResponse<T>> {
+async function applyResponseInterceptors<T>(
+  response: ApiResponse<T>
+): Promise<ApiResponse<T>> {
   let processedResponse = { ...response };
-  
+
   for (const interceptor of apiClientState.responseInterceptors) {
     processedResponse = await interceptor(processedResponse);
   }
-  
+
   return processedResponse;
 }
 
@@ -230,7 +235,7 @@ async function applyResponseInterceptors<T>(response: ApiResponse<T>): Promise<A
  */
 async function applyErrorInterceptors(error: Error): Promise<Error> {
   let processedError = error;
-  
+
   for (const interceptor of apiClientState.errorInterceptors) {
     try {
       processedError = await interceptor(processedError);
@@ -239,7 +244,7 @@ async function applyErrorInterceptors(error: Error): Promise<Error> {
       console.error('Error interceptor failed:', interceptorError);
     }
   }
-  
+
   return processedError;
 }
 
@@ -252,7 +257,7 @@ async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
 
   try {
     responseText = await response.text();
-    
+
     // Handle empty responses
     if (!responseText) {
       data = null as T;
@@ -306,8 +311,8 @@ async function request<T = any>(
   });
 
   // Construct full URL
-  const url = endpoint.startsWith('http') 
-    ? endpoint 
+  const url = endpoint.startsWith('http')
+    ? endpoint
     : `${apiClientState.baseUrl}${endpoint}`;
 
   // Create headers with authentication
@@ -336,7 +341,11 @@ async function request<T = any>(
         throw new ApiError('Request timeout', 'TIMEOUT');
       }
 
-      if (error instanceof ApiError && error.statusCode && error.statusCode < 500) {
+      if (
+        error instanceof ApiError &&
+        error.statusCode &&
+        error.statusCode < 500
+      ) {
         // Apply error interceptors before throwing
         throw await applyErrorInterceptors(error);
       }
@@ -356,7 +365,7 @@ async function request<T = any>(
       }
 
       // Wait before retrying (exponential backoff)
-      await new Promise(resolve => 
+      await new Promise((resolve) =>
         setTimeout(resolve, Math.pow(2, attempt) * 1000)
       );
     }
@@ -370,31 +379,31 @@ async function request<T = any>(
  * Convenience methods for HTTP verbs
  */
 const apiMethods = {
-  get: <T = any>(endpoint: string, config?: ApiRequestConfig) => 
+  get: <T = any>(endpoint: string, config?: ApiRequestConfig) =>
     request<T>(endpoint, { ...config, method: 'GET' }),
-    
-  post: <T = any>(endpoint: string, data?: any, config?: ApiRequestConfig) => 
+
+  post: <T = any>(endpoint: string, data?: any, config?: ApiRequestConfig) =>
     request<T>(endpoint, {
       ...config,
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     }),
-    
-  put: <T = any>(endpoint: string, data?: any, config?: ApiRequestConfig) => 
+
+  put: <T = any>(endpoint: string, data?: any, config?: ApiRequestConfig) =>
     request<T>(endpoint, {
       ...config,
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
     }),
-    
-  patch: <T = any>(endpoint: string, data?: any, config?: ApiRequestConfig) => 
+
+  patch: <T = any>(endpoint: string, data?: any, config?: ApiRequestConfig) =>
     request<T>(endpoint, {
       ...config,
       method: 'PATCH',
       body: data ? JSON.stringify(data) : undefined,
     }),
-    
-  delete: <T = any>(endpoint: string, config?: ApiRequestConfig) => 
+
+  delete: <T = any>(endpoint: string, config?: ApiRequestConfig) =>
     request<T>(endpoint, { ...config, method: 'DELETE' }),
 
   upload: <T = any>(
@@ -407,9 +416,11 @@ const apiMethods = {
 
     // If there's additional data, add it to form data
     if (config?.body) {
-      Object.entries(config.body as Record<string, any>).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
+      Object.entries(config.body as Record<string, any>).forEach(
+        ([key, value]) => {
+          formData.append(key, value);
+        }
+      );
     }
 
     return request<T>(endpoint, {
@@ -418,14 +429,14 @@ const apiMethods = {
       body: formData,
       // Don't set Content-Type header for FormData (browser sets it with boundary)
       headers: Object.fromEntries(
-        Object.entries(config?.headers || {}).filter(([key]) => 
-          key.toLowerCase() !== 'content-type'
+        Object.entries(config?.headers || {}).filter(
+          ([key]) => key.toLowerCase() !== 'content-type'
         )
       ),
     });
   },
 
-  healthCheck: () => 
+  healthCheck: () =>
     request<void>('/health', { skipAuth: true, timeout: 5000 })
       .then(() => true)
       .catch(() => false),
@@ -435,21 +446,23 @@ const apiMethods = {
  * Interceptor management
  */
 const interceptorMethods = {
-  addRequest: (interceptor: RequestInterceptor): number => 
+  addRequest: (interceptor: RequestInterceptor): number =>
     apiClientState.requestInterceptors.push(interceptor) - 1,
 
   removeRequest: (index: number): void => {
     apiClientState.requestInterceptors.splice(index, 1);
   },
 
-  addResponse: <T = any>(interceptor: ResponseInterceptor<T>): number => 
-    apiClientState.responseInterceptors.push(interceptor as ResponseInterceptor) - 1,
+  addResponse: <T = any>(interceptor: ResponseInterceptor<T>): number =>
+    apiClientState.responseInterceptors.push(
+      interceptor as ResponseInterceptor
+    ) - 1,
 
   removeResponse: (index: number): void => {
     apiClientState.responseInterceptors.splice(index, 1);
   },
 
-  addError: (interceptor: ErrorInterceptor): number => 
+  addError: (interceptor: ErrorInterceptor): number =>
     apiClientState.errorInterceptors.push(interceptor) - 1,
 
   removeError: (index: number): void => {
@@ -529,21 +542,23 @@ export function createApiClient(baseUrl?: string, timeout?: number) {
   const customClient = {
     ...apiMethods,
     interceptors: {
-      addRequest: (interceptor: RequestInterceptor): number => 
+      addRequest: (interceptor: RequestInterceptor): number =>
         customState.requestInterceptors.push(interceptor) - 1,
 
       removeRequest: (index: number): void => {
         customState.requestInterceptors.splice(index, 1);
       },
 
-      addResponse: <T = any>(interceptor: ResponseInterceptor<T>): number => 
-        customState.responseInterceptors.push(interceptor as ResponseInterceptor) - 1,
+      addResponse: <T = any>(interceptor: ResponseInterceptor<T>): number =>
+        customState.responseInterceptors.push(
+          interceptor as ResponseInterceptor
+        ) - 1,
 
       removeResponse: (index: number): void => {
         customState.responseInterceptors.splice(index, 1);
       },
 
-      addError: (interceptor: ErrorInterceptor): number => 
+      addError: (interceptor: ErrorInterceptor): number =>
         customState.errorInterceptors.push(interceptor) - 1,
 
       removeError: (index: number): void => {
@@ -569,11 +584,14 @@ export function createApiClient(baseUrl?: string, timeout?: number) {
 
       getDefaultTimeout: (): number => customState.defaultTimeout,
     },
-    request: <T = any>(endpoint: string, config: ApiRequestConfig = {}): Promise<ApiResponse<T>> => {
+    request: <T = any>(
+      endpoint: string,
+      config: ApiRequestConfig = {}
+    ): Promise<ApiResponse<T>> => {
       // Temporarily replace the global state for this request
       const originalState = apiClientState;
       apiClientState = customState;
-      
+
       try {
         return request<T>(endpoint, config);
       } finally {

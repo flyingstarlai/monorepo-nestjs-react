@@ -33,11 +33,15 @@ export class AuthService {
     let activeWorkspaceSlug: string | null = null;
     try {
       // Try to get last active workspace
-      activeWorkspaceSlug = await this.usersService.getActiveWorkspaceSlug(user.id);
-      
+      activeWorkspaceSlug = await this.usersService.getActiveWorkspaceSlug(
+        user.id
+      );
+
       // If no valid last active workspace, get fallback
       if (!activeWorkspaceSlug) {
-        activeWorkspaceSlug = await this.usersService.getFallbackWorkspaceSlug(user.id);
+        activeWorkspaceSlug = await this.usersService.getFallbackWorkspaceSlug(
+          user.id
+        );
       }
     } catch (error) {
       console.error('Error determining active workspace:', error);

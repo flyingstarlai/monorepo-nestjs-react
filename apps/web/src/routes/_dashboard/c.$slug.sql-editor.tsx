@@ -1,17 +1,35 @@
 import { createFileRoute, useParams, useBlocker } from '@tanstack/react-router';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import React from 'react';
 import {
   Database,
   Minimize2,
   Maximize2,
   PanelLeft,
   PanelRight,
+  AlertTriangle,
+  Download,
+  FileText,
+  Save,
+  CheckCircle,
+  Play,
+  Rocket,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useSidebar } from '@/components/ui/sidebar';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ProcedureList } from '@/features/sql-editor/components/procedure-list';
 import { ProcedureDialog } from '@/features/sql-editor/components/procedure-dialog';
 import { ExecuteProcedureDialog } from '@/features/sql-editor/components/execute-dialog';
@@ -25,6 +43,53 @@ import {
 import type { StoredProcedure } from '@/features/sql-editor/types';
 import { useSqlEditorStore } from '@/features/sql-editor/stores/sql-editor.store';
 import { toast } from 'sonner';
+
+// Error boundary for results display
+interface ResultsErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class ResultsErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  ResultsErrorBoundaryState
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ResultsErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Results display error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <AlertTriangle className="h-8 w-8 text-destructive mb-3" />
+          <h3 className="font-medium text-sm mb-2">Display Error</h3>
+          <p className="text-xs text-muted-foreground mb-3 max-w-md">
+            There was an error displaying the results. This might be due to
+            unexpected data format.
+          </p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: undefined })}
+            className="text-xs text-primary hover:underline"
+          >
+            Try again
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 export const Route = createFileRoute('/_dashboard/c/$slug/sql-editor')({
   component: SqlEditorPage,
@@ -71,6 +136,13 @@ function SqlEditorPage() {
   const [executionResults, setExecutionResults] = useState<
     Record<string, unknown>[]
   >([]);
+  const [executionColumns, setExecutionColumns] = useState<
+    Array<{ name: string; type: string }>
+  >([]);
+  const [executionMetadata, setExecutionMetadata] = useState<{
+    executionTime?: number;
+    rowCount?: number;
+  }>({});
   const [executionMessages, setExecutionMessages] = useState<
     Array<{
       timestamp: Date;
@@ -78,6 +150,15 @@ function SqlEditorPage() {
       message: string;
     }>
   >([]);
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [executedProcedureId, setExecutedProcedureId] = useState<string | null>(
+    null
+  );
+  const [contextSwitchDialog, setContextSwitchDialog] = useState<{
+    open: boolean;
+    targetProcedureId: string;
+    targetProcedureName: string;
+  }>({ open: false, targetProcedureId: '', targetProcedureName: '' });
 
   // Create procedure-specific validation messages
   const currentValidationErrors = useMemo(
@@ -293,11 +374,25 @@ function SqlEditorPage() {
     (id: string) => {
       const procedure = procedures?.find((p) => p.id === id);
       if (procedure && procedure.status === 'published') {
-        setExecutingProcedure(procedure);
-        setExecuteDialogOpen(true);
+        // Check if we need to switch context and if there are unsaved changes
+        if (selectedProcedureId !== id && isDirty) {
+          // Show confirmation dialog for context switching
+          setContextSwitchDialog({
+            open: true,
+            targetProcedureId: id,
+            targetProcedureName: procedure.name,
+          });
+        } else {
+          // Auto-switch context if no unsaved changes or same procedure
+          if (selectedProcedureId !== id) {
+            setSelectedProcedureId(id);
+          }
+          setExecutingProcedure(procedure);
+          setExecuteDialogOpen(true);
+        }
       }
     },
-    [procedures]
+    [procedures, selectedProcedureId, isDirty, setSelectedProcedureId]
   );
 
   // Keyboard shortcuts
@@ -353,26 +448,82 @@ function SqlEditorPage() {
     }
   };
 
+  const handleExecuteStart = () => {
+    setIsExecuting(true);
+    setExecutionResults([]);
+    setExecutionColumns([]);
+    setExecutionMetadata({});
+
+    // Show bottom panel and switch to results tab
+    if (!bottomPanelOpen) {
+      storeState.setBottomPanelOpen(true);
+      storeState.setBottomPanelHeight(200);
+    }
+    storeState.setActiveBottomTab('results');
+
+    // Add execution start message
+    setExecutionMessages((prev) => [
+      ...prev,
+      {
+        timestamp: new Date(),
+        type: 'info',
+        message: 'Executing procedure...',
+      },
+    ]);
+  };
+
   const handleExecuteSuccess = (result: {
     success: boolean;
-    result: Record<string, unknown>;
+    result?: Record<string, unknown>;
+    data?: Record<string, unknown>[];
+    columns?: Array<{ name: string; type: string }>;
     executionTime?: number;
     rowCount?: number;
     error?: string;
   }) => {
-    // Show bottom panel if hidden
-    if (!bottomPanelOpen) {
-      storeState.setBottomPanelOpen(true);
-      storeState.setBottomPanelHeight(200);
+    setIsExecuting(false);
+
+    // Track which procedure was executed
+    if (executingProcedure) {
+      setExecutedProcedureId(executingProcedure.id);
     }
 
     // Set active tab to results
     storeState.setActiveBottomTab('results');
 
-    // Store execution results
+    // Store execution results and columns
+    const results = Array.isArray(result.data)
+      ? result.data
+      : Array.isArray(result.result)
+        ? result.result
+        : [result.data || result.result].filter(Boolean);
     setExecutionResults(
-      Array.isArray(result.result) ? result.result : [result.result]
+      results.filter((row: any) => row != null && typeof row === 'object')
     );
+
+    // Store execution metadata
+    setExecutionMetadata({
+      executionTime: result.executionTime,
+      rowCount: result.rowCount || results.length,
+    });
+
+    // Store column information if available
+    if (result.columns && Array.isArray(result.columns)) {
+      setExecutionColumns(result.columns);
+    } else {
+      // Fallback: derive columns from first result row
+      const firstRow = results[0];
+      if (firstRow && typeof firstRow === 'object') {
+        const derivedColumns = Object.keys(firstRow).map((key: string) => ({
+          name: key,
+          type:
+            typeof (firstRow as any)[key] === 'number' ? 'number' : 'string',
+        }));
+        setExecutionColumns(derivedColumns);
+      } else {
+        setExecutionColumns([]);
+      }
+    }
 
     // Add execution message
     setExecutionMessages((prev) => [
@@ -389,7 +540,7 @@ function SqlEditorPage() {
 
   const handleDialogSuccess = (createdProcedure?: StoredProcedure) => {
     refetch();
-    
+
     // If a new procedure was created, set it as the selected procedure
     if (createdProcedure) {
       setSelectedProcedureId(createdProcedure.id);
@@ -449,6 +600,122 @@ function SqlEditorPage() {
     }
   };
 
+  const exportToCSV = useCallback(() => {
+    if (executionResults.length === 0) return;
+
+    const headers =
+      executionColumns.length > 0
+        ? executionColumns.map((col) => col.name)
+        : Object.keys(executionResults[0] || {});
+
+    const csvContent = [
+      headers.join(','),
+      ...executionResults.map((row) =>
+        headers
+          .map((header) => {
+            const value = row[header];
+            if (value === null || value === undefined) return '';
+            const stringValue = String(value);
+            // Escape quotes and wrap in quotes if contains comma or quote
+            return stringValue.includes(',') || stringValue.includes('"')
+              ? `"${stringValue.replace(/"/g, '""')}"`
+              : stringValue;
+          })
+          .join(',')
+      ),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute(
+      'download',
+      `query_results_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`
+    );
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [executionResults, executionColumns]);
+
+  const exportToJSON = useCallback(() => {
+    if (executionResults.length === 0) return;
+
+    const jsonContent = JSON.stringify(
+      {
+        data: executionResults,
+        columns: executionColumns,
+        metadata: executionMetadata,
+        exportedAt: new Date().toISOString(),
+      },
+      null,
+      2
+    );
+
+    const blob = new Blob([jsonContent], {
+      type: 'application/json;charset=utf-8;',
+    });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute(
+      'download',
+      `query_results_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`
+    );
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [executionResults, executionColumns, executionMetadata]);
+
+  const handleContextSwitchConfirm = useCallback(
+    async (saveChanges: boolean) => {
+      const { targetProcedureId } = contextSwitchDialog;
+
+      if (saveChanges && selectedProcedure) {
+        try {
+          await handleSaveProcedure();
+        } catch {
+          // If save fails, don't proceed with context switch
+          return;
+        }
+      }
+
+      // Switch context and open execute dialog
+      setSelectedProcedureId(targetProcedureId);
+      const targetProcedure = procedures?.find(
+        (p) => p.id === targetProcedureId
+      );
+      if (targetProcedure) {
+        setExecutingProcedure(targetProcedure);
+        setExecuteDialogOpen(true);
+      }
+
+      // Close dialog
+      setContextSwitchDialog({
+        open: false,
+        targetProcedureId: '',
+        targetProcedureName: '',
+      });
+    },
+    [
+      contextSwitchDialog,
+      selectedProcedure,
+      handleSaveProcedure,
+      setSelectedProcedureId,
+      procedures,
+    ]
+  );
+
+  const handleContextSwitchCancel = useCallback(() => {
+    setContextSwitchDialog({
+      open: false,
+      targetProcedureId: '',
+      targetProcedureName: '',
+    });
+  }, []);
+
   if (error) {
     return (
       <div className="space-y-6">
@@ -476,46 +743,126 @@ function SqlEditorPage() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => storeState.setExplorerCollapsed(!explorerCollapsed)}
-            aria-label={
-              explorerCollapsed
-                ? 'Show procedure explorer'
-                : 'Hide procedure explorer'
-            }
-          >
-            {explorerCollapsed ? (
-              <PanelRight className="h-4 w-4 mr-2" />
-            ) : (
-              <PanelLeft className="h-4 w-4 mr-2" />
+        <TooltipProvider>
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    storeState.setExplorerCollapsed(!explorerCollapsed)
+                  }
+                  aria-label={
+                    explorerCollapsed
+                      ? 'Show procedure explorer'
+                      : 'Hide procedure explorer'
+                  }
+                >
+                  {explorerCollapsed ? (
+                    <PanelRight className="h-4 w-4" />
+                  ) : (
+                    <PanelLeft className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Toggle Explorer</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => storeState.setBottomPanelOpen(!bottomPanelOpen)}
+                  aria-label={!bottomPanelOpen ? 'Show bottom panel' : 'Hide bottom panel'}
+                >
+                  {!bottomPanelOpen ? (
+                    <Maximize2 className="h-4 w-4" />
+                  ) : (
+                    <Minimize2 className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Toggle Panel</TooltipContent>
+            </Tooltip>
+
+            <div className="w-px h-5 bg-border mx-1" />
+
+          <TooltipProvider>
+                <TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowPublishDialog(true)}
+                        disabled={!selectedProcedure || selectedProcedure.status === 'published'}
+                        aria-label="Publish procedure"
+                      >
+                        <Rocket className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Publish procedure</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                </TooltipProvider>
+          </TooltipProvider>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleSaveProcedure}
+                  disabled={!selectedProcedure || readOnly || !isDirty}
+                  aria-label="Save (Cmd/Ctrl+S)"
+                >
+                  <Save className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {readOnly ? 'Published procedures are read-only' : 'Save (Cmd/Ctrl+S)'}
+              </TooltipContent>
+            </Tooltip>
+
+            {selectedProcedure?.status === 'published' && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleExecuteProcedure(selectedProcedure.id)}
+                      aria-label="Execute (Shift+Change)"
+                    >
+                      <Zap className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Execute (Shift+Enter)</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
-            {explorerCollapsed ? 'Show Explorer' : 'Hide Explorer'}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => storeState.setBottomPanelOpen(!bottomPanelOpen)}
-            aria-label={
-              !bottomPanelOpen ? 'Show bottom panel' : 'Hide bottom panel'
-            }
-          >
-            {!bottomPanelOpen ? (
-              <Maximize2 className="h-4 w-4 mr-2" />
-            ) : (
-              <Minimize2 className="h-4 w-4 mr-2" />
+
+            {selectedProcedure?.status === 'draft' && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handlePublishProcedure(selectedProcedure.id)}
+                    disabled={!editorContent.trim()}
+                    aria-label="Publish"
+                  >
+                    <Rocket className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Publish</TooltipContent>
+              </Tooltip>
             )}
-            {!bottomPanelOpen ? 'Show Panel' : 'Hide Panel'}
-          </Button>
-          <Button
-            onClick={handleCreateProcedure}
-            aria-label="Create new stored procedure"
-          >
-            Create Procedure
-          </Button>
-        </div>
+          </div>
+        </TooltipProvider>
       </div>
 
       {/* Feature Flag Notice */}
@@ -650,62 +997,191 @@ function SqlEditorPage() {
                     aria-labelledby="results-tab"
                   >
                     <div className="p-4">
-                      {executionResults.length > 0 ? (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium">Results</p>
-                            <p className="text-xs text-muted-foreground">
-                              {executionResults.length} row
-                              {executionResults.length !== 1 ? 's' : ''}
-                            </p>
+                      <ResultsErrorBoundary>
+                        {isExecuting ? (
+                          <div className="flex items-center justify-center py-8">
+                            <div className="flex items-center gap-3 text-muted-foreground">
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                              <span className="text-sm">
+                                Executing procedure...
+                              </span>
+                            </div>
                           </div>
-                          <div className="border rounded-md overflow-hidden">
-                            <table className="w-full text-sm">
-                              <thead className="bg-muted/50">
-                                <tr>
-                                  {Object.keys(executionResults[0] || {}).map(
-                                    (key) => (
-                                      <th
-                                        key={key}
-                                        className="px-3 py-2 text-left font-medium border-b"
-                                      >
-                                        {key}
-                                      </th>
-                                    )
+                        ) : executionResults.length > 0 ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium">Results</p>
+                                {executedProcedureId &&
+                                  executedProcedureId !==
+                                    selectedProcedureId && (
+                                    <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
+                                      <Database className="h-3 w-3" />
+                                      From:{' '}
+                                      {procedures?.find(
+                                        (p) => p.id === executedProcedureId
+                                      )?.name || 'Unknown'}
+                                    </div>
                                   )}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {executionResults.map((row, index) => (
-                                  <tr key={index} className="border-b">
-                                    {Object.values(row).map(
-                                      (value, cellIndex) => (
-                                        <td
-                                          key={cellIndex}
-                                          className="px-3 py-2"
-                                        >
-                                          {value === null ? (
-                                            <span className="text-muted-foreground italic">
-                                              NULL
-                                            </span>
-                                          ) : (
-                                            String(value)
-                                          )}
-                                        </td>
-                                      )
-                                    )}
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={exportToCSV}
+                                    className="h-7 px-2 text-xs"
+                                  >
+                                    <FileText className="h-3 w-3 mr-1" />
+                                    CSV
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={exportToJSON}
+                                    className="h-7 px-2 text-xs"
+                                  >
+                                    <Download className="h-3 w-3 mr-1" />
+                                    JSON
+                                  </Button>
+                                </div>
+                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                  {executionMetadata.rowCount !== undefined && (
+                                    <span>
+                                      {executionMetadata.rowCount} row
+                                      {executionMetadata.rowCount !== 1
+                                        ? 's'
+                                        : ''}
+                                    </span>
+                                  )}
+                                  {executionMetadata.executionTime && (
+                                    <span>
+                                      {executionMetadata.executionTime}ms
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="border rounded-md overflow-hidden">
+                              <table className="w-full text-sm">
+                                <thead className="bg-muted/50">
+                                  <tr>
+                                    {executionColumns.length > 0
+                                      ? executionColumns.map((column) => (
+                                          <th
+                                            key={column.name}
+                                            className="px-3 py-2 text-left font-medium border-b"
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              {column.name}
+                                              <span className="text-xs text-muted-foreground font-normal">
+                                                ({column.type})
+                                              </span>
+                                            </div>
+                                          </th>
+                                        ))
+                                      : Object.keys(
+                                          executionResults[0] || {}
+                                        ).map((key) => (
+                                          <th
+                                            key={key}
+                                            className="px-3 py-2 text-left font-medium border-b"
+                                          >
+                                            {key}
+                                          </th>
+                                        ))}
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                                </thead>
+                                <tbody>
+                                  {executionResults.map((row, index) => (
+                                    <tr key={index} className="border-b">
+                                      {row != null &&
+                                      typeof row === 'object' ? (
+                                        executionColumns.length > 0 ? (
+                                          executionColumns.map((column) => (
+                                            <td
+                                              key={column.name}
+                                              className="px-3 py-2"
+                                            >
+                                              {row[column.name] === null ? (
+                                                <span className="text-muted-foreground italic">
+                                                  NULL
+                                                </span>
+                                              ) : column.type === 'integer' ||
+                                                column.type === 'number' ? (
+                                                <span className="text-right font-mono">
+                                                  {String(row[column.name])}
+                                                </span>
+                                              ) : (
+                                                String(row[column.name])
+                                              )}
+                                            </td>
+                                          ))
+                                        ) : (
+                                          Object.values(row).map(
+                                            (value, cellIndex) => (
+                                              <td
+                                                key={cellIndex}
+                                                className="px-3 py-2"
+                                              >
+                                                {value === null ? (
+                                                  <span className="text-muted-foreground italic">
+                                                    NULL
+                                                  </span>
+                                                ) : (
+                                                  String(value)
+                                                )}
+                                              </td>
+                                            )
+                                          )
+                                        )
+                                      ) : (
+                                        <td
+                                          colSpan={
+                                            executionColumns.length ||
+                                            Object.keys(
+                                              executionResults[0] || {}
+                                            ).length
+                                          }
+                                          className="px-3 py-2 text-center text-muted-foreground italic"
+                                        >
+                                          Invalid row data
+                                        </td>
+                                      )}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          No results to display. Execute a procedure to see
-                          results here.
-                        </p>
-                      )}
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <Database className="h-12 w-12 text-muted-foreground/30 mb-4" />
+                            <h3 className="font-medium text-sm text-muted-foreground mb-2">
+                              No Results Yet
+                            </h3>
+                            <p className="text-xs text-muted-foreground max-w-md mb-4">
+                              Execute a stored procedure to see results here.
+                              Results will include returned data, execution
+                              time, and row counts.
+                            </p>
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <span>Execution info</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                <span>Query results</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                <span>Performance metrics</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </ResultsErrorBoundary>
                     </div>
                   </TabsContent>
 
@@ -790,6 +1266,7 @@ function SqlEditorPage() {
         onOpenChange={setExecuteDialogOpen}
         workspaceSlug={slug}
         procedure={executingProcedure}
+        onExecuteStart={handleExecuteStart}
         onSuccess={handleExecuteSuccess}
       />
 
@@ -801,6 +1278,37 @@ function SqlEditorPage() {
         procedure={publishingProcedure}
         onSuccess={handleDialogSuccess}
       />
+
+      {/* Context Switch Confirmation Dialog */}
+      <Dialog
+        open={contextSwitchDialog.open}
+        onOpenChange={(open) => !open && handleContextSwitchCancel()}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Switch Procedure Context</DialogTitle>
+            <DialogDescription>
+              You have unsaved changes in the current procedure. Would you like
+              to save them before switching to execute &quot;
+              {contextSwitchDialog.targetProcedureName}&quot;?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleContextSwitchCancel}>
+              Cancel
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => handleContextSwitchConfirm(false)}
+            >
+              Don&apos;t Save
+            </Button>
+            <Button onClick={() => handleContextSwitchConfirm(true)}>
+              Save & Switch
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

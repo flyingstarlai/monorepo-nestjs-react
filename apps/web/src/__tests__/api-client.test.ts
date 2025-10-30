@@ -61,7 +61,7 @@ describe('API Client', () => {
     it('should make a POST request with data', async () => {
       const postData = { name: 'Test' };
       const mockResponse = { id: 1, ...postData };
-      
+
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 201,
@@ -85,7 +85,7 @@ describe('API Client', () => {
 
     it('should handle API errors correctly', async () => {
       const errorResponse = { message: 'Not found', code: 'NOT_FOUND' };
-      
+
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
@@ -168,7 +168,7 @@ describe('API Client', () => {
     it('should handle expired tokens', async () => {
       const expiredToken = 'expired-token';
       const newToken = 'new-token';
-      
+
       // Mock expired token
       localStorageMock.getItem.mockImplementation((key) => {
         if (key === 'access_token') return expiredToken;
@@ -202,7 +202,10 @@ describe('API Client', () => {
 
       const response = await apiClient.get('/protected');
 
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('access_token', newToken);
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'access_token',
+        newToken
+      );
       expect(response.data).toEqual({ data: 'success' });
     });
   });
@@ -273,7 +276,9 @@ describe('API Client', () => {
         text: () => Promise.resolve('{"message": "Server error"}'),
       });
 
-      await expect(apiClient.get('/error')).rejects.toThrow('Intercepted: Server error');
+      await expect(apiClient.get('/error')).rejects.toThrow(
+        'Intercepted: Server error'
+      );
       expect(errorInterceptor).toHaveBeenCalled();
 
       apiClient.interceptors.removeError(0);
@@ -283,7 +288,10 @@ describe('API Client', () => {
   describe('File Upload', () => {
     it('should upload files correctly', async () => {
       const file = new File(['test'], 'test.txt', { type: 'text/plain' });
-      const mockResponse = { id: 'file-id', url: 'https://example.com/file.txt' };
+      const mockResponse = {
+        id: 'file-id',
+        url: 'https://example.com/file.txt',
+      };
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -316,7 +324,9 @@ describe('API Client', () => {
       customClient.config.setBaseUrl('https://new-api.example.com');
       customClient.config.setDefaultTimeout(20000);
 
-      expect(customClient.config.getBaseUrl()).toBe('https://new-api.example.com');
+      expect(customClient.config.getBaseUrl()).toBe(
+        'https://new-api.example.com'
+      );
       expect(customClient.config.getDefaultTimeout()).toBe(20000);
     });
   });
@@ -416,14 +426,16 @@ describe('API Logging', () => {
     }
 
     const logs = getLogEntries();
-    expect(logs.some(log => log.type === 'error')).toBe(true);
+    expect(logs.some((log) => log.type === 'error')).toBe(true);
   });
 });
 
 describe('Integration with Auth Store', () => {
   it('should handle auth logout events', async () => {
     let eventFired = false;
-    const eventHandler = () => { eventFired = true; };
+    const eventHandler = () => {
+      eventFired = true;
+    };
     window.addEventListener('auth:logout', eventHandler);
 
     // Mock a 401 response
@@ -442,7 +454,7 @@ describe('Integration with Auth Store', () => {
     }
 
     // Wait a bit for the event to be dispatched
-    await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expect(eventFired).toBe(true);
     expect(localStorageMock.removeItem).toHaveBeenCalledWith('access_token');

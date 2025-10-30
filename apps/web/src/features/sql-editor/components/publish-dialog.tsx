@@ -17,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Upload, AlertTriangle, CheckCircle, Code } from 'lucide-react';
+import { Rocket, AlertTriangle, CheckCircle, Code } from 'lucide-react';
 import { usePublishProcedure } from '../hooks/use-sql-editor';
 import type { StoredProcedure } from '../types';
 
@@ -43,16 +43,17 @@ export function PublishDialog({
   );
 
   const isLoading = publishMutation.isPending;
+  const error = publishMutation.error;
 
   const handlePublish = async () => {
     if (!procedure || confirmText !== procedure.name) return;
 
     try {
-      await publishMutation.mutateAsync({ sqlDraft: procedure.sqlDraft });
+      await publishMutation.mutateAsync();
       onSuccess?.();
       onOpenChange(false);
       setConfirmText('');
-    } catch (error) {
+    } catch {
       // Error is handled by the mutation
     }
   };
@@ -71,7 +72,7 @@ export function PublishDialog({
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
+            <Rocket className="h-5 w-5" />
             Publish Procedure
           </DialogTitle>
           <DialogDescription>
@@ -111,14 +112,27 @@ export function PublishDialog({
             </Card>
           )}
 
+          {/* Error Display */}
+          {error && (
+            <Alert className="border-destructive bg-destructive/10">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <AlertDescription className="text-destructive">
+                <strong>Publish Error:</strong>{' '}
+                {error instanceof Error
+                  ? error.message
+                  : 'Failed to publish procedure. Please try again.'}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Warning */}
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Important:</strong> Publishing will overwrite the
-              currently published version of this procedure. The published
-              version will be immediately available for execution by all
-              workspace members with appropriate permissions.
+              <strong>Important:</strong> Publishing will overwrite currently
+              published version of this procedure. The published version will be
+              immediately available for execution by all workspace members with
+              appropriate permissions.
             </AlertDescription>
           </Alert>
 

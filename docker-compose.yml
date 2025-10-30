@@ -73,6 +73,27 @@ services:
       timeout: 5s
       retries: 5
 
+  # MSSQL Database for SQL Editor
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: tcstudio-mssql-dev
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=SqlServer123!
+      - MSSQL_PID=Express
+    volumes:
+      - mssql_data:/var/opt/mssql
+    networks:
+      - dashboard-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P SqlServer123! -Q 'SELECT 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Redis (optional, for caching/sessions)
   redis:
     image: redis:7-alpine
@@ -131,6 +152,7 @@ services:
 
 volumes:
   postgres_data:
+  mssql_data:
   redis_data:
   prometheus_data:
   grafana_data:

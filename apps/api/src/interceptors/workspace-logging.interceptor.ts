@@ -14,13 +14,15 @@ export class WorkspaceLoggingInterceptor implements NestInterceptor {
   private readonly logger = new Logger(WorkspaceLoggingInterceptor.name);
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const request = context.switchToHttp().getRequest<Request & { workspace?: { id: string; slug: string } }>();
+    const request = context
+      .switchToHttp()
+      .getRequest<Request & { workspace?: { id: string; slug: string } }>();
     const response = context.switchToHttp().getResponse();
-    
+
     // Extract workspace information if available
     const workspaceId = request.workspace?.id;
     const workspaceSlug = request.workspace?.slug;
-    
+
     // Add workspace context to request for logging
     if (workspaceId) {
       request.headers['x-workspace-id'] = workspaceId;

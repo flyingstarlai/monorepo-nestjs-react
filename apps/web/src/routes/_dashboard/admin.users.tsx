@@ -50,8 +50,6 @@ export const Route = createFileRoute('/_dashboard/admin/users')({
   component: AdminUsers,
 });
 
-
-
 function AdminUsers() {
   const { user } = useAuth();
   const { data: users = [], isLoading, error } = useUsersQuery();
@@ -123,7 +121,6 @@ function AdminUsers() {
             </div>
           );
         },
-
       },
       {
         accessorKey: 'createdAt',
@@ -172,8 +169,6 @@ function AdminUsers() {
     ],
     [user, handleToggleActive, handleRoleChange]
   );
-
-
 
   return (
     <div className="flex-1 space-y-6">
@@ -270,7 +265,7 @@ function AdminUsers() {
             columns={columns}
             data={users}
             isLoading={isLoading}
-            error={error ? "Failed to load users" : undefined}
+            error={error ? 'Failed to load users' : undefined}
             pagination={{
               page,
               totalPages: Math.ceil(users.length / pageSize),

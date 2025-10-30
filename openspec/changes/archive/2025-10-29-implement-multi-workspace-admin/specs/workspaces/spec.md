@@ -146,9 +146,6 @@ The system SHALL allow workspace Owners and Platform Admins to manage members wi
 - THEN the system deactivates the membership
 - AND if this change would leave the workspace with zero Owners, the request MUST include `replacementOwnerUserId` to transfer ownership; otherwise the system rejects with 400 Bad Request
 
-
-
-
 ### Requirement: Enhanced Workspace Switching
 
 The system SHALL provide an improved workspace selector that supports multiple workspaces with search and role indicators.

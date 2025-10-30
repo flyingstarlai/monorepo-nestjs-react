@@ -35,6 +35,7 @@ interface ExecuteProcedureDialogProps {
   onOpenChange: (open: boolean) => void;
   workspaceSlug: string;
   procedure: StoredProcedure | null;
+  onExecuteStart?: () => void;
   onSuccess?: (result: ExecutionResult) => void;
 }
 
@@ -50,12 +51,14 @@ export function ExecuteProcedureDialog({
   onOpenChange,
   workspaceSlug,
   procedure,
+  onExecuteStart,
   onSuccess,
 }: ExecuteProcedureDialogProps) {
   const [parameters, setParameters] = useState<ProcedureParameter[]>([]);
   const [timeout, setTimeout] = useState(30); // Default 30 seconds
   const [executionResult, setExecutionResult] =
     useState<ExecutionResult | null>(null);
+  const [executionCompleted, setExecutionCompleted] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
 
   const executeMutation = useExecuteProcedure();
@@ -127,6 +130,8 @@ export function ExecuteProcedureDialog({
 
     setIsExecuting(true);
     setExecutionResult(null);
+    setExecutionCompleted(false);
+    onExecuteStart?.();
 
     try {
       const parametersObj: Record<string, unknown> = {};
@@ -155,7 +160,15 @@ export function ExecuteProcedureDialog({
       });
 
       setExecutionResult(result);
+      setExecutionCompleted(true);
       onSuccess?.(result);
+      
+      // Close dialog immediately after successful execution
+      setTimeout(() => {
+        onOpenChange(false);
+        setExecutionResult(null);
+        setExecutionCompleted(false);
+      }, 500); // Brief delay to show completion state
     } catch {
       // Error is handled by the mutation
     } finally {
@@ -167,6 +180,7 @@ export function ExecuteProcedureDialog({
     timeout,
     executeMutation,
     onSuccess,
+    onExecuteStart,
     workspaceSlug,
   ]);
 
@@ -174,6 +188,7 @@ export function ExecuteProcedureDialog({
     if (!isExecuting) {
       onOpenChange(false);
       setExecutionResult(null);
+      setExecutionCompleted(false);
     }
   }, [isExecuting, onOpenChange]);
 
@@ -319,32 +334,21 @@ export function ExecuteProcedureDialog({
             </CardContent>
           </Card>
 
-          {/* Execution Result */}
+          {/* Execution Status */}
           {executionResult && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Execution Result</CardTitle>
-              </CardHeader>
-              <CardContent>
+              <CardContent className="py-6">
                 {executionResult.success ? (
-                  <div className="space-y-3">
-                    <Alert>
-                      <AlertDescription className="text-green-600">
-                        Procedure executed successfully in{' '}
-                        {executionResult.executionTime}ms
-                        {executionResult.rowCount &&
-                          ` - ${executionResult.rowCount} rows affected`}
-                      </AlertDescription>
-                    </Alert>
-
-                    {executionResult.result && (
-                      <div className="space-y-2">
-                        <Label>Result:</Label>
-                        <pre className="bg-muted p-3 rounded-md text-sm overflow-auto max-h-40">
-                          {JSON.stringify(executionResult.result, null, 2)}
-                        </pre>
-                      </div>
-                    )}
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Zap className="h-6 w-6 text-green-600" />
+                    </div>
+                    <h3 className="font-medium text-sm mb-1">Execution Successful</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Results will appear in the bottom panel
+                      {executionResult.executionTime && ` (${executionResult.executionTime}ms)`}
+                      {executionResult.rowCount && ` - ${executionResult.rowCount} rows`}
+                    </p>
                   </div>
                 ) : (
                   <Alert variant="destructive">
@@ -360,23 +364,29 @@ export function ExecuteProcedureDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={isExecuting}
-          >
-            {executionResult ? 'Close' : 'Cancel'}
-          </Button>
-          {!executionResult && (
-            <Button
-              onClick={handleExecute}
-              disabled={isExecuting || missingParams.length > 0}
-              className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-            >
-              <Zap className="h-4 w-4 mr-2" />
-              {isExecuting ? 'Executing...' : 'Execute Procedure'}
-            </Button>
-          )}
+          {!executionResult ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                disabled={isExecuting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleExecute}
+                disabled={isExecuting || missingParams.length > 0}
+                className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <Zap className="h-4 w-4 mr-2" />
+                {isExecuting ? 'Executing...' : 'Execute Procedure'}
+              </Button>
+            </>
+          ) : executionCompleted ? (
+            <div className="text-sm text-green-600 text-center font-medium">
+              ✓ Executed successfully - Opening results...
+            </div>
+          ) : null}
         </DialogFooter>
       </DialogContent>
     </Dialog>

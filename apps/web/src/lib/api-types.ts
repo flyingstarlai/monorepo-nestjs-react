@@ -98,21 +98,27 @@ export interface HealthCheckResponse {
   timestamp: string;
   uptime: number;
   version: string;
-  services: Record<string, {
-    status: 'healthy' | 'unhealthy' | 'degraded';
-    responseTime?: number;
-    lastCheck: string;
-  }>;
+  services: Record<
+    string,
+    {
+      status: 'healthy' | 'unhealthy' | 'degraded';
+      responseTime?: number;
+      lastCheck: string;
+    }
+  >;
 }
 
 // Search response
 export interface SearchResponse<T = any> {
   items: T[];
   pagination: PaginationMeta;
-  facets?: Record<string, Array<{
-    value: string;
-    count: number;
-  }>>;
+  facets?: Record<
+    string,
+    Array<{
+      value: string;
+      count: number;
+    }>
+  >;
   suggestions?: string[];
   totalHits: number;
   searchTime: number;
@@ -178,7 +184,17 @@ export interface SortOptions {
 // Filtering options
 export interface FilterOptions {
   field: string;
-  operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'nin' | 'like' | 'ilike';
+  operator:
+    | 'eq'
+    | 'ne'
+    | 'gt'
+    | 'gte'
+    | 'lt'
+    | 'lte'
+    | 'in'
+    | 'nin'
+    | 'like'
+    | 'ilike';
   value: any;
 }
 
@@ -216,7 +232,9 @@ export interface ResponseWithMetadata<T = any> {
 }
 
 // Type guards for response checking
-export function isSuccessResponse<T>(response: ApiResponse<T>): response is ApiResponse<T> & { success: true } {
+export function isSuccessResponse<T>(
+  response: ApiResponse<T>
+): response is ApiResponse<T> & { success: true } {
   return response.success === true;
 }
 
@@ -224,16 +242,28 @@ export function isErrorResponse(response: any): response is ErrorResponse {
   return response && response.success === false;
 }
 
-export function isPaginatedResponse<T>(response: any): response is PaginatedResponse<T> {
+export function isPaginatedResponse<T>(
+  response: any
+): response is PaginatedResponse<T> {
   return response && Array.isArray(response.items) && response.pagination;
 }
 
-export function isCursorPaginatedResponse<T>(response: any): response is CursorPaginatedResponse<T> {
-  return response && Array.isArray(response.items) && response.pagination && 'cursor' in response.pagination;
+export function isCursorPaginatedResponse<T>(
+  response: any
+): response is CursorPaginatedResponse<T> {
+  return (
+    response &&
+    Array.isArray(response.items) &&
+    response.pagination &&
+    'cursor' in response.pagination
+  );
 }
 
 // Utility functions for creating standard responses
-export function createSuccessResponse<T>(data: T, message?: string): ApiResponse<T> {
+export function createSuccessResponse<T>(
+  data: T,
+  message?: string
+): ApiResponse<T> {
   return {
     success: true,
     data,

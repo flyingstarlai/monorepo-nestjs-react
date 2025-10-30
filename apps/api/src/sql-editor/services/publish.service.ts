@@ -288,18 +288,31 @@ export class PublishService {
     }
 
     // Treat the input as the procedure body and wrap it in a proper definition
-    const body = sql;
-    const escapedBody = body.replace(/'/g, "''");
-
+    const body = sql.trim();
+    
+    // Build the complete CREATE OR ALTER PROCEDURE statement
+    const fullProcedureSql = `CREATE OR ALTER PROCEDURE [${procedureName}] AS\n${body}`;
+    
+    // Use sp_executesql with proper parameterization
     return `
-      DECLARE @sql NVARCHAR(MAX) = N'CREATE OR ALTER PROCEDURE [${procedureName}] AS\n${escapedBody}';
       BEGIN TRY
+        DECLARE @sql NVARCHAR(MAX) = N${this.escapeSqlString(fullProcedureSql)};
         EXEC sp_executesql @sql;
       END TRY
       BEGIN CATCH
-        THROW;
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+        DECLARE @ErrorState INT = ERROR_STATE();
+        RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
       END CATCH
     `;
+  }
+
+  private escapeSqlString(sql: string): string {
+    // Escape single quotes by doubling them
+    let escaped = sql.replace(/'/g, "''");
+    // Return as N'...' string literal
+    return `'${escaped}'`;
   }
 
   async canUserPublishProcedure(

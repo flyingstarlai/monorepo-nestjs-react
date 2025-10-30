@@ -9,7 +9,8 @@ import { Reflector } from '@nestjs/core';
 import { WorkspaceRole } from '../entities/workspace-member.entity';
 
 export const ENVIRONMENT_EDIT_KEY = 'environment_edit';
-export const RequireEnvironmentEdit = () => SetMetadata(ENVIRONMENT_EDIT_KEY, true);
+export const RequireEnvironmentEdit = () =>
+  SetMetadata(ENVIRONMENT_EDIT_KEY, true);
 
 @Injectable()
 export class EnvironmentEditGuard implements CanActivate {
@@ -40,7 +41,9 @@ export class EnvironmentEditGuard implements CanActivate {
     ].includes(membership.role);
 
     if (!hasEditPermission) {
-      throw new ForbiddenException('Only workspace owners and authors can edit environment configurations');
+      throw new ForbiddenException(
+        'Only workspace owners and authors can edit environment configurations'
+      );
     }
 
     return true;

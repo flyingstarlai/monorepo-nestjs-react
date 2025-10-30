@@ -66,12 +66,14 @@ npm run db:reset
 ### 1. Install PostgreSQL
 
 **macOS (Homebrew):**
+
 ```bash
 brew install postgresql@16
 brew services start postgresql@16
 ```
 
 **Ubuntu/Debian:**
+
 ```bash
 sudo apt update
 sudo apt install postgresql postgresql-contrib
@@ -148,22 +150,24 @@ npm run migration:run
 
 ### Data Type Mappings
 
-| MSSQL | PostgreSQL | Notes |
-|--------|------------|---------|
-| `datetime2` | `timestamp` | Both support high precision timestamps |
-| `simple-json` | `jsonb` | PostgreSQL has native JSON with indexing |
-| `varchar(max)` | `text` | PostgreSQL handles large text efficiently |
-| `uniqueidentifier` | `uuid` | Both support UUID primary keys |
-| `bit` | `boolean` | Boolean handling |
+| MSSQL              | PostgreSQL  | Notes                                     |
+| ------------------ | ----------- | ----------------------------------------- |
+| `datetime2`        | `timestamp` | Both support high precision timestamps    |
+| `simple-json`      | `jsonb`     | PostgreSQL has native JSON with indexing  |
+| `varchar(max)`     | `text`      | PostgreSQL handles large text efficiently |
+| `uniqueidentifier` | `uuid`      | Both support UUID primary keys            |
+| `bit`              | `boolean`   | Boolean handling                          |
 
 ### Indexes
 
 PostgreSQL automatically creates indexes for:
+
 - Primary keys
 - Unique constraints
 - Foreign key constraints
 
 Additional indexes are created via migrations for performance:
+
 - Activities by owner and creation time
 - Activities by workspace and creation time
 - Workspaces by slug
@@ -205,30 +209,37 @@ log_duration = on
 ### Connection Issues
 
 **Error**: `ECONNREFUSED`
+
 - **Solution**: Ensure PostgreSQL is running and accessible on configured port
 
 **Error**: `authentication failed`
+
 - **Solution**: Verify username/password in `.env` matches PostgreSQL user
 
 **Error**: `database does not exist`
+
 - **Solution**: Create database: `createdb dashboard`
 
 ### Migration Issues
 
 **Error**: `relation already exists`
+
 - **Solution**: Reset database: `npm run db:reset`
 
 **Error**: `column does not exist`
+
 - **Solution**: Check entity definitions and regenerate migrations
 
 ### Performance Issues
 
 **Slow Queries**:
+
 - Check indexes: `\d+ table_name` in psql
 - Analyze query plans: `EXPLAIN ANALYZE your_query`
 - Consider adding specific indexes
 
 **High Memory Usage**:
+
 - Tune PostgreSQL memory settings
 - Check connection pool size
 - Monitor with: `SELECT * FROM pg_stat_activity;`
@@ -250,11 +261,11 @@ SELECT count(*) FROM pg_stat_activity;
 SELECT pg_size_pretty(pg_database_size('tc_studio'));
 
 # Check table sizes
-SELECT 
+SELECT
   schemaname,
   tablename,
   pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
-FROM pg_tables 
+FROM pg_tables
 WHERE schemaname = 'public'
 ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
 ```
@@ -262,6 +273,7 @@ ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
 ### Application Monitoring
 
 The application includes Prometheus metrics that can track:
+
 - Database connection pool status
 - Query execution times
 - Error rates

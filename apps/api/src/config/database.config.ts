@@ -7,6 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { Workspace } from '../workspaces/entities/workspace.entity';
 import { WorkspaceMember } from '../workspaces/entities/workspace-member.entity';
 import { Environment } from '../workspaces/entities/environment.entity';
+import { StoredProcedure } from '../sql-editor/entities/stored-procedure.entity';
 
 type DatabaseType = 'postgres' | 'mssql';
 
@@ -32,23 +33,24 @@ const buildDatabaseOptions = (): TypeOrmModuleOptions => {
     loggingEnv !== undefined ? loggingEnv === 'true' : !isProduction;
 
   const dbType = getDatabaseType();
-  
+
   // Default values based on database type
-  const defaults = dbType === 'postgres' 
-    ? {
-        host: 'localhost',
-        port: 5432,
-        username: 'postgres',
-        password: 'postgres101',
-        database: 'tc_studio',
-      }
-    : {
-        host: 'localhost',
-        port: 1433,
-        username: 'sa',
-        password: 'YourStrong!Passw0rd',
-        database: 'dashboard',
-      };
+  const defaults =
+    dbType === 'postgres'
+      ? {
+          host: 'localhost',
+          port: 5432,
+          username: 'postgres',
+          password: 'postgres101',
+          database: 'tc_studio',
+        }
+      : {
+          host: 'localhost',
+          port: 1433,
+          username: 'sa',
+          password: 'YourStrong!Passw0rd',
+          database: 'dashboard',
+        };
 
   const host = process.env.DB_HOST || defaults.host;
   const port = parseInt(process.env.DB_PORT || defaults.port.toString(), 10);
@@ -57,7 +59,15 @@ const buildDatabaseOptions = (): TypeOrmModuleOptions => {
   const database = process.env.DB_DATABASE || defaults.database;
 
   const baseOptions = {
-    entities: [User, Role, Activity, Workspace, WorkspaceMember, Environment],
+    entities: [
+      User,
+      Role,
+      Activity,
+      Workspace,
+      WorkspaceMember,
+      Environment,
+      StoredProcedure,
+    ],
     synchronize: false,
     migrations: getMigrationsPath(),
     migrationsRun: false,

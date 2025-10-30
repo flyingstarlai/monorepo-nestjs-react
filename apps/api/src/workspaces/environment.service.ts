@@ -1,9 +1,16 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Environment } from './entities/environment.entity';
 import { Workspace } from './entities/workspace.entity';
-import { WorkspaceMember, WorkspaceRole } from './entities/workspace-member.entity';
+import {
+  WorkspaceMember,
+  WorkspaceRole,
+} from './entities/workspace-member.entity';
 import { ActivitiesService } from '../activities/activities.service';
 import { ActivityType } from '../activities/entities/activity.entity';
 import { WorkspaceConnectionManager } from './connection-manager.service';
@@ -62,11 +69,11 @@ export class EnvironmentService {
     const workspace = await this.workspaceRepository.findOne({
       where: { slug, isActive: true },
     });
-    
+
     if (!workspace) {
       return null;
     }
-    
+
     return this.findByWorkspace(workspace.id);
   }
 
@@ -82,20 +89,24 @@ export class EnvironmentService {
 
     const allowedRoles = [WorkspaceRole.OWNER, WorkspaceRole.AUTHOR];
     if (!member || !allowedRoles.includes(member.role)) {
-      throw new ForbiddenException('Only workspace owners and authors can create environment configurations');
+      throw new ForbiddenException(
+        'Only workspace owners and authors can create environment configurations'
+      );
     }
 
     // Check if environment already exists for this workspace
     const existing = await this.findByWorkspace(workspaceId);
     if (existing) {
-      throw new ForbiddenException('Environment configuration already exists for this workspace');
+      throw new ForbiddenException(
+        'Environment configuration already exists for this workspace'
+      );
     }
 
     // Verify workspace exists
     const workspace = await this.workspaceRepository.findOne({
       where: { id: workspaceId },
     });
-    
+
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
@@ -132,7 +143,9 @@ export class EnvironmentService {
 
     const allowedRoles = [WorkspaceRole.OWNER, WorkspaceRole.AUTHOR];
     if (!member || !allowedRoles.includes(member.role)) {
-      throw new ForbiddenException('Only workspace owners and authors can update environment configurations');
+      throw new ForbiddenException(
+        'Only workspace owners and authors can update environment configurations'
+      );
     }
 
     const environment = await this.findByWorkspace(workspaceId);
@@ -153,7 +166,9 @@ export class EnvironmentService {
     });
 
     if (!updatedEnvironment) {
-      throw new NotFoundException('Environment configuration not found after update');
+      throw new NotFoundException(
+        'Environment configuration not found after update'
+      );
     }
 
     // Record environment update activity
@@ -175,7 +190,9 @@ export class EnvironmentService {
 
     const allowedRoles = [WorkspaceRole.OWNER, WorkspaceRole.AUTHOR];
     if (!member || !allowedRoles.includes(member.role)) {
-      throw new ForbiddenException('Only workspace owners and authors can delete environment configurations');
+      throw new ForbiddenException(
+        'Only workspace owners and authors can delete environment configurations'
+      );
     }
 
     const environment = await this.findByWorkspace(workspaceId);
@@ -212,11 +229,21 @@ export class EnvironmentService {
 
     const allowedRoles = [WorkspaceRole.OWNER, WorkspaceRole.AUTHOR];
     if (!member || !allowedRoles.includes(member.role)) {
-      throw new ForbiddenException('Only workspace owners and authors can test environment connections');
+      throw new ForbiddenException(
+        'Only workspace owners and authors can test environment connections'
+      );
     }
 
     try {
-      const { host, port, username, password, database, connectionTimeout = 30000, encrypt = false } = data;
+      const {
+        host,
+        port,
+        username,
+        password,
+        database,
+        connectionTimeout = 30000,
+        encrypt = false,
+      } = data;
 
       // Use connection manager to test the connection
       const testResult = await this.connectionManager.testConnection({
@@ -263,7 +290,8 @@ export class EnvironmentService {
       return {
         success: false,
         message: 'Connection test failed',
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error:
+          error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
   }
@@ -281,11 +309,11 @@ export class EnvironmentService {
     // This is a placeholder implementation
     // In a real scenario, you would use the 'mssql' package to test the connection
     // For now, we'll just validate the basic format
-    
+
     if (!config.host || config.port <= 0 || config.port > 65535) {
       return false;
     }
-    
+
     if (!config.username || !config.password || !config.database) {
       return false;
     }
@@ -295,7 +323,10 @@ export class EnvironmentService {
     return true;
   }
 
-  async canUserAccessEnvironment(workspaceId: string, userId: string): Promise<boolean> {
+  async canUserAccessEnvironment(
+    workspaceId: string,
+    userId: string
+  ): Promise<boolean> {
     const member = await this.memberRepository.findOne({
       where: { workspaceId, userId, isActive: true },
     });
@@ -303,7 +334,10 @@ export class EnvironmentService {
     return !!member;
   }
 
-  async canUserEditEnvironment(workspaceId: string, userId: string): Promise<boolean> {
+  async canUserEditEnvironment(
+    workspaceId: string,
+    userId: string
+  ): Promise<boolean> {
     const member = await this.memberRepository.findOne({
       where: { workspaceId, userId, isActive: true },
     });

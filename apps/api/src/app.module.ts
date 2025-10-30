@@ -16,6 +16,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 import { SeedsModule } from './seeds/seeds.module';
+import { SqlEditorModule } from './sql-editor/sql-editor.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { SeedsModule } from './seeds/seeds.module';
     ActivitiesModule,
     WorkspacesModule,
     SeedsModule,
+    SqlEditorModule,
   ],
   controllers: [AppController],
   providers: [
