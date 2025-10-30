@@ -2,15 +2,31 @@ import { createFileRoute, useParams, useBlocker } from '@tanstack/react-router';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import React from 'react';
 import {
+  ArrowDownToLine,
+  Ban,
+  ChevronDown,
+  CircleCheck,
+  CirclePlay,
   Database,
-  Minimize2,
+  FileEdit,
+  FileText,
+  FolderTree,
+  Loader2,
+  Lock,
   Maximize2,
+  Minimize2,
+  MoreHorizontal,
   PanelLeft,
   PanelRight,
-  AlertTriangle,
-  Download,
-  FileText,
-  ChevronsUpDown,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Save,
+  Terminal,
+  Trash2,
+  TriangleAlert,
+  User,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -762,27 +778,6 @@ function SqlEditorPage() {
     });
   }, []);
 
-  // Smart toggle function for SQL Editor icon
-  const handleSqlEditorToggle = useCallback(() => {
-    // If both panels are open, close explorer first
-    if (!explorerCollapsed && bottomPanelOpen) {
-      storeState.setExplorerCollapsed(true);
-    }
-    // If only explorer is open, close it and open bottom panel
-    else if (!explorerCollapsed && !bottomPanelOpen) {
-      storeState.setExplorerCollapsed(true);
-      storeState.setBottomPanelOpen(true);
-    }
-    // If only bottom panel is open, close it
-    else if (explorerCollapsed && bottomPanelOpen) {
-      storeState.setBottomPanelOpen(false);
-    }
-    // If both are closed, open explorer
-    else {
-      storeState.setExplorerCollapsed(false);
-    }
-  }, [explorerCollapsed, bottomPanelOpen, storeState]);
-
   if (error) {
     return (
       <div className="space-y-6">
@@ -805,25 +800,23 @@ function SqlEditorPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={handleSqlEditorToggle}
-                className="bg-primary/10 hover:bg-primary/20 p-2 rounded-lg transition-all duration-200"
-                aria-label="Toggle panels"
+                onClick={() =>
+                  storeState.setExplorerCollapsed(!explorerCollapsed)
+                }
+                aria-label={
+                  explorerCollapsed
+                    ? 'Show procedure explorer'
+                    : 'Hide procedure explorer'
+                }
               >
-                <ChevronsUpDown className="h-4 w-4 text-primary" />
+                {explorerCollapsed ? (
+                  <PanelRight className="h-4 w-4" />
+                ) : (
+                  <PanelLeft className="h-4 w-4" />
+                )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
-              <p className="text-sm font-medium">Toggle Panels</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {!explorerCollapsed && bottomPanelOpen
-                  ? 'Hide explorer'
-                  : explorerCollapsed && bottomPanelOpen
-                    ? 'Hide bottom panel'
-                    : explorerCollapsed && !bottomPanelOpen
-                      ? 'Show explorer'
-                      : 'Show bottom panel'}
-              </p>
-            </TooltipContent>
+            <TooltipContent>Toggle Explorer</TooltipContent>
           </Tooltip>
           <div className="bg-primary/10 p-2 rounded-lg">
             <Database className="h-5 w-5 text-primary" />
@@ -837,30 +830,6 @@ function SqlEditorPage() {
         </div>
         <TooltipProvider>
           <div className="flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    storeState.setExplorerCollapsed(!explorerCollapsed)
-                  }
-                  aria-label={
-                    explorerCollapsed
-                      ? 'Show procedure explorer'
-                      : 'Hide procedure explorer'
-                  }
-                >
-                  {explorerCollapsed ? (
-                    <PanelRight className="h-4 w-4" />
-                  ) : (
-                    <PanelLeft className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Toggle Explorer</TooltipContent>
-            </Tooltip>
-
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
