@@ -32,7 +32,9 @@ function SqlEditorPage() {
     'results' | 'messages'
   >('results');
   const [isBottomResizing, setIsBottomResizing] = useState(false);
-  const [executionResults, setExecutionResults] = useState<Record<string, unknown>[]>([]);
+  const [executionResults, setExecutionResults] = useState<
+    Record<string, unknown>[]
+  >([]);
   const [executionMessages, setExecutionMessages] = useState<
     Array<{
       timestamp: Date;
@@ -42,7 +44,9 @@ function SqlEditorPage() {
   >([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const { open, setOpen } = useSidebar();
-  const [previousSidebarState, setPreviousSidebarState] = useState<boolean | null>(null);
+  const [previousSidebarState, setPreviousSidebarState] = useState<
+    boolean | null
+  >(null);
 
   // Zustand store state
   const {
@@ -125,13 +129,16 @@ function SqlEditorPage() {
     }
   }, [selectedProcedure, editorContent, updateProcedureMutation, refetch]);
 
-  const handleExecuteProcedure = useCallback((id: string) => {
-    const procedure = procedures?.find((p) => p.id === id);
-    if (procedure && procedure.status === 'published') {
-      setExecutingProcedure(procedure);
-      setExecuteDialogOpen(true);
-    }
-  }, [procedures]);
+  const handleExecuteProcedure = useCallback(
+    (id: string) => {
+      const procedure = procedures?.find((p) => p.id === id);
+      if (procedure && procedure.status === 'published') {
+        setExecutingProcedure(procedure);
+        setExecuteDialogOpen(true);
+      }
+    },
+    [procedures]
+  );
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -161,15 +168,18 @@ function SqlEditorPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedProcedure, handleSaveProcedure, handleExecuteProcedure, readOnly]);
+  }, [
+    selectedProcedure,
+    handleSaveProcedure,
+    handleExecuteProcedure,
+    readOnly,
+  ]);
 
   // Route change guard for dirty editor state
   useBlocker(
     () => isDirty,
     'You have unsaved changes. Are you sure you want to leave?'
   );
-
-
 
   const handleDeleteProcedure = async (id: string) => {
     try {
@@ -183,7 +193,13 @@ function SqlEditorPage() {
     }
   };
 
-  const handleExecuteSuccess = (result: { success: boolean; result: Record<string, unknown>; executionTime?: number; rowCount?: number; error?: string }) => {
+  const handleExecuteSuccess = (result: {
+    success: boolean;
+    result: Record<string, unknown>;
+    executionTime?: number;
+    rowCount?: number;
+    error?: string;
+  }) => {
     // Show bottom panel if hidden
     if (bottomPanelHeight === 0) {
       setBottomPanelHeight(200);
@@ -193,7 +209,9 @@ function SqlEditorPage() {
     setActiveBottomTab('results');
 
     // Store execution results
-    setExecutionResults(Array.isArray(result.result) ? result.result : [result.result]);
+    setExecutionResults(
+      Array.isArray(result.result) ? result.result : [result.result]
+    );
 
     // Add execution message
     setExecutionMessages((prev) => [
@@ -201,7 +219,7 @@ function SqlEditorPage() {
       {
         timestamp: new Date(),
         type: result.success ? 'info' : 'error',
-        message: result.success 
+        message: result.success
           ? `Procedure executed successfully${result.executionTime ? ` in ${result.executionTime}ms` : ''}${result.rowCount !== undefined ? ` (${result.rowCount} rows)` : ''}`
           : result.error || 'Procedure execution failed',
       },
@@ -365,7 +383,6 @@ function SqlEditorPage() {
             selectedProcedureId={selectedProcedureId}
             onSelectProcedure={setSelectedProcedureId}
             onCreateProcedure={handleCreateProcedure}
-
             onDeleteProcedure={handleDeleteProcedure}
             onPublishProcedure={handlePublishProcedure}
             onExecuteProcedure={handleExecuteProcedure}
