@@ -252,20 +252,7 @@ export function initializeApiConfig(): void {
 
   currentConfig = merged;
 
-  // Log configuration in development
-  if (merged.isDevelopment) {
-    console.group('🔧 API Configuration');
-    console.log(
-      'Environment:',
-      merged.isDevelopment ? 'development' : 'production'
-    );
-    console.log('Base URL:', merged.baseUrl);
-    console.log('Timeout:', merged.defaultTimeout);
-    console.log('Max Retries:', merged.maxRetries);
-    console.log('Logging Enabled:', merged.loggingEnabled);
-    console.log('Token Refresh:', merged.enableTokenRefresh);
-    console.groupEnd();
-  }
+
 }
 
 /**

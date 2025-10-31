@@ -32,28 +32,18 @@ export function VersionHistoryDialog({
   // Clear UX separation between View and Compare modes
   const [mode, setMode] = useState<'view' | 'compare'>('view');
 
-  // Debug logging for procedure data
-  useEffect(() => {
-    console.log('🔍 VersionHistoryDialog - Procedure Debug:', {
-      procedureId: procedure?.id,
-      procedureName: procedure?.name,
-      workspaceSlug,
-      procedureExists: !!procedure,
-      procedureObject: procedure
-    });
-  }, [procedure, workspaceSlug]);
+
 
   // Validate procedure before making API calls
   const isValidProcedure = procedure && procedure.id && procedure.id !== '' && procedure.id !== 'undefined';
   const procedureIdForQuery = isValidProcedure ? procedure.id : '';
 
-  const { data: versions, isLoading, error } = useVersions(workspaceSlug, procedureIdForQuery);
+  const { data: versions, isLoading } = useVersions(workspaceSlug, procedureIdForQuery);
   const rollbackMutation = useRollbackToVersion(workspaceSlug, procedureIdForQuery);
   const publishMutation = usePublishProcedure(workspaceSlug, procedureIdForQuery);
 
   // Reset selected versions when procedure changes
   useEffect(() => {
-    console.log('🔄 VersionHistoryDialog - Resetting selected versions due to procedure change');
     setSelectedVersions({ left: null, right: null });
   }, [procedure?.id]);
 
@@ -74,21 +64,7 @@ export function VersionHistoryDialog({
     setSelectedVersions({ left: current, right: null });
   }, [open, mode, versions, selectedVersions.left]);
 
-  // Debug logging for versions data
-  useEffect(() => {
-    console.log('📋 VersionHistoryDialog - Versions Debug:', {
-      versionsCount: versions?.length || 0,
-      isLoading,
-      error: error?.message,
-      versions: versions?.map(v => ({
-        id: v.id,
-        version: v.version,
-        name: v.name,
-        source: v.source,
-        procedureId: v.procedureId
-      }))
-    });
-  }, [versions, isLoading, error]);
+
 
   const handleVersionSelect = (version: StoredProcedureVersion) => {
     if (mode === 'view') {
@@ -119,14 +95,7 @@ export function VersionHistoryDialog({
     }
   };
 
-  const handleRollback = (version: StoredProcedureVersion) => {
-    rollbackMutation.mutate(version.version, {
-      onSuccess: () => {
-        onSuccess?.();
-        onOpenChange(false);
-      },
-    });
-  };
+
 
   // Rollback confirmation state
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -173,12 +142,6 @@ export function VersionHistoryDialog({
 
   // Early return for invalid procedure state
   if (!isValidProcedure) {
-    console.log('❌ VersionHistoryDialog - Invalid procedure state:', {
-      procedure,
-      isValidProcedure,
-      procedureId: procedure?.id,
-      procedureName: procedure?.name
-    });
     
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -207,7 +170,7 @@ export function VersionHistoryDialog({
   }
 
 
-  console.log("VERSIONS", versions);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[80vh] flex flex-col">

@@ -89,10 +89,7 @@ export const authApi = {
     try {
       const response = await apiClient.put<User>('/users/profile', profileData);
 
-      // Keep the console logs for debugging (can be removed later)
-      console.log('Profile update response status:', response.status);
-      console.log('Profile update response headers:', response.headers);
-      console.log('Profile update response data:', response.data);
+
 
       return response.data;
     } catch (error) {

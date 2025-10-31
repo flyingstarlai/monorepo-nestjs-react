@@ -159,24 +159,9 @@ export function useValidateSql(workspaceSlug: string) {
 }
 
 export function useVersions(workspaceSlug: string, procedureId: string) {
-  console.log('🔍 useVersions Hook Debug:', {
-    workspaceSlug,
-    procedureId,
-    hasProcedureId: !!procedureId,
-    hasWorkspaceSlug: !!workspaceSlug,
-    queryKey: ['sql-editor', 'procedures', workspaceSlug, procedureId, 'versions']
-  });
-
   return useQuery({
     queryKey: ['sql-editor', 'procedures', workspaceSlug, procedureId, 'versions'],
-    queryFn: () => {
-      console.log('🌐 useVersions API Call:', {
-        workspaceSlug,
-        procedureId,
-        endpoint: `/c/${workspaceSlug}/sql-editor/${procedureId}/versions`
-      });
-      return sqlEditorApi.getVersions(workspaceSlug, procedureId);
-    },
+    queryFn: () => sqlEditorApi.getVersions(workspaceSlug, procedureId),
     enabled: !!workspaceSlug && !!procedureId,
     staleTime: 0, // Disable cache temporarily for debugging
     gcTime: 5 * 60 * 1000, // 5 minutes

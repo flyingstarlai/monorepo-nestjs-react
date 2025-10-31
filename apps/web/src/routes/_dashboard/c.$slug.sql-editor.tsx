@@ -294,15 +294,8 @@ function SqlEditorPage() {
 
   // Enhanced procedure selection with cache invalidation
   const handleSelectProcedure = useCallback((procedureId: string) => {
-    console.log('🔄 handleSelectProcedure called:', {
-      newProcedureId: procedureId,
-      currentProcedureId: selectedProcedureId,
-      workspaceSlug: slug
-    });
-
     // Invalidate version cache for previous procedure if exists
     if (selectedProcedureId && selectedProcedureId !== procedureId) {
-      console.log('🗑️ Invalidating version cache for previous procedure:', selectedProcedureId);
       queryClient.invalidateQueries({
         queryKey: ['sql-editor', 'procedures', slug, selectedProcedureId, 'versions']
       });

@@ -18,6 +18,6 @@ Note: Tasks are checked complete if they are already implemented.
 
 ## 3. QA / Docs
 
-- [ ] 3.1 Manual flows: save, publish, view history, diff, rollback, execute
-- [ ] 3.2 Edge cases: empty diff, large diffs, permission denied
+- [x] 3.1 Manual flows: save, publish, view history, diff, rollback, execute
+- [x] 3.2 Edge cases: empty diff, large diffs, permission denied
 - [ ] 3.3 Update README/spec usage notes if needed

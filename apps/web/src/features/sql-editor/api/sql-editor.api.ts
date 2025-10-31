@@ -213,44 +213,11 @@ export const sqlEditorApi = {
     workspaceSlug: string,
     procedureId: string
   ): Promise<StoredProcedureVersion[]> {
-    console.log('🌐 sqlEditorApi.getVersions Debug:', {
-      workspaceSlug,
-      procedureId,
-      endpoint: `/c/${workspaceSlug}/sql-editor/${procedureId}/versions`
-    });
-
-    try {
-      const response = await apiClient.get<StoredProcedureVersion[]>(
-        `/c/${workspaceSlug}/sql-editor/${procedureId}/versions`
-      );
-      
-      console.log('✅ sqlEditorApi.getVersions Response:', {
-        status: response.status,
-        dataLength: response.data?.length || 0,
-        versions: response.data?.map(v => ({
-          id: v.id,
-          version: v.version,
-          name: v.name,
-          source: v.source,
-          procedureId: v.procedureId,
-          workspaceId: v.workspaceId
-        }))
-      });
-      
-      return response.data;
-    } catch (error) {
-      console.error('❌ sqlEditorApi.getVersions Error:', {
-        error,
-        workspaceSlug,
-        procedureId,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error'
-      });
-      
-      if (error instanceof WorkspaceError || error instanceof SqlEditorError) {
-        throw error;
-      }
-      throw new SqlEditorError('Failed to fetch procedure versions');
-    }
+    const response = await apiClient.get<StoredProcedureVersion[]>(
+      `/c/${workspaceSlug}/sql-editor/${procedureId}/versions`
+    );
+    
+    return response.data;
   },
 
   async getVersion(
