@@ -2,13 +2,7 @@ import { createFileRoute, useParams, useBlocker } from '@tanstack/react-router';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import React from 'react';
 import {
-  AlertTriangle,
-  Database, Download,
-  FileText,
-  FolderTree,
-  LucidePanelLeft,
-  Maximize2,
-  Minimize2,
+  Database,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,18 +17,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { ProcedureList } from '@/features/sql-editor/components/procedure-list';
 import { ProcedureDialog } from '@/features/sql-editor/components/procedure-dialog';
 import { ExecuteProcedureDialog } from '@/features/sql-editor/components/execute-dialog';
 import { PublishDialog } from '@/features/sql-editor/components/publish-dialog';
-
 import { SqlEditorComponent } from '@/features/sql-editor/components/sql-editor';
+import { SQLEditorHeader } from '@/features/sql-editor/components/sql-editor-header';
+import { ResultsPanel } from '@/features/sql-editor/components/results-panel';
+import { ValidationPanel } from '@/features/sql-editor/components/validation-panel';
+import { ConsolePanel } from '@/features/sql-editor/components/console-panel';
+import { exportToCSV, exportToJSON } from '@/features/sql-editor/utils/export-utils';
+
 import {
   useProcedures,
   useDeleteProcedure,
@@ -50,52 +43,7 @@ import type {
 import { useSqlEditorStore } from '@/features/sql-editor/stores/sql-editor.store';
 import { toast } from 'sonner';
 
-// Error boundary for results display
-interface ResultsErrorBoundaryState {
-  hasError: boolean;
-  error?: Error;
-}
 
-class ResultsErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  ResultsErrorBoundaryState
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error: Error): ResultsErrorBoundaryState {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Results display error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="flex flex-col items-center justify-center py-8 text-center">
-          <AlertTriangle className="h-8 w-8 text-destructive mb-3" />
-          <h3 className="font-medium text-sm mb-2">Display Error</h3>
-          <p className="text-xs text-muted-foreground mb-3 max-w-md">
-            There was an error displaying the results. This might be due to
-            unexpected data format.
-          </p>
-          <button
-            onClick={() => this.setState({ hasError: false, error: undefined })}
-            className="text-xs text-primary hover:underline"
-          >
-            Try again
-          </button>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
 
 export const Route = createFileRoute('/_dashboard/c/$slug/sql-editor')({
   component: SqlEditorPage,
@@ -300,21 +248,14 @@ function SqlEditorPage() {
     }
   }, [selectedProcedure, setEditorContent, setIsDirty]);
 
-  // Sidebar focus mode - collapse on enter, restore on exit
+  // Sidebar focus mode - only collapse on initial mount, allow manual toggle
   useEffect(() => {
-    // Cache current sidebar state and collapse it
+    // Only collapse sidebar on initial mount, then allow manual control
     if (previousSidebarState === null) {
       setPreviousSidebarState(open);
       setOpen(false);
     }
-
-    // Restore sidebar state on cleanup
-    return () => {
-      if (previousSidebarState !== null) {
-        setOpen(previousSidebarState);
-      }
-    };
-  }, [open, setOpen]);
+  }, []); // Remove dependencies to prevent re-running on toggle
 
   // Auto-switch to validation tab when validation errors occur
   useEffect(() => {
@@ -644,74 +585,7 @@ function SqlEditorPage() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  const exportToCSV = useCallback(() => {
-    if (executionResults.length === 0) return;
 
-    const headers =
-      executionColumns.length > 0
-        ? executionColumns.map((col) => col.name)
-        : Object.keys(executionResults[0] || {});
-
-    const csvContent = [
-      headers.join(','),
-      ...executionResults.map((row) =>
-        headers
-          .map((header) => {
-            const value = row[header];
-            if (value === null || value === undefined) return '';
-            const stringValue = String(value);
-            // Escape quotes and wrap in quotes if contains comma or quote
-            return stringValue.includes(',') || stringValue.includes('"')
-              ? `"${stringValue.replace(/"/g, '""')}"`
-              : stringValue;
-          })
-          .join(',')
-      ),
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute(
-      'download',
-      `query_results_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`
-    );
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, [executionResults, executionColumns]);
-
-  const exportToJSON = useCallback(() => {
-    if (executionResults.length === 0) return;
-
-    const jsonContent = JSON.stringify(
-      {
-        data: executionResults,
-        columns: executionColumns,
-        metadata: executionMetadata,
-        exportedAt: new Date().toISOString(),
-      },
-      null,
-      2
-    );
-
-    const blob = new Blob([jsonContent], {
-      type: 'application/json;charset=utf-8;',
-    });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute(
-      'download',
-      `query_results_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`
-    );
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, [executionResults, executionColumns, executionMetadata]);
 
   const handleContextSwitchConfirm = useCallback(
     async (saveChanges: boolean) => {
@@ -775,80 +649,14 @@ function SqlEditorPage() {
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b bg-background flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setOpen(!open)}
-                aria-label={open ? 'Hide sidebar' : 'Show sidebar'}
-              >
-                <LucidePanelLeft className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Toggle Sidebar</TooltipContent>
-          </Tooltip>
-          <div className="bg-primary/10 p-2 rounded-lg">
-            <Database className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold">SQL Tools</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage and execute stored procedures
-            </p>
-          </div>
-        </div>
-        <TooltipProvider>
-          <div className="flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    storeState.setExplorerCollapsed(!explorerCollapsed)
-                  }
-                  aria-label={
-                    explorerCollapsed
-                      ? 'Show procedure explorer'
-                      : 'Hide procedure explorer'
-                  }
-                >
-                  {explorerCollapsed ? (
-                    <FolderTree className="h-4 w-4" />
-                  ) : (
-                    <FolderTree className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Toggle Explorer</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() =>
-                    storeState.setBottomPanelOpen(!bottomPanelOpen)
-                  }
-                  aria-label={
-                    !bottomPanelOpen ? 'Show bottom panel' : 'Hide bottom panel'
-                  }
-                >
-                  {!bottomPanelOpen ? (
-                    <Maximize2 className="h-4 w-4" />
-                  ) : (
-                    <Minimize2 className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Toggle Panel</TooltipContent>
-            </Tooltip>
-          </div>
-        </TooltipProvider>
-      </div>
+      <SQLEditorHeader
+        open={open}
+        setOpen={setOpen}
+        explorerCollapsed={explorerCollapsed}
+        onToggleExplorer={() => storeState.setExplorerCollapsed(!explorerCollapsed)}
+        bottomPanelOpen={bottomPanelOpen}
+        onToggleBottomPanel={() => storeState.setBottomPanelOpen(!bottomPanelOpen)}
+      />
 
       {/* Main Content */}
       <div ref={containerRef} className="flex-1 flex overflow-hidden min-h-0">
@@ -996,193 +804,17 @@ function SqlEditorPage() {
                     id="results-panel"
                     aria-labelledby="results-tab"
                   >
-                    <div className="p-4">
-                      <ResultsErrorBoundary>
-                        {isExecuting ? (
-                          <div className="flex items-center justify-center py-8">
-                            <div className="flex items-center gap-3 text-muted-foreground">
-                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                              <span className="text-sm">
-                                Executing procedure...
-                              </span>
-                            </div>
-                          </div>
-                        ) : executionResults.length > 0 ? (
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <p className="text-sm font-medium">Results</p>
-                                {executedProcedureId &&
-                                  executedProcedureId !==
-                                    selectedProcedureId && (
-                                    <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
-                                      <Database className="h-3 w-3" />
-                                      From:{' '}
-                                      {procedures?.find(
-                                        (p) => p.id === executedProcedureId
-                                      )?.name || 'Unknown'}
-                                    </div>
-                                  )}
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={exportToCSV}
-                                    className="h-7 px-2 text-xs"
-                                  >
-                                    <FileText className="h-3 w-3 mr-1" />
-                                    CSV
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={exportToJSON}
-                                    className="h-7 px-2 text-xs"
-                                  >
-                                    <Download className="h-3 w-3 mr-1" />
-                                    JSON
-                                  </Button>
-                                </div>
-                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                  {executionMetadata.rowCount !== undefined && (
-                                    <span>
-                                      {executionMetadata.rowCount} row
-                                      {executionMetadata.rowCount !== 1
-                                        ? 's'
-                                        : ''}
-                                    </span>
-                                  )}
-                                  {executionMetadata.executionTime && (
-                                    <span>
-                                      {executionMetadata.executionTime}ms
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="border rounded-md overflow-hidden">
-                              <table className="w-full text-sm">
-                                <thead className="bg-muted/50">
-                                  <tr>
-                                    {executionColumns.length > 0
-                                      ? executionColumns.map((column) => (
-                                          <th
-                                            key={column.name}
-                                            className="px-3 py-2 text-left font-medium border-b"
-                                          >
-                                            <div className="flex items-center gap-2">
-                                              {column.name}
-                                              <span className="text-xs text-muted-foreground font-normal">
-                                                ({column.type})
-                                              </span>
-                                            </div>
-                                          </th>
-                                        ))
-                                      : Object.keys(
-                                          executionResults[0] || {}
-                                        ).map((key) => (
-                                          <th
-                                            key={key}
-                                            className="px-3 py-2 text-left font-medium border-b"
-                                          >
-                                            {key}
-                                          </th>
-                                        ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {executionResults.map((row, index) => (
-                                    <tr key={index} className="border-b">
-                                      {row != null &&
-                                      typeof row === 'object' ? (
-                                        executionColumns.length > 0 ? (
-                                          executionColumns.map((column) => (
-                                            <td
-                                              key={column.name}
-                                              className="px-3 py-2"
-                                            >
-                                              {row[column.name] === null ? (
-                                                <span className="text-muted-foreground italic">
-                                                  NULL
-                                                </span>
-                                              ) : column.type === 'integer' ||
-                                                column.type === 'number' ? (
-                                                <span className="text-right font-mono">
-                                                  {String(row[column.name])}
-                                                </span>
-                                              ) : (
-                                                String(row[column.name])
-                                              )}
-                                            </td>
-                                          ))
-                                        ) : (
-                                          Object.values(row).map(
-                                            (value, cellIndex) => (
-                                              <td
-                                                key={cellIndex}
-                                                className="px-3 py-2"
-                                              >
-                                                {value === null ? (
-                                                  <span className="text-muted-foreground italic">
-                                                    NULL
-                                                  </span>
-                                                ) : (
-                                                  String(value)
-                                                )}
-                                              </td>
-                                            )
-                                          )
-                                        )
-                                      ) : (
-                                        <td
-                                          colSpan={
-                                            executionColumns.length ||
-                                            Object.keys(
-                                              executionResults[0] || {}
-                                            ).length
-                                          }
-                                          className="px-3 py-2 text-center text-muted-foreground italic"
-                                        >
-                                          Invalid row data
-                                        </td>
-                                      )}
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center py-12 text-center">
-                            <Database className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                            <h3 className="font-medium text-sm text-muted-foreground mb-2">
-                              No Results Yet
-                            </h3>
-                            <p className="text-xs text-muted-foreground max-w-md mb-4">
-                              Execute a stored procedure to see results here.
-                              Results will include returned data, execution
-                              time, and row counts.
-                            </p>
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <span>Execution info</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                <span>Query results</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                                <span>Performance metrics</span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </ResultsErrorBoundary>
-                    </div>
+                    <ResultsPanel
+                      isExecuting={isExecuting}
+                      executionResults={executionResults}
+                      executionColumns={executionColumns}
+                      executionMetadata={executionMetadata}
+                      executedProcedureId={executedProcedureId}
+                      selectedProcedureId={selectedProcedureId}
+                      procedures={procedures}
+                      exportToCSV={() => exportToCSV(executionResults, executionColumns)}
+                      exportToJSON={() => exportToJSON(executionResults, executionColumns, executionMetadata)}
+                    />
                   </TabsContent>
 
                   <TabsContent
@@ -1192,40 +824,7 @@ function SqlEditorPage() {
                     id="validation-panel"
                     aria-labelledby="validation-tab"
                   >
-                    <div className="p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <p className="text-sm font-medium">
-                          Validation Messages
-                        </p>
-                      </div>
-
-                      {validationMessages.length > 0 ? (
-                        <div className="space-y-2">
-                          {validationMessages.map((msg, index) => (
-                            <div
-                              key={index}
-                              className={`p-3 rounded-md border ${
-                                msg.type === 'error'
-                                  ? 'bg-destructive/10 border-destructive/20 text-destructive'
-                                  : 'bg-yellow-50 border-yellow-200 text-yellow-800'
-                              }`}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <p className="text-sm flex-1">{msg.message}</p>
-                                <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                  {msg.timestamp.toLocaleTimeString()}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          No validation messages. SQL syntax errors and warnings
-                          will appear here.
-                        </p>
-                      )}
-                    </div>
+                    <ValidationPanel validationMessages={validationMessages} />
                   </TabsContent>
 
                   <TabsContent
@@ -1235,49 +834,10 @@ function SqlEditorPage() {
                     id="console-panel"
                     aria-labelledby="console-tab"
                   >
-                    <div className="p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <p className="text-sm font-medium">Console Messages</p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setConsoleMessages([])}
-                          disabled={consoleMessages.length === 0}
-                          aria-label="Clear all console messages"
-                        >
-                          Clear
-                        </Button>
-                      </div>
-
-                      {consoleMessages.length > 0 ? (
-                        <div className="space-y-2">
-                          {consoleMessages.map((msg, index) => (
-                            <div
-                              key={index}
-                              className={`p-3 rounded-md border ${
-                                msg.type === 'error'
-                                  ? 'bg-destructive/10 border-destructive/20 text-destructive'
-                                  : msg.type === 'success'
-                                    ? 'bg-green-50 border-green-200 text-green-800'
-                                    : 'bg-blue-50 border-blue-200 text-blue-800'
-                              }`}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <p className="text-sm flex-1">{msg.message}</p>
-                                <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                  {msg.timestamp.toLocaleTimeString()}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          No console messages. Procedure execution status and
-                          results will appear here.
-                        </p>
-                      )}
-                    </div>
+                    <ConsolePanel
+                      consoleMessages={consoleMessages}
+                      setConsoleMessages={setConsoleMessages}
+                    />
                   </TabsContent>
                 </Tabs>
               </div>
