@@ -13,6 +13,7 @@ import {
   useWorkspaces,
 } from '@/features/workspaces/stores/workspace.store';
 import { useEffect, useState } from 'react';
+import { useLocation } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_dashboard')({
   beforeLoad: ({ context }) => {
@@ -32,6 +33,10 @@ function DashboardLayout() {
   const { fetchWorkspaces } = useWorkspaceActions();
   const workspaces = useWorkspaces();
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const location = useLocation();
+
+  // Check if current page is SQL editor to hide sidebar trigger
+  const isSqlEditorPage = location.pathname.endsWith('/sql-editor');
 
   useEffect(() => {
     // Initialize workspace store on app load
@@ -81,11 +86,15 @@ function DashboardLayout() {
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
+            {!isSqlEditorPage && (
+              <>
+                <SidebarTrigger className="-ml-1" />
+                <Separator
+                  orientation="vertical"
+                  className="mr-2 data-[orientation=vertical]:h-4"
+                />
+              </>
+            )}
             <AppBreadcrumb />
           </div>
         </header>
