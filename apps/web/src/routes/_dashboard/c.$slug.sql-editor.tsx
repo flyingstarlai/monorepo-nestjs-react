@@ -10,7 +10,6 @@ import {
   Database,
   FileEdit,
   FileText,
-  FileTree,
   FolderTree,
   Loader2,
   Lock,
@@ -18,7 +17,6 @@ import {
   Menu,
   Minimize2,
   MoreHorizontal,
-  Panel,
   PanelLeft,
   PanelRight,
   Pencil,
@@ -806,7 +804,7 @@ function SqlEditorPage() {
                 onClick={() => setOpen(!open)}
                 aria-label={open ? 'Hide sidebar' : 'Show sidebar'}
               >
-                <Panel className="h-4 w-4" />
+                <Menu className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Toggle Sidebar</TooltipContent>
@@ -826,9 +824,9 @@ function SqlEditorPage() {
                 }
               >
                 {explorerCollapsed ? (
-                  <FileTree className="h-4 w-4" />
+                  <FolderTree className="h-4 w-4" />
                 ) : (
-                  <FileTree className="h-4 w-4" />
+                  <FolderTree className="h-4 w-4" />
                 )}
               </Button>
             </TooltipTrigger>
