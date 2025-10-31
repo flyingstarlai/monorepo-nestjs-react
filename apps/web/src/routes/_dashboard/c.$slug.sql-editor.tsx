@@ -1,9 +1,7 @@
 import { createFileRoute, useParams, useBlocker } from '@tanstack/react-router';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import React from 'react';
-import {
-  Database,
-} from 'lucide-react';
+import { Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -26,7 +24,10 @@ import { SQLEditorHeader } from '@/features/sql-editor/components/sql-editor-hea
 import { ResultsPanel } from '@/features/sql-editor/components/results-panel';
 import { ValidationPanel } from '@/features/sql-editor/components/validation-panel';
 import { ConsolePanel } from '@/features/sql-editor/components/console-panel';
-import { exportToCSV, exportToJSON } from '@/features/sql-editor/utils/export-utils';
+import {
+  exportToCSV,
+  exportToJSON,
+} from '@/features/sql-editor/utils/export-utils';
 
 import {
   useProcedures,
@@ -42,8 +43,6 @@ import type {
 } from '@/features/sql-editor/types';
 import { useSqlEditorStore } from '@/features/sql-editor/stores/sql-editor.store';
 import { toast } from 'sonner';
-
-
 
 export const Route = createFileRoute('/_dashboard/c/$slug/sql-editor')({
   component: SqlEditorPage,
@@ -594,8 +593,6 @@ function SqlEditorPage() {
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-
-
   const handleContextSwitchConfirm = useCallback(
     async (saveChanges: boolean) => {
       const { targetProcedureId } = contextSwitchDialog;
@@ -662,12 +659,16 @@ function SqlEditorPage() {
         open={open}
         setOpen={setOpen}
         explorerCollapsed={explorerCollapsed}
-        onToggleExplorer={() => storeState.setExplorerCollapsed(!explorerCollapsed)}
+        onToggleExplorer={() =>
+          storeState.setExplorerCollapsed(!explorerCollapsed)
+        }
         bottomPanelOpen={bottomPanelOpen}
         onToggleBottomPanel={() => {
           if (!bottomPanelOpen) {
             const containerEl = containerRef.current;
-            const h = containerEl ? Math.round(containerEl.clientHeight * 0.3) : 200;
+            const h = containerEl
+              ? Math.round(containerEl.clientHeight * 0.3)
+              : 200;
             storeState.setBottomPanelHeight(h);
             storeState.setBottomPanelOpen(true);
           } else {
@@ -813,7 +814,7 @@ function SqlEditorPage() {
 
                   <TabsContent
                     value="results"
-                    className="m-0 h-[calc(100%-2rem)] overflow-auto"
+                    className="m-0 h-[calc(100%-2.25rem)] overflow-auto"
                     role="tabpanel"
                     id="results-panel"
                     aria-labelledby="results-tab"
@@ -826,14 +827,22 @@ function SqlEditorPage() {
                       executedProcedureId={executedProcedureId}
                       selectedProcedureId={selectedProcedureId}
                       procedures={procedures}
-                      exportToCSV={() => exportToCSV(executionResults, executionColumns)}
-                      exportToJSON={() => exportToJSON(executionResults, executionColumns, executionMetadata)}
+                      exportToCSV={() =>
+                        exportToCSV(executionResults, executionColumns)
+                      }
+                      exportToJSON={() =>
+                        exportToJSON(
+                          executionResults,
+                          executionColumns,
+                          executionMetadata
+                        )
+                      }
                     />
                   </TabsContent>
 
                   <TabsContent
                     value="validation"
-                    className="m-0 h-[calc(100%-2rem)] overflow-auto"
+                    className="m-0 h-[calc(100%-2.25rem)] overflow-auto"
                     role="tabpanel"
                     id="validation-panel"
                     aria-labelledby="validation-tab"
@@ -843,7 +852,7 @@ function SqlEditorPage() {
 
                   <TabsContent
                     value="console"
-                    className="m-0 h-[calc(100%-2rem)] overflow-auto"
+                    className="m-0 h-[calc(100%-2.25rem)] overflow-auto"
                     role="tabpanel"
                     id="console-panel"
                     aria-labelledby="console-tab"

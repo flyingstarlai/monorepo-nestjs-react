@@ -60,20 +60,22 @@ export function ProcedureList({
   // Filter procedures based on selected filter
   const filteredProcedures = useMemo(() => {
     if (!procedures) return procedures;
-    
+
     switch (activeFilter) {
       case 'published':
-        return procedures.filter(p => p.status === 'published');
+        return procedures.filter((p) => p.status === 'published');
       case 'draft':
-        return procedures.filter(p => p.status === 'draft');
+        return procedures.filter((p) => p.status === 'draft');
       default:
         return procedures;
     }
   }, [procedures, activeFilter]);
 
   // Get counts for display
-  const publishedCount = procedures?.filter(p => p.status === 'published').length || 0;
-  const draftCount = procedures?.filter(p => p.status === 'draft').length || 0;
+  const publishedCount =
+    procedures?.filter((p) => p.status === 'published').length || 0;
+  const draftCount =
+    procedures?.filter((p) => p.status === 'draft').length || 0;
 
   const handleDeleteClick = (id: string) => {
     setProcedureToDelete(id);
@@ -199,9 +201,7 @@ export function ProcedureList({
             >
               <FileText className="h-3 w-3 mr-1.5" />
               Draft
-              <span className="ml-1 text-[10px] opacity-70">
-                {draftCount}
-              </span>
+              <span className="ml-1 text-[10px] opacity-70">{draftCount}</span>
             </Button>
           </div>
         </div>
@@ -310,23 +310,24 @@ export function ProcedureList({
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <FileCode className="h-8 w-8 mb-3 text-muted-foreground/40" />
               <p className="text-sm font-medium text-foreground mb-1">
-                {activeFilter === 'all' 
+                {activeFilter === 'all'
                   ? 'No procedures yet'
-                  : `No ${activeFilter} procedures`
-                }
+                  : `No ${activeFilter} procedures`}
               </p>
               <p className="text-xs text-muted-foreground mb-4">
-                {activeFilter === 'all' 
+                {activeFilter === 'all'
                   ? 'Create your first stored procedure to get started'
                   : activeFilter === 'published'
                     ? 'No procedures have been published yet'
-                    : 'No draft procedures found'
-                }
-                {activeFilter !== 'all' && procedures && procedures.length > 0 && (
-                  <span className="block mt-2">
-                    Try selecting a different filter or create a new procedure.
-                  </span>
-                )}
+                    : 'No draft procedures found'}
+                {activeFilter !== 'all' &&
+                  procedures &&
+                  procedures.length > 0 && (
+                    <span className="block mt-2">
+                      Try selecting a different filter or create a new
+                      procedure.
+                    </span>
+                  )}
               </p>
               <Button
                 size="sm"

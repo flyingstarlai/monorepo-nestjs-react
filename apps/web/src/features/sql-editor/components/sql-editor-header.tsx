@@ -1,6 +1,17 @@
 import { Button } from '@/components/ui/button';
-import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Database, FolderTree, LucidePanelLeft, Maximize2, Minimize2 } from 'lucide-react';
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
+  Database,
+  FolderTree,
+  LucidePanelLeft,
+  Maximize2,
+  Minimize2,
+} from 'lucide-react';
 
 interface SQLEditorHeaderProps {
   open: boolean;

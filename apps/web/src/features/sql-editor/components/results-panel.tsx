@@ -30,7 +30,7 @@ export function ResultsPanel({
   exportToJSON,
 }: ResultsPanelProps) {
   return (
-    <div className="p-4">
+    <div className="flex flex-col h-full p-4">
       <ResultsErrorBoundary>
         {isExecuting ? (
           <div className="flex items-center justify-center py-8">
@@ -40,8 +40,8 @@ export function ResultsPanel({
             </div>
           </div>
         ) : executionResults.length > 0 ? (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="flex flex-col h-full min-h-0">
+            <div className="flex items-center justify-between mb-2 flex-shrink-0">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-medium">Results</p>
                 {executedProcedureId &&
@@ -49,9 +49,8 @@ export function ResultsPanel({
                     <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded">
                       <Database className="h-3 w-3" />
                       From:{' '}
-                      {procedures?.find(
-                        (p) => p.id === executedProcedureId
-                      )?.name || 'Unknown'}
+                      {procedures?.find((p) => p.id === executedProcedureId)
+                        ?.name || 'Unknown'}
                     </div>
                   )}
               </div>
@@ -89,7 +88,7 @@ export function ResultsPanel({
                 </div>
               </div>
             </div>
-            <div className="border rounded-md overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-auto border rounded-md">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
                   <tr>
@@ -123,10 +122,7 @@ export function ResultsPanel({
                       {row != null && typeof row === 'object' ? (
                         executionColumns.length > 0 ? (
                           executionColumns.map((column) => (
-                            <td
-                              key={column.name}
-                              className="px-3 py-2"
-                            >
+                            <td key={column.name} className="px-3 py-2">
                               {row[column.name] === null ? (
                                 <span className="text-muted-foreground italic">
                                   NULL
@@ -143,10 +139,7 @@ export function ResultsPanel({
                           ))
                         ) : (
                           Object.values(row).map((value, cellIndex) => (
-                            <td
-                              key={cellIndex}
-                              className="px-3 py-2"
-                            >
+                            <td key={cellIndex} className="px-3 py-2">
                               {value === null ? (
                                 <span className="text-muted-foreground italic">
                                   NULL
@@ -181,9 +174,8 @@ export function ResultsPanel({
               No Results Yet
             </h3>
             <p className="text-xs text-muted-foreground max-w-md mb-4">
-              Execute a stored procedure to see results here.
-              Results will include returned data, execution
-              time, and row counts.
+              Execute a stored procedure to see results here. Results will
+              include returned data, execution time, and row counts.
             </p>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-1">

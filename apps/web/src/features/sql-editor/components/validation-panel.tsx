@@ -10,13 +10,13 @@ interface ValidationPanelProps {
 
 export function ValidationPanel({ validationMessages }: ValidationPanelProps) {
   return (
-    <div className="p-4">
-      <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-col h-full p-4">
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <p className="text-sm font-medium">Validation Messages</p>
       </div>
 
       {validationMessages.length > 0 ? (
-        <div className="space-y-2">
+        <div className="flex-1 min-h-0 overflow-auto space-y-2">
           {validationMessages.map((msg, index) => (
             <div
               key={index}
@@ -36,10 +36,12 @@ export function ValidationPanel({ validationMessages }: ValidationPanelProps) {
           ))}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">
-          No validation messages. SQL syntax errors and warnings
-          will appear here.
-        </p>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-sm text-muted-foreground text-center">
+            No validation messages. SQL syntax errors and warnings will appear
+            here.
+          </p>
+        </div>
       )}
     </div>
   );

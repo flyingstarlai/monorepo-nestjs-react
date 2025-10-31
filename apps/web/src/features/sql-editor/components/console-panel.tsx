@@ -11,10 +11,13 @@ interface ConsolePanelProps {
   setConsoleMessages: React.Dispatch<React.SetStateAction<ConsoleMessage[]>>;
 }
 
-export function ConsolePanel({ consoleMessages, setConsoleMessages }: ConsolePanelProps) {
+export function ConsolePanel({
+  consoleMessages,
+  setConsoleMessages,
+}: ConsolePanelProps) {
   return (
-    <div className="p-4">
-      <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-col h-full p-4">
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <p className="text-sm font-medium">Console Messages</p>
         <Button
           variant="outline"
@@ -28,7 +31,7 @@ export function ConsolePanel({ consoleMessages, setConsoleMessages }: ConsolePan
       </div>
 
       {consoleMessages.length > 0 ? (
-        <div className="space-y-2">
+        <div className="flex-1 min-h-0 overflow-auto space-y-2">
           {consoleMessages.map((msg, index) => (
             <div
               key={index}
@@ -50,10 +53,12 @@ export function ConsolePanel({ consoleMessages, setConsoleMessages }: ConsolePan
           ))}
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">
-          No console messages. Procedure execution status and
-          results will appear here.
-        </p>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-sm text-muted-foreground text-center">
+            No console messages. Procedure execution status and results will
+            appear here.
+          </p>
+        </div>
       )}
     </div>
   );
