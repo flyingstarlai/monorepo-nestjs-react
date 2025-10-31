@@ -769,6 +769,7 @@ function SqlEditorPage() {
                     )
                   }
                   aria-label="Bottom panel tabs"
+                  className="h-full grid grid-rows-[auto,1fr]"
                 >
                   <div className="border-b">
                     <TabsList className="h-8 px-2" role="tablist">
@@ -814,10 +815,11 @@ function SqlEditorPage() {
 
                   <TabsContent
                     value="results"
-                    className="m-0 h-[calc(100%-2.25rem)] overflow-auto"
+                    className="m-0 h-full overflow-hidden"
                     role="tabpanel"
                     id="results-panel"
                     aria-labelledby="results-tab"
+                    tabIndex={0}
                   >
                     <ResultsPanel
                       isExecuting={isExecuting}
@@ -842,20 +844,22 @@ function SqlEditorPage() {
 
                   <TabsContent
                     value="validation"
-                    className="m-0 h-[calc(100%-2.25rem)] overflow-auto"
+                    className="m-0 h-full overflow-hidden"
                     role="tabpanel"
                     id="validation-panel"
                     aria-labelledby="validation-tab"
+                    tabIndex={0}
                   >
                     <ValidationPanel validationMessages={validationMessages} />
                   </TabsContent>
 
                   <TabsContent
                     value="console"
-                    className="m-0 h-[calc(100%-2.25rem)] overflow-auto"
+                    className="m-0 h-full overflow-hidden"
                     role="tabpanel"
                     id="console-panel"
                     aria-labelledby="console-tab"
+                    tabIndex={0}
                   >
                     <ConsolePanel
                       consoleMessages={consoleMessages}

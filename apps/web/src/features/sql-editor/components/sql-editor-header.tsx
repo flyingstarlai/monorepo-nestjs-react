@@ -36,7 +36,7 @@ export function SQLEditorHeader({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant="ghost"
+              variant={open ? "secondary" : "ghost"}
               size="icon"
               onClick={() => setOpen(!open)}
               aria-label={open ? 'Hide sidebar' : 'Show sidebar'}
@@ -61,7 +61,7 @@ export function SQLEditorHeader({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
+                variant={!explorerCollapsed ? "secondary" : "ghost"}
                 size="icon"
                 onClick={onToggleExplorer}
                 aria-label={
@@ -82,7 +82,7 @@ export function SQLEditorHeader({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
+                variant={bottomPanelOpen ? "secondary" : "ghost"}
                 size="icon"
                 onClick={onToggleBottomPanel}
                 aria-label={

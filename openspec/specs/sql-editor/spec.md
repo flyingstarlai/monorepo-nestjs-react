@@ -3,9 +3,7 @@
 ## Purpose
 
 Define requirements for creating, validating, publishing, and executing MSSQL stored procedures with a draft/publish workflow, modern editor UI, and per‑workspace environments.
-
 ## Requirements
-
 ### Requirement: SQL Editor Module
 
 The system SHALL provide a minimal SQL Editor to manage MSSQL stored procedures with a draft/publish workflow.
@@ -168,6 +166,15 @@ The system SHALL provide a bottom panel with tabs for Results and Messages, resi
 - WHEN the splitter is dragged
 - THEN the panel height adjusts and is remembered per workspace
 
+#### Scenario: Scrollable tab content
+
+- WHEN content in any bottom panel tab (Results or Messages) exceeds the visible panel height
+- THEN the tab body SHALL be vertically scrollable within the bottom panel
+- AND the page outside the SQL Editor SHALL NOT scroll as a result of the overflow
+- AND there SHALL be exactly one primary scroll container per tab body to avoid nested scroll conflicts
+- AND scrolling SHALL work with mouse wheel/trackpad and via keyboard when the tab body is focused
+- AND resizing the bottom panel SHALL preserve scrollability without clipping content
+
 ### Requirement: Bottom Status Bar (Draft vs Published)
 
 The system SHALL display a minimal status bar beneath the editor with essential information and contextual actions based on procedure status.
@@ -217,3 +224,4 @@ The system SHALL add a top‑level sidebar category "SQL Tools" with a "SQL Edit
 - WHEN `FEATURE_SQL_EDITOR` is enabled and the user is within a workspace
 - THEN the sidebar shows a "SQL Tools" group with a "SQL Editor" entry
 - AND the entry links to the SQL Editor route and highlights when active; visibility to all members; actions remain role‑gated in the module
+
