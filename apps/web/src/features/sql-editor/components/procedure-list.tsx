@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import {
   FileCode,
@@ -6,6 +6,8 @@ import {
   MoreHorizontal,
   Plus,
   CheckCircle,
+  List,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +31,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import type { StoredProcedure } from '../types';
 
+type FilterType = 'all' | 'published' | 'draft';
+
 interface ProcedureListProps {
   procedures: StoredProcedure[] | undefined;
   selectedProcedureId: string | null;
@@ -51,6 +55,25 @@ export function ProcedureList({
   const [procedureToDelete, setProcedureToDelete] = useState<string | null>(
     null
   );
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+
+  // Filter procedures based on selected filter
+  const filteredProcedures = useMemo(() => {
+    if (!procedures) return procedures;
+    
+    switch (activeFilter) {
+      case 'published':
+        return procedures.filter(p => p.status === 'published');
+      case 'draft':
+        return procedures.filter(p => p.status === 'draft');
+      default:
+        return procedures;
+    }
+  }, [procedures, activeFilter]);
+
+  // Get counts for display
+  const publishedCount = procedures?.filter(p => p.status === 'published').length || 0;
+  const draftCount = procedures?.filter(p => p.status === 'draft').length || 0;
 
   const handleDeleteClick = (id: string) => {
     setProcedureToDelete(id);
@@ -113,14 +136,15 @@ export function ProcedureList({
       <div className="h-full flex flex-col bg-background">
         {/* Header */}
         <div className="px-4 py-3 border-b border-border/50">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="text-sm font-semibold text-foreground">
                 Procedures
               </h2>
               <p className="text-xs text-muted-foreground">
-                {procedures?.length || 0}{' '}
+                {filteredProcedures?.length || 0} of {procedures?.length || 0}{' '}
                 {procedures?.length === 1 ? 'procedure' : 'procedures'}
+                {activeFilter !== 'all' && ` (${activeFilter})`}
               </p>
             </div>
             <Button
@@ -134,13 +158,59 @@ export function ProcedureList({
               New
             </Button>
           </div>
+
+          {/* Filter Buttons */}
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant={activeFilter === 'all' ? 'default' : 'ghost'}
+              onClick={() => setActiveFilter('all')}
+              aria-label="Show all procedures"
+              aria-pressed={activeFilter === 'all'}
+              className="h-7 px-2 text-xs font-medium transition-all duration-200"
+            >
+              <List className="h-3 w-3 mr-1.5" />
+              All
+              <span className="ml-1 text-[10px] opacity-70">
+                {procedures?.length || 0}
+              </span>
+            </Button>
+            <Button
+              size="sm"
+              variant={activeFilter === 'published' ? 'default' : 'ghost'}
+              onClick={() => setActiveFilter('published')}
+              aria-label="Show published procedures"
+              aria-pressed={activeFilter === 'published'}
+              className="h-7 px-2 text-xs font-medium transition-all duration-200"
+            >
+              <CheckCircle className="h-3 w-3 mr-1.5" />
+              Published
+              <span className="ml-1 text-[10px] opacity-70">
+                {publishedCount}
+              </span>
+            </Button>
+            <Button
+              size="sm"
+              variant={activeFilter === 'draft' ? 'default' : 'ghost'}
+              onClick={() => setActiveFilter('draft')}
+              aria-label="Show draft procedures"
+              aria-pressed={activeFilter === 'draft'}
+              className="h-7 px-2 text-xs font-medium transition-all duration-200"
+            >
+              <FileText className="h-3 w-3 mr-1.5" />
+              Draft
+              <span className="ml-1 text-[10px] opacity-70">
+                {draftCount}
+              </span>
+            </Button>
+          </div>
         </div>
 
         {/* Procedure List */}
         <div className="flex-1 overflow-hidden">
-          {procedures && procedures.length > 0 ? (
+          {filteredProcedures && filteredProcedures.length > 0 ? (
             <div className="py-1">
-              {procedures.map((procedure) => (
+              {filteredProcedures.map((procedure) => (
                 <div
                   key={procedure.id}
                   className={`group flex items-center gap-2 px-3 py-2 cursor-pointer transition-all duration-150 hover:bg-muted/40 focus:outline-none focus:bg-muted/60 ${
@@ -240,10 +310,23 @@ export function ProcedureList({
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <FileCode className="h-8 w-8 mb-3 text-muted-foreground/40" />
               <p className="text-sm font-medium text-foreground mb-1">
-                No procedures yet
+                {activeFilter === 'all' 
+                  ? 'No procedures yet'
+                  : `No ${activeFilter} procedures`
+                }
               </p>
               <p className="text-xs text-muted-foreground mb-4">
-                Create your first stored procedure to get started
+                {activeFilter === 'all' 
+                  ? 'Create your first stored procedure to get started'
+                  : activeFilter === 'published'
+                    ? 'No procedures have been published yet'
+                    : 'No draft procedures found'
+                }
+                {activeFilter !== 'all' && procedures && procedures.length > 0 && (
+                  <span className="block mt-2">
+                    Try selecting a different filter or create a new procedure.
+                  </span>
+                )}
               </p>
               <Button
                 size="sm"
