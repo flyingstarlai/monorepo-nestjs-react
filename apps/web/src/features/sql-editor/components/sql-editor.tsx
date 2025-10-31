@@ -404,7 +404,7 @@ export function SqlEditorComponent({
         )}
 
         {/* Monaco Editor */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative min-h-0 h-full">
           {/* Read-Only Lock Indicator */}
           {readOnly && procedure?.status === 'published' && (
             <Tooltip>

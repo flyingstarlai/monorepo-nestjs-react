@@ -207,7 +207,7 @@ export function ProcedureList({
         </div>
 
         {/* Procedure List */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {filteredProcedures && filteredProcedures.length > 0 ? (
             <div className="py-1">
               {filteredProcedures.map((procedure) => (

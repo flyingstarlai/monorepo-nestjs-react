@@ -97,7 +97,7 @@ function DashboardLayout() {
           </header>
         )}
         <div
-          className={`flex flex-1 flex-col gap-4 p-4 w-full overflow-hidden ${isSqlEditorPage ? 'pt-4' : 'pt-0'}`}
+          className={`flex flex-1 flex-col gap-4 w-full overflow-hidden ${isSqlEditorPage ? 'p-0' : 'p-4'}`}
         >
           <Outlet />
         </div>

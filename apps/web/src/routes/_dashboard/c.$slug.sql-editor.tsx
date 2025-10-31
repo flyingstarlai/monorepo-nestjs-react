@@ -230,6 +230,15 @@ function SqlEditorPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, [storeState.setExplorerCollapsed]);
 
+  // Default open bottom panel at ~30% height if not set
+  useEffect(() => {
+    if (containerRef.current && !bottomPanelOpen && bottomPanelHeight === 0) {
+      const h = Math.round(containerRef.current.clientHeight * 0.3);
+      storeState.setBottomPanelHeight(h);
+      storeState.setBottomPanelOpen(true);
+    }
+  }, [bottomPanelOpen, bottomPanelHeight, storeState]);
+
   // Update last procedure when selection changes
   useEffect(() => {
     if (selectedProcedureId) {
@@ -647,7 +656,7 @@ function SqlEditorPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="flex flex-col h-svh min-h-0">
       {/* Header */}
       <SQLEditorHeader
         open={open}
@@ -655,7 +664,16 @@ function SqlEditorPage() {
         explorerCollapsed={explorerCollapsed}
         onToggleExplorer={() => storeState.setExplorerCollapsed(!explorerCollapsed)}
         bottomPanelOpen={bottomPanelOpen}
-        onToggleBottomPanel={() => storeState.setBottomPanelOpen(!bottomPanelOpen)}
+        onToggleBottomPanel={() => {
+          if (!bottomPanelOpen) {
+            const containerEl = containerRef.current;
+            const h = containerEl ? Math.round(containerEl.clientHeight * 0.3) : 200;
+            storeState.setBottomPanelHeight(h);
+            storeState.setBottomPanelOpen(true);
+          } else {
+            storeState.setBottomPanelOpen(false);
+          }
+        }}
       />
 
       {/* Main Content */}
@@ -691,7 +709,7 @@ function SqlEditorPage() {
         />
 
         {/* Editor/Details Panel */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
           {selectedProcedure ? (
             <div className="flex-1 min-h-0">
               <SqlEditorComponent
@@ -703,11 +721,7 @@ function SqlEditorPage() {
                 onMoveToDraft={() => setMoveToDraftDialog(true)}
                 onValidate={handleValidate}
                 onPublish={handlePublish}
-                height={
-                  bottomPanelOpen && bottomPanelHeight > 0
-                    ? `calc(100% - ${bottomPanelHeight}px)`
-                    : '100%'
-                }
+                height="100%"
                 isDirty={isDirty}
                 readOnly={selectedProcedure?.status === 'published'}
                 workspaceSlug={slug}
@@ -799,7 +813,7 @@ function SqlEditorPage() {
 
                   <TabsContent
                     value="results"
-                    className="m-0 h-[calc(100%-2rem)] overflow-hidden"
+                    className="m-0 h-[calc(100%-2rem)] overflow-auto"
                     role="tabpanel"
                     id="results-panel"
                     aria-labelledby="results-tab"
@@ -819,7 +833,7 @@ function SqlEditorPage() {
 
                   <TabsContent
                     value="validation"
-                    className="m-0 h-[calc(100%-2rem)] overflow-hidden"
+                    className="m-0 h-[calc(100%-2rem)] overflow-auto"
                     role="tabpanel"
                     id="validation-panel"
                     aria-labelledby="validation-tab"
@@ -829,7 +843,7 @@ function SqlEditorPage() {
 
                   <TabsContent
                     value="console"
-                    className="m-0 h-[calc(100%-2rem)] overflow-hidden"
+                    className="m-0 h-[calc(100%-2rem)] overflow-auto"
                     role="tabpanel"
                     id="console-panel"
                     aria-labelledby="console-tab"
