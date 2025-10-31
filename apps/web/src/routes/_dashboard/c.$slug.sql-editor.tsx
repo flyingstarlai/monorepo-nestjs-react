@@ -14,6 +14,7 @@ import {
   Loader2,
   Lock,
   Maximize2,
+  Menu,
   Minimize2,
   MoreHorizontal,
   PanelLeft,
@@ -795,6 +796,19 @@ function SqlEditorPage() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b bg-background flex-shrink-0">
         <div className="flex items-center gap-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setOpen(!open)}
+                aria-label={open ? 'Hide sidebar' : 'Show sidebar'}
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Toggle Sidebar</TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
