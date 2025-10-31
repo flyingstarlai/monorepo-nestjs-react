@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { IProcedureNameRewriter, RewriteResult } from '../interfaces/validation.interfaces';
+import {
+  IProcedureNameRewriter,
+  RewriteResult,
+} from '../interfaces/validation.interfaces';
 
 @Injectable()
 export class ProcedureNameRewriterService implements IProcedureNameRewriter {

@@ -6,12 +6,12 @@
   - [x] IProcedureNameRewriter { rewrite(sql: string, newName: string): RewriteResult }
   - [x] IMssqlClient { query(sql: string): Promise<any>; executeBatch(sql: string[]): Promise<any[]> }
 - [x] 1.2 Implement SyntaxCompileValidator (MSSQL)
-  - [x] Rewrite procedure name to __tc_tmp_{uuid}
+  - [x] Rewrite procedure name to \__tc_tmp_{uuid}
   - [x] Execute as a single batch: CREATE OR ALTER PROCEDURE [tmp] AS ...
   - [x] DROP PROCEDURE [tmp] in finally if created
   - [x] Map compiler error line/near to original SQL
 - [x] 1.3 Implement BestPracticesValidator
-  - [x] Warn for SELECT *
+  - [x] Warn for SELECT \*
   - [x] Warn for missing SET NOCOUNT ON
   - [x] Warn for missing BEGIN/END or AS keyword
 - [x] 1.4 Wire ValidationService to run pipeline and return unified result

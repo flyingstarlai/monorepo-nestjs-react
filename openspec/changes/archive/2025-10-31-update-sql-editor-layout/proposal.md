@@ -16,7 +16,7 @@ The current SQL Editor UI uses heavier card chrome and a dark theme that reduces
 
 - Affected specs: sql-editor
 - Affected code (no implementation in this change; for planning):
-  - apps/web/src/routes/_dashboard/c.$slug.sql-editor.tsx
+  - apps/web/src/routes/\_dashboard/c.$slug.sql-editor.tsx
   - apps/web/src/features/sql-editor/components/sql-editor.tsx
   - apps/web/src/features/sql-editor/components/procedure-list.tsx
   - apps/web/src/features/sql-editor/stores/sql-editor.store.ts

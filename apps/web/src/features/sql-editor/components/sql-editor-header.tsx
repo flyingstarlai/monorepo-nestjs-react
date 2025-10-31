@@ -20,7 +20,7 @@ export function SQLEditorHeader({
   onToggleBottomPanel,
 }: SQLEditorHeaderProps) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-b bg-background flex-shrink-0">
+    <div className="flex items-center justify-between py-3 border-b bg-background flex-shrink-0">
       <div className="flex items-center gap-3">
         <Tooltip>
           <TooltipTrigger asChild>

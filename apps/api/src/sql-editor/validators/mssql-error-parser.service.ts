@@ -5,7 +5,7 @@ import { IErrorParser, ParsedError } from '../interfaces/validation.interfaces';
 export class MssqlErrorParserService implements IErrorParser {
   parse(error: Error | string): ParsedError {
     const errorMessage = error instanceof Error ? error.message : error;
-    
+
     // Extract line number
     const lineMatch = errorMessage.match(/line\s+(\d+):/i);
     const line = lineMatch ? parseInt(lineMatch[1]) : undefined;

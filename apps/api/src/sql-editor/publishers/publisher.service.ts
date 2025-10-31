@@ -1,6 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { IPublisher, PublishContext, PrecheckResult, DeployResult, VerifyResult } from '../interfaces/publishing.interfaces';
-import { ISqlValidator, ValidationIssue } from '../interfaces/validation.interfaces';
+import {
+  IPublisher,
+  PublishContext,
+  PrecheckResult,
+  DeployResult,
+  VerifyResult,
+} from '../interfaces/publishing.interfaces';
+import {
+  ISqlValidator,
+  ValidationIssue,
+} from '../interfaces/validation.interfaces';
 import { MssqlClientService } from '../clients/mssql-client.service';
 import { SyntaxCompileValidatorService } from '../validators/syntax-compile-validator.service';
 import { MssqlErrorParserService } from '../validators/mssql-error-parser.service';
@@ -15,9 +24,14 @@ export class PublisherService implements IPublisher {
     private readonly errorParser: MssqlErrorParserService
   ) {}
 
-  async precheck(context: PublishContext, sql: string): Promise<PrecheckResult> {
+  async precheck(
+    context: PublishContext,
+    sql: string
+  ): Promise<PrecheckResult> {
     const startTime = Date.now();
-    this.logger.debug(`Running precheck for procedure ${context.procedureId} in workspace ${context.workspaceId}`);
+    this.logger.debug(
+      `Running precheck for procedure ${context.procedureId} in workspace ${context.workspaceId}`
+    );
 
     try {
       // Use syntax validator for precheck (without temp rewrite)
@@ -27,12 +41,14 @@ export class PublisherService implements IPublisher {
         userId: context.userId,
       });
 
-      const errors = issues.filter(issue => issue.severity === 'error');
+      const errors = issues.filter((issue) => issue.severity === 'error');
       const canProceed = errors.length === 0;
 
       const duration = Date.now() - startTime;
 
-      this.logger.debug(`Precheck completed for procedure ${context.procedureId}: canProceed=${canProceed}, duration=${duration}ms`);
+      this.logger.debug(
+        `Precheck completed for procedure ${context.procedureId}: canProceed=${canProceed}, duration=${duration}ms`
+      );
 
       return {
         success: canProceed,
@@ -42,21 +58,28 @@ export class PublisherService implements IPublisher {
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      this.logger.error(`Precheck failed for procedure ${context.procedureId}:`, error);
+      this.logger.error(
+        `Precheck failed for procedure ${context.procedureId}:`,
+        error
+      );
 
-      const parsedError = this.errorParser.parse(error instanceof Error ? error : String(error));
-      
+      const parsedError = this.errorParser.parse(
+        error instanceof Error ? error : String(error)
+      );
+
       return {
         success: false,
         canProceed: false,
-        issues: [{
-          message: parsedError.message,
-          line: parsedError.line,
-          column: parsedError.column,
-          near: parsedError.near,
-          code: parsedError.code,
-          severity: 'error',
-        }],
+        issues: [
+          {
+            message: parsedError.message,
+            line: parsedError.line,
+            column: parsedError.column,
+            near: parsedError.near,
+            code: parsedError.code,
+            severity: 'error',
+          },
+        ],
         duration,
       };
     }
@@ -64,51 +87,68 @@ export class PublisherService implements IPublisher {
 
   async deploy(context: PublishContext, sql: string): Promise<DeployResult> {
     const startTime = Date.now();
-    this.logger.debug(`Deploying procedure ${context.procedureId} in workspace ${context.workspaceId}`);
+    this.logger.debug(
+      `Deploying procedure ${context.procedureId} in workspace ${context.workspaceId}`
+    );
 
     try {
       // Sanitize and prepare SQL for deployment
       const deploySql = this.prepareDeploySql(sql);
-      
+
       // Execute the deployment
       await this.mssqlClient.query(deploySql, context.workspaceId);
 
       const duration = Date.now() - startTime;
       const procedureName = this.extractProcedureName(sql);
 
-      this.logger.debug(`Deployment completed for procedure ${context.procedureId}, name=${procedureName}, duration=${duration}ms`);
+      this.logger.debug(
+        `Deployment completed for procedure ${context.procedureId}, name=${procedureName}, duration=${duration}ms`
+      );
 
       return {
         success: true,
         deployedName: procedureName,
-        sqlPreview: deploySql.substring(0, 200) + (deploySql.length > 200 ? '...' : ''),
+        sqlPreview:
+          deploySql.substring(0, 200) + (deploySql.length > 200 ? '...' : ''),
         duration,
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      this.logger.error(`Deployment failed for procedure ${context.procedureId}:`, error);
+      this.logger.error(
+        `Deployment failed for procedure ${context.procedureId}:`,
+        error
+      );
 
-      const parsedError = this.errorParser.parse(error instanceof Error ? error : String(error));
-      
+      const parsedError = this.errorParser.parse(
+        error instanceof Error ? error : String(error)
+      );
+
       return {
         success: false,
-        issues: [{
-          message: parsedError.message,
-          line: parsedError.line,
-          column: parsedError.column,
-          near: parsedError.near,
-          code: parsedError.code,
-          severity: 'error',
-        }],
+        issues: [
+          {
+            message: parsedError.message,
+            line: parsedError.line,
+            column: parsedError.column,
+            near: parsedError.near,
+            code: parsedError.code,
+            severity: 'error',
+          },
+        ],
         sqlPreview: sql.substring(0, 200) + (sql.length > 200 ? '...' : ''),
         duration,
       };
     }
   }
 
-  async verify(context: PublishContext, procedureName: string): Promise<VerifyResult> {
+  async verify(
+    context: PublishContext,
+    procedureName: string
+  ): Promise<VerifyResult> {
     const startTime = Date.now();
-    this.logger.debug(`Verifying procedure ${procedureName} in workspace ${context.workspaceId}`);
+    this.logger.debug(
+      `Verifying procedure ${procedureName} in workspace ${context.workspaceId}`
+    );
 
     try {
       // Check if procedure exists in INFORMATION_SCHEMA
@@ -119,17 +159,22 @@ export class PublisherService implements IPublisher {
         AND ROUTINE_NAME = '${procedureName.replace(/'/g, "''")}'
       `;
 
-      const existenceResult = await this.mssqlClient.query(existenceQuery, context.workspaceId);
-      
+      const existenceResult = await this.mssqlClient.query(
+        existenceQuery,
+        context.workspaceId
+      );
+
       if (!existenceResult || existenceResult.length === 0) {
         const duration = Date.now() - startTime;
         return {
           success: false,
           verified: false,
-          issues: [{
-            message: `Procedure ${procedureName} not found after deployment`,
-            severity: 'error',
-          }],
+          issues: [
+            {
+              message: `Procedure ${procedureName} not found after deployment`,
+              severity: 'error',
+            },
+          ],
           duration,
         };
       }
@@ -139,12 +184,17 @@ export class PublisherService implements IPublisher {
         SELECT OBJECT_DEFINITION(OBJECT_ID('${procedureName.replace(/'/g, "''")}')) as definition
       `;
 
-      const definitionResult = await this.mssqlClient.query(definitionQuery, context.workspaceId);
+      const definitionResult = await this.mssqlClient.query(
+        definitionQuery,
+        context.workspaceId
+      );
       const objectDefinition = definitionResult?.[0]?.definition;
 
       const duration = Date.now() - startTime;
 
-      this.logger.debug(`Verification completed for procedure ${procedureName}: verified=true, duration=${duration}ms`);
+      this.logger.debug(
+        `Verification completed for procedure ${procedureName}: verified=true, duration=${duration}ms`
+      );
 
       return {
         success: true,
@@ -154,21 +204,28 @@ export class PublisherService implements IPublisher {
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      this.logger.error(`Verification failed for procedure ${procedureName}:`, error);
+      this.logger.error(
+        `Verification failed for procedure ${procedureName}:`,
+        error
+      );
 
-      const parsedError = this.errorParser.parse(error instanceof Error ? error : String(error));
-      
+      const parsedError = this.errorParser.parse(
+        error instanceof Error ? error : String(error)
+      );
+
       return {
         success: false,
         verified: false,
-        issues: [{
-          message: parsedError.message,
-          line: parsedError.line,
-          column: parsedError.column,
-          near: parsedError.near,
-          code: parsedError.code,
-          severity: 'error',
-        }],
+        issues: [
+          {
+            message: parsedError.message,
+            line: parsedError.line,
+            column: parsedError.column,
+            near: parsedError.near,
+            code: parsedError.code,
+            severity: 'error',
+          },
+        ],
         duration,
       };
     }
@@ -176,16 +233,17 @@ export class PublisherService implements IPublisher {
 
   private prepareDeploySql(sql: string): string {
     const trimmedSql = sql.trim();
-    
+
     // If SQL already has a full header, sanitize and return as-is
     if (this.hasFullHeader(trimmedSql)) {
       return this.sanitizeSql(trimmedSql);
     }
 
     // If body only, construct minimal CREATE OR ALTER header
-    const procedureName = this.extractProcedureName(trimmedSql) || 'UnknownProcedure';
+    const procedureName =
+      this.extractProcedureName(trimmedSql) || 'UnknownProcedure';
     const header = `CREATE OR ALTER PROCEDURE [${procedureName}]`;
-    
+
     return this.sanitizeSql(`${header}\nAS\n${trimmedSql}`);
   }
 

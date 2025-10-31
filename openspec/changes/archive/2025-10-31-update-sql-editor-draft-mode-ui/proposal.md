@@ -15,7 +15,7 @@ The current SQL editor displays validate and save buttons in the bottom status b
 ## Impact
 
 - Affected specs: sql-editor
-- Affected code: 
+- Affected code:
   - apps/web/src/features/sql-editor/components/sql-editor.tsx (lines 482-522)
   - apps/web/src/features/sql-editor/components/procedure-list.tsx (explorer icons)
   - apps/web/src/features/sql-editor/stores/sql-editor.store.ts (draft activation logic)

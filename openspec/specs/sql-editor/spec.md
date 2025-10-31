@@ -64,7 +64,7 @@ The system SHALL validate SQL stored procedures using a SOLID, extensible pipeli
 
 #### Scenario: Best‑practice warnings emitted
 
-- WHEN the draft uses SELECT * or lacks SET NOCOUNT ON
+- WHEN the draft uses SELECT \* or lacks SET NOCOUNT ON
 - THEN the system returns warnings and the result remains valid=true if there are no errors
 
 ### Requirement: Deterministic Publishing Pipeline

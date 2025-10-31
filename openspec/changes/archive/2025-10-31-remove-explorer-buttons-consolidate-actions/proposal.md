@@ -12,7 +12,7 @@ The current SQL editor has redundant action buttons - both in the file explorer 
 ## Impact
 
 - Affected specs: sql-editor
-- Affected code: 
+- Affected code:
   - apps/web/src/features/sql-editor/components/procedure-list.tsx (remove publish/execute buttons)
   - apps/web/src/features/sql-editor/components/sql-editor.tsx (execute button already in bottom)
 - User experience: Cleaner file explorer focused on navigation, consolidated actions in status bar

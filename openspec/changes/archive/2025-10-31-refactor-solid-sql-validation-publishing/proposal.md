@@ -3,6 +3,7 @@
 Validation for SQL stored procedures is unreliable and frequently fails with confusing MSSQL parsing errors (e.g., "Incorrect syntax near 'END'") due to dynamic SQL wrapping and batch boundary issues. Publishing shares similar fragility and couples validation concerns with deployment.
 
 We need a SOLID, deterministic, and testable validation + publishing pipeline that:
+
 - Clearly separates responsibilities (validation vs deployment)
 - Uses safe MSSQL compilation checks without false positives
 - Produces consistent error shapes (line/column, near token, message)
@@ -44,5 +45,5 @@ We need a SOLID, deterministic, and testable validation + publishing pipeline th
   - apps/api/src/sql-editor/services/publish.service.ts
   - apps/api/src/sql-editor/services/execution.service.ts (interfaces reuse)
   - apps/api/src/workspaces/connection-manager.service.ts (DI of IMssqlClient)
-  - apps/web/src/features/sql-editor/* (UX and error shape)
+  - apps/web/src/features/sql-editor/\* (UX and error shape)
 - Migration: Replace current validation with new pipeline; deprecate the existing validate endpoint or convert to a Dry Run endpoint using the new validator.

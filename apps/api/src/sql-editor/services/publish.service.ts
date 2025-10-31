@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import {
@@ -12,7 +8,10 @@ import {
 import { MssqlConnectionRegistry } from './mssql-connection-registry.service';
 import { ActivitiesService } from '../../activities/activities.service';
 import { ActivityType } from '../../activities/entities/activity.entity';
-import { IPublisher, PublishContext } from '../interfaces/publishing.interfaces';
+import {
+  IPublisher,
+  PublishContext,
+} from '../interfaces/publishing.interfaces';
 import { PublisherService } from '../publishers/publisher.service';
 
 @Injectable()
@@ -58,23 +57,38 @@ export class PublishService {
 
     try {
       // Step 1: Precheck validation
-      const precheckResult = await this.publisher.precheck(publishContext, procedure.sqlDraft);
+      const precheckResult = await this.publisher.precheck(
+        publishContext,
+        procedure.sqlDraft
+      );
       if (!precheckResult.canProceed) {
-        const errorMessages = precheckResult.issues?.map(issue => issue.message).join('; ') || 'Unknown validation error';
+        const errorMessages =
+          precheckResult.issues?.map((issue) => issue.message).join('; ') ||
+          'Unknown validation error';
         throw new Error(`Precheck validation failed: ${errorMessages}`);
       }
 
       // Step 2: Deploy
-      const deployResult = await this.publisher.deploy(publishContext, procedure.sqlDraft);
+      const deployResult = await this.publisher.deploy(
+        publishContext,
+        procedure.sqlDraft
+      );
       if (!deployResult.success) {
-        const errorMessages = deployResult.issues?.map(issue => issue.message).join('; ') || 'Unknown deployment error';
+        const errorMessages =
+          deployResult.issues?.map((issue) => issue.message).join('; ') ||
+          'Unknown deployment error';
         throw new Error(`Deployment failed: ${errorMessages}`);
       }
 
       // Step 3: Verify
-      const verifyResult = await this.publisher.verify(publishContext, procedure.name);
+      const verifyResult = await this.publisher.verify(
+        publishContext,
+        procedure.name
+      );
       if (!verifyResult.verified) {
-        const errorMessages = verifyResult.issues?.map(issue => issue.message).join('; ') || 'Unknown verification error';
+        const errorMessages =
+          verifyResult.issues?.map((issue) => issue.message).join('; ') ||
+          'Unknown verification error';
         throw new Error(`Verification failed: ${errorMessages}`);
       }
 
@@ -224,9 +238,10 @@ export class PublishService {
       );
 
       // Log the SQL being executed (truncated for very long procedures)
-      const sqlLog = createProcedureSql.length > 500 
-        ? createProcedureSql.substring(0, 500) + '...' 
-        : createProcedureSql;
+      const sqlLog =
+        createProcedureSql.length > 500
+          ? createProcedureSql.substring(0, 500) + '...'
+          : createProcedureSql;
       this.logger.debug(
         `Deploying procedure ${procedureName} to MSSQL. SQL: ${sqlLog}`
       );
@@ -239,17 +254,20 @@ export class PublishService {
       );
     } catch (error) {
       // Enhanced error logging with more context
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
-      
+
       this.logger.error(
         `Failed to deploy procedure ${procedureName} to MSSQL. Error: ${errorMessage}`,
         {
           procedureName,
           sqlLength: procedureSql.length,
-          sqlPreview: procedureSql.substring(0, 200) + (procedureSql.length > 200 ? '...' : ''),
+          sqlPreview:
+            procedureSql.substring(0, 200) +
+            (procedureSql.length > 200 ? '...' : ''),
           originalError: error,
-          stack: errorStack
+          stack: errorStack,
         }
       );
 
@@ -315,10 +333,10 @@ export class PublishService {
 
     // Treat the input as the procedure body and wrap it in a proper definition
     const body = sql.trim();
-    
+
     // Build the complete CREATE OR ALTER PROCEDURE statement
     const fullProcedureSql = `CREATE OR ALTER PROCEDURE [${procedureName}] AS\n${body}`;
-    
+
     return fullProcedureSql;
   }
 
@@ -367,7 +385,10 @@ export class PublishService {
       }
     }
 
-    if (cleanError.includes('already exists') || cleanError.includes('There is already an object')) {
+    if (
+      cleanError.includes('already exists') ||
+      cleanError.includes('There is already an object')
+    ) {
       cleanError += ' → Try using CREATE OR ALTER instead of CREATE';
     }
 

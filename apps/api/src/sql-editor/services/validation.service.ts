@@ -1,13 +1,13 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StoredProcedure } from '../entities/stored-procedure.entity';
 import { MssqlConnectionRegistry } from './mssql-connection-registry.service';
-import { ISqlValidator, ValidationIssue, ValidationContext } from '../interfaces/validation.interfaces';
+import {
+  ISqlValidator,
+  ValidationIssue,
+  ValidationContext,
+} from '../interfaces/validation.interfaces';
 import { SyntaxCompileValidatorService } from '../validators/syntax-compile-validator.service';
 import { BestPracticesValidatorService } from '../validators/best-practices-validator.service';
 import { MssqlClientService } from '../clients/mssql-client.service';
@@ -32,10 +32,7 @@ export class ValidationService {
     private readonly syntaxValidator: SyntaxCompileValidatorService,
     private readonly bestPracticesValidator: BestPracticesValidatorService
   ) {
-    this.validators = [
-      this.syntaxValidator,
-      this.bestPracticesValidator,
-    ];
+    this.validators = [this.syntaxValidator, this.bestPracticesValidator];
   }
 
   async validateDraft(
@@ -90,20 +87,28 @@ export class ValidationService {
     try {
       // Run validation pipeline
       const allIssues: ValidationIssue[] = [];
-      
+
       for (const validator of this.validators) {
         const issues = await validator.validate(sqlContent, validationContext);
         allIssues.push(...issues);
       }
 
       // Separate errors and warnings
-      const errors = allIssues.filter(issue => issue.severity === 'error');
-      const warnings = allIssues.filter(issue => issue.severity === 'warning');
+      const errors = allIssues.filter((issue) => issue.severity === 'error');
+      const warnings = allIssues.filter(
+        (issue) => issue.severity === 'warning'
+      );
 
       const result: ValidationResult = {
         valid: errors.length === 0,
-        errors: errors.length > 0 ? errors.map(e => this.formatIssue(e)) : undefined,
-        warnings: warnings.length > 0 ? warnings.map(w => this.formatIssue(w)) : undefined,
+        errors:
+          errors.length > 0
+            ? errors.map((e) => this.formatIssue(e))
+            : undefined,
+        warnings:
+          warnings.length > 0
+            ? warnings.map((w) => this.formatIssue(w))
+            : undefined,
       };
 
       this.logger.debug(
@@ -128,15 +133,15 @@ export class ValidationService {
 
   private formatIssue(issue: ValidationIssue): string {
     let formatted = issue.message;
-    
+
     if (issue.line) {
       formatted = `Line ${issue.line}: ${formatted}`;
     }
-    
+
     if (issue.near) {
       formatted += ` (near '${issue.near}')`;
     }
-    
+
     return formatted;
   }
 
@@ -184,7 +189,9 @@ export class ValidationService {
 
     // Check for required elements
     if (!this.isStoredProcedure(sqlContent)) {
-      errors.push('SQL must be a CREATE, ALTER, or CREATE OR ALTER PROCEDURE statement');
+      errors.push(
+        'SQL must be a CREATE, ALTER, or CREATE OR ALTER PROCEDURE statement'
+      );
     }
 
     return {

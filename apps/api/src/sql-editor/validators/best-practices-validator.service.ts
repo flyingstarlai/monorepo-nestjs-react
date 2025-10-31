@@ -1,16 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { ISqlValidator, ValidationIssue, ValidationContext } from '../interfaces/validation.interfaces';
+import {
+  ISqlValidator,
+  ValidationIssue,
+  ValidationContext,
+} from '../interfaces/validation.interfaces';
 
 @Injectable()
 export class BestPracticesValidatorService implements ISqlValidator {
-  validate(sql: string, context: ValidationContext): Promise<ValidationIssue[]> {
+  validate(
+    sql: string,
+    context: ValidationContext
+  ): Promise<ValidationIssue[]> {
     const issues: ValidationIssue[] = [];
     const normalizedSql = sql.toLowerCase();
 
     // Check for SELECT *
     if (normalizedSql.includes('select *')) {
       issues.push({
-        message: 'Avoid using SELECT * in stored procedures - specify explicit columns',
+        message:
+          'Avoid using SELECT * in stored procedures - specify explicit columns',
         severity: 'warning',
       });
     }
@@ -34,7 +42,8 @@ export class BestPracticesValidatorService implements ISqlValidator {
     // Check for potential SQL injection patterns
     if (normalizedSql.includes('exec(') || normalizedSql.includes('execute(')) {
       issues.push({
-        message: 'Dynamic SQL execution detected - ensure proper parameterization to prevent SQL injection',
+        message:
+          'Dynamic SQL execution detected - ensure proper parameterization to prevent SQL injection',
         severity: 'warning',
       });
     }
@@ -52,7 +61,8 @@ export class BestPracticesValidatorService implements ISqlValidator {
     const matches = sql.match(hardcodedValuePattern);
     if (matches && matches.length > 2) {
       issues.push({
-        message: 'Multiple hardcoded string literals found - consider using parameters instead',
+        message:
+          'Multiple hardcoded string literals found - consider using parameters instead',
         severity: 'warning',
       });
     }

@@ -74,8 +74,11 @@ BEGIN
     SELECT 1
 END`;
 
-      const result = (service as any).buildCreateProcedureSql(procedureName, procedureSql);
-      
+      const result = (service as any).buildCreateProcedureSql(
+        procedureName,
+        procedureSql
+      );
+
       expect(result).toBe(procedureSql);
       expect(result).not.toContain('BEGIN TRY');
       expect(result).not.toContain('sp_executesql');
@@ -89,8 +92,11 @@ BEGIN
     SELECT 1
 END`;
 
-      const result = (service as any).buildCreateProcedureSql(procedureName, procedureSql);
-      
+      const result = (service as any).buildCreateProcedureSql(
+        procedureName,
+        procedureSql
+      );
+
       expect(result).toBe(procedureSql);
       expect(result).not.toContain('BEGIN TRY');
       expect(result).not.toContain('sp_executesql');
@@ -101,8 +107,11 @@ END`;
       const procedureSql = `SELECT 1
 SELECT 2`;
 
-      const result = (service as any).buildCreateProcedureSql(procedureName, procedureSql);
-      
+      const result = (service as any).buildCreateProcedureSql(
+        procedureName,
+        procedureSql
+      );
+
       expect(result).toBe(`CREATE OR ALTER PROCEDURE [TestProc] AS
 SELECT 1
 SELECT 2`);
@@ -118,8 +127,11 @@ END
 GO
 -- Some comment`;
 
-      const result = (service as any).buildCreateProcedureSql(procedureName, procedureSql);
-      
+      const result = (service as any).buildCreateProcedureSql(
+        procedureName,
+        procedureSql
+      );
+
       expect(result).not.toContain('GO');
       expect(result).toContain('CREATE PROCEDURE TestProc');
     });
@@ -137,8 +149,11 @@ BEGIN
     CREATE TABLE TestTable (Id INT)
 END`;
 
-      const result = (service as any).buildCreateProcedureSql(procedureName, procedureSql);
-      
+      const result = (service as any).buildCreateProcedureSql(
+        procedureName,
+        procedureSql
+      );
+
       expect(result).toBe(procedureSql);
       expect(result).not.toContain('BEGIN TRY');
       expect(result).not.toContain('sp_executesql');
@@ -154,8 +169,11 @@ BEGIN
     SELECT * FROM Users WHERE Id = @Id AND Name = @Name
 END`;
 
-      const result = (service as any).buildCreateProcedureSql(procedureName, procedureSql);
-      
+      const result = (service as any).buildCreateProcedureSql(
+        procedureName,
+        procedureSql
+      );
+
       expect(result).toBe(procedureSql);
       expect(result).toContain('@Id INT');
       expect(result).toContain('@Name VARCHAR(100)');
@@ -174,8 +192,11 @@ BEGIN
     END CATCH
 END`;
 
-      const result = (service as any).buildCreateProcedureSql(procedureName, procedureSql);
-      
+      const result = (service as any).buildCreateProcedureSql(
+        procedureName,
+        procedureSql
+      );
+
       expect(result).toBe(procedureSql);
       expect(result).toContain('BEGIN TRY');
       expect(result).toContain('BEGIN CATCH');
@@ -184,30 +205,38 @@ END`;
 
   describe('parseMssqlDeployError', () => {
     it('should parse line numbers from error messages', () => {
-      const errorMessage = 'Line 15: Incorrect syntax near \')\'.';
+      const errorMessage = "Line 15: Incorrect syntax near ')'.";
       const result = (service as any).parseMssqlDeployError(errorMessage);
-      
-      expect(result).toBe('Line 15: Incorrect syntax near \')\'. → Check syntax near \')\' and ensure proper SQL structure');
+
+      expect(result).toBe(
+        "Line 15: Incorrect syntax near ')'. → Check syntax near ')' and ensure proper SQL structure"
+      );
     });
 
     it('should clean up SQL Server error prefixes', () => {
-      const errorMessage = 'Msg 102, Level 15, State 1, Line 5: Incorrect syntax near \'END\'.';
+      const errorMessage =
+        "Msg 102, Level 15, State 1, Line 5: Incorrect syntax near 'END'.";
       const result = (service as any).parseMssqlDeployError(errorMessage);
-      
-      expect(result).toBe('Line 5: Incorrect syntax near \'END\'. → Check syntax near \'END\' and ensure proper SQL structure');
+
+      expect(result).toBe(
+        "Line 5: Incorrect syntax near 'END'. → Check syntax near 'END' and ensure proper SQL structure"
+      );
     });
 
     it('should handle object already exists errors', () => {
-      const errorMessage = 'There is already an object named \'TestProc\' in the database.';
+      const errorMessage =
+        "There is already an object named 'TestProc' in the database.";
       const result = (service as any).parseMssqlDeployError(errorMessage);
-      
-      expect(result).toBe('There is already an object named \'TestProc\' in the database. → Try using CREATE OR ALTER instead of CREATE');
+
+      expect(result).toBe(
+        "There is already an object named 'TestProc' in the database. → Try using CREATE OR ALTER instead of CREATE"
+      );
     });
 
     it('should return original error if no special parsing needed', () => {
       const errorMessage = 'Some other error message';
       const result = (service as any).parseMssqlDeployError(errorMessage);
-      
+
       expect(result).toBe('Some other error message');
     });
   });
