@@ -2,32 +2,13 @@ import { createFileRoute, useParams, useBlocker } from '@tanstack/react-router';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import React from 'react';
 import {
-  ArrowDownToLine,
-  Ban,
-  ChevronDown,
-  CircleCheck,
-  CirclePlay,
-  Database,
-  FileEdit,
+  AlertTriangle,
+  Database, Download,
   FileText,
   FolderTree,
-  Loader2,
-  Lock,
+  LucidePanelLeft,
   Maximize2,
-  Menu,
   Minimize2,
-  MoreHorizontal,
-  PanelLeft,
-  PanelRight,
-  Pencil,
-  Plus,
-  RotateCcw,
-  Save,
-  Terminal,
-  Trash2,
-  TriangleAlert,
-  User,
-  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -291,7 +272,7 @@ function SqlEditorPage() {
   // Responsive behavior: collapse explorer on small screens
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 1024 && !explorerCollapsed) {
+      if (window.innerWidth < 1024) {
         storeState.setExplorerCollapsed(true);
       }
     };
@@ -299,7 +280,7 @@ function SqlEditorPage() {
     handleResize(); // Check on mount
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [explorerCollapsed, storeState.setExplorerCollapsed]);
+  }, [storeState.setExplorerCollapsed]);
 
   // Update last procedure when selection changes
   useEffect(() => {
@@ -804,33 +785,10 @@ function SqlEditorPage() {
                 onClick={() => setOpen(!open)}
                 aria-label={open ? 'Hide sidebar' : 'Show sidebar'}
               >
-                <Menu className="h-4 w-4" />
+                <LucidePanelLeft className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Toggle Sidebar</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() =>
-                  storeState.setExplorerCollapsed(!explorerCollapsed)
-                }
-                aria-label={
-                  explorerCollapsed
-                    ? 'Show procedure explorer'
-                    : 'Hide procedure explorer'
-                }
-              >
-                {explorerCollapsed ? (
-                  <FolderTree className="h-4 w-4" />
-                ) : (
-                  <FolderTree className="h-4 w-4" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Toggle Explorer</TooltipContent>
           </Tooltip>
           <div className="bg-primary/10 p-2 rounded-lg">
             <Database className="h-5 w-5 text-primary" />
@@ -844,6 +802,29 @@ function SqlEditorPage() {
         </div>
         <TooltipProvider>
           <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    storeState.setExplorerCollapsed(!explorerCollapsed)
+                  }
+                  aria-label={
+                    explorerCollapsed
+                      ? 'Show procedure explorer'
+                      : 'Hide procedure explorer'
+                  }
+                >
+                  {explorerCollapsed ? (
+                    <FolderTree className="h-4 w-4" />
+                  ) : (
+                    <FolderTree className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Toggle Explorer</TooltipContent>
+            </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
