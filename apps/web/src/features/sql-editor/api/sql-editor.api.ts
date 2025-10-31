@@ -6,6 +6,7 @@ import type {
   ValidateSqlDto,
   ValidationResult,
   ExecutionResult,
+  StoredProcedureVersion,
 } from '../types';
 import { apiClient } from '@/lib/api-client';
 import { WorkspaceError } from '@/lib/api-errors';
@@ -203,7 +204,91 @@ export const sqlEditorApi = {
       if (error instanceof WorkspaceError || error instanceof SqlEditorError) {
         throw error;
       }
+      console.error('Failed to validate SQL:', error);
       throw new SqlEditorError('Failed to validate SQL');
+    }
+  },
+
+  async getVersions(
+    workspaceSlug: string,
+    procedureId: string
+  ): Promise<StoredProcedureVersion[]> {
+    console.log('🌐 sqlEditorApi.getVersions Debug:', {
+      workspaceSlug,
+      procedureId,
+      endpoint: `/c/${workspaceSlug}/sql-editor/${procedureId}/versions`
+    });
+
+    try {
+      const response = await apiClient.get<StoredProcedureVersion[]>(
+        `/c/${workspaceSlug}/sql-editor/${procedureId}/versions`
+      );
+      
+      console.log('✅ sqlEditorApi.getVersions Response:', {
+        status: response.status,
+        dataLength: response.data?.length || 0,
+        versions: response.data?.map(v => ({
+          id: v.id,
+          version: v.version,
+          name: v.name,
+          source: v.source,
+          procedureId: v.procedureId,
+          workspaceId: v.workspaceId
+        }))
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('❌ sqlEditorApi.getVersions Error:', {
+        error,
+        workspaceSlug,
+        procedureId,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error'
+      });
+      
+      if (error instanceof WorkspaceError || error instanceof SqlEditorError) {
+        throw error;
+      }
+      throw new SqlEditorError('Failed to fetch procedure versions');
+    }
+  },
+
+  async getVersion(
+    workspaceSlug: string,
+    procedureId: string,
+    version: number
+  ): Promise<StoredProcedureVersion> {
+    try {
+      const response = await apiClient.get<StoredProcedureVersion>(
+        `/c/${workspaceSlug}/sql-editor/${procedureId}/versions/${version}`
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceError || error instanceof SqlEditorError) {
+        throw error;
+      }
+      console.error('Failed to fetch version:', error);
+      throw new SqlEditorError('Failed to fetch procedure version');
+    }
+  },
+
+  async rollbackToVersion(
+    workspaceSlug: string,
+    procedureId: string,
+    version: number
+  ): Promise<StoredProcedure> {
+    try {
+      const response = await apiClient.post<StoredProcedure>(
+        `/c/${workspaceSlug}/sql-editor/${procedureId}/rollback`,
+        { version }
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof WorkspaceError || error instanceof SqlEditorError) {
+        throw error;
+      }
+      console.error('Failed to rollback procedure:', error);
+      throw new SqlEditorError('Failed to rollback procedure');
     }
   },
 };

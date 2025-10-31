@@ -8,6 +8,7 @@ import { Workspace } from '../workspaces/entities/workspace.entity';
 import { WorkspaceMember } from '../workspaces/entities/workspace-member.entity';
 import { Environment } from '../workspaces/entities/environment.entity';
 import { StoredProcedure } from '../sql-editor/entities/stored-procedure.entity';
+import { StoredProcedureVersion } from '../sql-editor/entities/stored-procedure-version.entity';
 
 type DatabaseType = 'postgres' | 'mssql';
 
@@ -67,6 +68,7 @@ const buildDatabaseOptions = (): TypeOrmModuleOptions => {
       WorkspaceMember,
       Environment,
       StoredProcedure,
+      StoredProcedureVersion,
     ],
     synchronize: false,
     migrations: getMigrationsPath(),

@@ -157,3 +157,59 @@ export function useValidateSql(workspaceSlug: string) {
     },
   });
 }
+
+export function useVersions(workspaceSlug: string, procedureId: string) {
+  console.log('🔍 useVersions Hook Debug:', {
+    workspaceSlug,
+    procedureId,
+    hasProcedureId: !!procedureId,
+    hasWorkspaceSlug: !!workspaceSlug,
+    queryKey: ['sql-editor', 'procedures', workspaceSlug, procedureId, 'versions']
+  });
+
+  return useQuery({
+    queryKey: ['sql-editor', 'procedures', workspaceSlug, procedureId, 'versions'],
+    queryFn: () => {
+      console.log('🌐 useVersions API Call:', {
+        workspaceSlug,
+        procedureId,
+        endpoint: `/c/${workspaceSlug}/sql-editor/${procedureId}/versions`
+      });
+      return sqlEditorApi.getVersions(workspaceSlug, procedureId);
+    },
+    enabled: !!workspaceSlug && !!procedureId,
+    staleTime: 0, // Disable cache temporarily for debugging
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+export function useVersion(workspaceSlug: string, procedureId: string, version: number) {
+  return useQuery({
+    queryKey: ['sql-editor', 'procedures', workspaceSlug, procedureId, 'version', version],
+    queryFn: () => sqlEditorApi.getVersion(workspaceSlug, procedureId, version),
+    enabled: !!workspaceSlug && !!procedureId && !!version,
+  });
+}
+
+export function useRollbackToVersion(workspaceSlug: string, procedureId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (version: number) =>
+      sqlEditorApi.rollbackToVersion(workspaceSlug, procedureId, version),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['sql-editor', 'procedures', workspaceSlug],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['sql-editor', 'procedures', workspaceSlug, procedureId],
+      });
+      toast.success('Procedure rolled back successfully');
+    },
+    onError: (error) => {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to rollback procedure';
+      toast.error(errorMessage);
+    },
+  });
+}

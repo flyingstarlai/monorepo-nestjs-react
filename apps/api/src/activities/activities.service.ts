@@ -142,6 +142,18 @@ export class ActivitiesService {
       ActivityType.WORKSPACE_UPDATED,
       ActivityType.WORKSPACE_DEACTIVATED,
       ActivityType.WORKSPACE_ACTIVATED,
+      // SQL Editor workspace events
+      ActivityType.SQL_PROCEDURE_CREATED,
+      ActivityType.SQL_PROCEDURE_UPDATED,
+      ActivityType.SQL_PROCEDURE_DELETED,
+      ActivityType.SQL_PROCEDURE_PUBLISHED,
+      ActivityType.SQL_PROCEDURE_UNPUBLISHED,
+      ActivityType.SQL_PROCEDURE_PUBLISH_FAILED,
+      ActivityType.SQL_PROCEDURE_EXECUTED,
+      ActivityType.SQL_PROCEDURE_EXECUTION_FAILED,
+      // Version management events
+      ActivityType.SQL_PROCEDURE_VERSION_CREATED,
+      ActivityType.SQL_PROCEDURE_VERSION_ROLLED_BACK,
     ];
 
     return workspaceActivityTypes.includes(type)

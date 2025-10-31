@@ -60,3 +60,22 @@ export interface ExecutionResult {
   executionTime: number;
   rowCount?: number;
 }
+
+export interface StoredProcedureVersion {
+  id: string;
+  procedureId: string;
+  workspaceId: string;
+  version: number;
+  source: 'draft' | 'published';
+  name: string;
+  sqlText: string;
+  createdBy: string;
+  createdAt: string;
+  creator?: {
+    id: string;
+    email: string;
+    name?: string;
+    firstName?: string;
+    lastName?: string;
+  };
+}

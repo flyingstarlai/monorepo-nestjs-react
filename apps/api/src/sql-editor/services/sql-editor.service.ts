@@ -16,6 +16,7 @@ import {
 } from '../dto/stored-procedure.dto';
 import { ActivitiesService } from '../../activities/activities.service';
 import { ActivityType } from '../../activities/entities/activity.entity';
+import { VersionService } from './version.service';
 
 @Injectable()
 export class SqlEditorService {
@@ -24,7 +25,8 @@ export class SqlEditorService {
   constructor(
     @InjectRepository(StoredProcedure)
     private readonly storedProcedureRepository: Repository<StoredProcedure>,
-    private readonly activitiesService: ActivitiesService
+    private readonly activitiesService: ActivitiesService,
+    private readonly versionService: VersionService
   ) {}
 
   async createProcedure(
@@ -55,6 +57,7 @@ export class SqlEditorService {
     });
 
     const savedProcedure = await this.storedProcedureRepository.save(procedure);
+
 
     // Record creation activity
     await this.activitiesService.record(
@@ -107,7 +110,8 @@ export class SqlEditorService {
     procedureId: string,
     workspaceId: string,
     updateDto: UpdateStoredProcedureDto,
-    userId: string
+    userId: string,
+    createVersionSnapshot: boolean = false
   ): Promise<StoredProcedure> {
     this.logger.log(
       `Updating stored procedure ${procedureId} for workspace ${workspaceId}`
@@ -146,6 +150,7 @@ export class SqlEditorService {
       procedureId,
       workspaceId
     );
+
 
     // Record update activity
     await this.activitiesService.record(
@@ -301,6 +306,24 @@ export class SqlEditorService {
     }
 
     // For now, allow editing if user created the procedure
+    // In a full implementation, you'd check workspace membership roles
+    return procedure.createdBy === userId;
+  }
+
+  async canUserRollbackProcedure(
+    procedureId: string,
+    workspaceId: string,
+    userId: string
+  ): Promise<boolean> {
+    const procedure = await this.storedProcedureRepository.findOne({
+      where: { id: procedureId, workspaceId },
+    });
+
+    if (!procedure) {
+      return false;
+    }
+
+    // For now, allow rollback if user created the procedure
     // In a full implementation, you'd check workspace membership roles
     return procedure.createdBy === userId;
   }

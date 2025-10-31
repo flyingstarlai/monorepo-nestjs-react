@@ -11,6 +11,7 @@ import {
   Request,
   HttpStatus,
   HttpCode,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -39,6 +40,7 @@ import {
   ExecuteProcedureDto,
 } from '../services/execution.service';
 import { ValidationService } from '../services/validation.service';
+import { VersionService } from '../services/version.service';
 
 @ApiTags('SQL Editor')
 @Controller('c/:slug/sql-editor')
@@ -48,7 +50,8 @@ export class SqlEditorController {
     private readonly sqlEditorService: SqlEditorService,
     private readonly publishService: PublishService,
     private readonly executionService: ExecutionService,
-    private readonly validationService: ValidationService
+    private readonly validationService: ValidationService,
+    private readonly versionService: VersionService
   ) {}
 
   @Get()
@@ -341,6 +344,145 @@ export class SqlEditorController {
     return await this.validationService.validateSqlContent(
       body.sql,
       workspace.id
+    );
+  }
+
+  // Versioning endpoints
+  @Get(':procedureId/versions')
+  @ApiOperation({ summary: 'Get version history for a stored procedure' })
+  @ApiParam({ name: 'procedureId', description: 'Procedure ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of versions',
+    type: [Object],
+  })
+  async getVersions(
+    @Param('slug') slug: string,
+    @Param('procedureId') procedureId: string,
+    @Request() req: { user: User; workspace: any }
+  ) {
+    const { workspace } = req;
+    
+    console.log('🔍 Backend getVersions Debug:', {
+      slug,
+      procedureId,
+      workspaceId: workspace?.id,
+      workspaceName: workspace?.name,
+      userId: req.user?.id,
+      userEmail: req.user?.email,
+      procedureIdType: typeof procedureId,
+      procedureIdLength: procedureId?.length
+    });
+
+    // Validate procedure ID
+    if (!procedureId || procedureId === '' || procedureId === 'undefined') {
+      console.error('❌ Invalid procedureId received:', procedureId);
+      throw new Error('Invalid procedure ID');
+    }
+
+    const canView = await this.versionService.canUserViewVersions(
+      procedureId,
+      workspace.id,
+      req.user.id
+    );
+
+    if (!canView) {
+      console.log('🚫 Permission denied for versions:', {
+        procedureId,
+        workspaceId: workspace.id,
+        userId: req.user.id
+      });
+      throw new ForbiddenException('You do not have permission to view versions for this procedure');
+    }
+
+    const versions = await this.versionService.getVersionsForProcedure(
+      procedureId,
+      workspace.id
+    );
+
+    console.log('✅ Backend getVersions Result:', {
+      versionsCount: versions?.length || 0,
+      procedureId,
+      workspaceId: workspace.id,
+      versions: versions?.map(v => ({
+        id: v.id,
+        version: v.version,
+        name: v.name,
+        source: v.source,
+        procedureId: v.procedureId,
+        workspaceId: v.workspaceId,
+        createdBy: v.createdBy,
+        createdAt: v.createdAt
+      }))
+    });
+
+    return versions;
+  }
+
+  @Get(':procedureId/versions/:version')
+  @ApiOperation({ summary: 'Get a specific version of a stored procedure' })
+  @ApiParam({ name: 'procedureId', description: 'Procedure ID' })
+  @ApiParam({ name: 'version', description: 'Version number' })
+  @ApiResponse({
+    status: 200,
+    description: 'Version details',
+    type: Object,
+  })
+  async getVersion(
+    @Param('slug') slug: string,
+    @Param('procedureId') procedureId: string,
+    @Param('version') version: number,
+    @Request() req: { user: User; workspace: any }
+  ) {
+    const { workspace } = req;
+    const canView = await this.versionService.canUserViewVersions(
+      procedureId,
+      workspace.id,
+      req.user.id
+    );
+
+    if (!canView) {
+      throw new ForbiddenException('You do not have permission to view versions for this procedure');
+    }
+
+    return await this.versionService.getVersionByNumber(
+      procedureId,
+      workspace.id,
+      version
+    );
+  }
+
+  @Post(':procedureId/rollback')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Rollback a stored procedure to a specific version' })
+  @ApiParam({ name: 'procedureId', description: 'Procedure ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Procedure rolled back successfully',
+    type: StoredProcedureResponseDto,
+  })
+  async rollbackToVersion(
+    @Param('slug') slug: string,
+    @Param('procedureId') procedureId: string,
+    @Body() body: { version: number },
+    @Request() req: { user: User; workspace: any }
+  ) {
+    const { user, workspace } = req;
+    const canRollback = await this.versionService.canUserRollbackProcedure(
+      procedureId,
+      workspace.id,
+      user.id
+    );
+
+    if (!canRollback) {
+      throw new ForbiddenException('You do not have permission to rollback this procedure');
+    }
+
+    return await this.versionService.rollbackToVersion(
+      procedureId,
+      workspace.id,
+      body.version,
+      user.id
     );
   }
 }

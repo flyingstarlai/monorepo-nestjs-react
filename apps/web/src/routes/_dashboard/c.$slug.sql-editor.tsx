@@ -1,6 +1,7 @@
 import { createFileRoute, useParams, useBlocker } from '@tanstack/react-router';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import React from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,6 +25,7 @@ import { SQLEditorHeader } from '@/features/sql-editor/components/sql-editor-hea
 import { ResultsPanel } from '@/features/sql-editor/components/results-panel';
 import { ValidationPanel } from '@/features/sql-editor/components/validation-panel';
 import { ConsolePanel } from '@/features/sql-editor/components/console-panel';
+import { VersionHistoryDialog } from '@/features/sql-editor/components/version-history-dialog';
 import {
   exportToCSV,
   exportToJSON,
@@ -50,6 +52,7 @@ export const Route = createFileRoute('/_dashboard/c/$slug/sql-editor')({
 
 function SqlEditorPage() {
   const { slug } = useParams({ from: '/_dashboard/c/$slug/sql-editor' });
+  const queryClient = useQueryClient();
   const [isResizing, setIsResizing] = useState(false);
   const [isBottomResizing, setIsBottomResizing] = useState(false);
 
@@ -116,6 +119,7 @@ function SqlEditorPage() {
 
   const [publishDialog, setPublishDialog] = useState(false);
   const [moveToDraftDialog, setMoveToDraftDialog] = useState(false);
+  const [versionHistoryDialog, setVersionHistoryDialog] = useState(false);
 
   // Create procedure-specific validation messages from store
   const currentValidationErrors = useMemo(
@@ -288,6 +292,26 @@ function SqlEditorPage() {
     setCreateDialogOpen(true);
   };
 
+  // Enhanced procedure selection with cache invalidation
+  const handleSelectProcedure = useCallback((procedureId: string) => {
+    console.log('🔄 handleSelectProcedure called:', {
+      newProcedureId: procedureId,
+      currentProcedureId: selectedProcedureId,
+      workspaceSlug: slug
+    });
+
+    // Invalidate version cache for previous procedure if exists
+    if (selectedProcedureId && selectedProcedureId !== procedureId) {
+      console.log('🗑️ Invalidating version cache for previous procedure:', selectedProcedureId);
+      queryClient.invalidateQueries({
+        queryKey: ['sql-editor', 'procedures', slug, selectedProcedureId, 'versions']
+      });
+    }
+
+    // Set new procedure
+    setSelectedProcedureId(procedureId);
+  }, [selectedProcedureId, slug, queryClient, setSelectedProcedureId]);
+
   const handleSaveProcedure = useCallback(async () => {
     if (!selectedProcedure) return;
 
@@ -333,16 +357,17 @@ function SqlEditorPage() {
     setPublishDialog(true);
   }, []);
 
-  const handlePublishConfirm = useCallback(async () => {
-    try {
-      await publishProcedureMutation.mutateAsync();
-      toast.success('Procedure published successfully');
-      setPublishDialog(false);
-      refetch();
-    } catch {
-      // Error is handled by the mutation
-    }
-  }, [publishProcedureMutation, refetch]);
+  const handleShowHistory = useCallback(() => {
+    setVersionHistoryDialog(true);
+  }, []);
+
+  const handlePublishConfirm = useCallback(() => {
+    // The PublishDialog already performs the publish mutation.
+    // This callback should only handle UI updates after a successful publish.
+    toast.success('Procedure published successfully');
+    setPublishDialog(false);
+    refetch();
+  }, [refetch]);
 
   const handleExecuteProcedure = useCallback(
     (id: string) => {
@@ -359,14 +384,14 @@ function SqlEditorPage() {
         } else {
           // Auto-switch context if no unsaved changes or same procedure
           if (selectedProcedureId !== id) {
-            setSelectedProcedureId(id);
+            handleSelectProcedure(id);
           }
           setExecutingProcedure(procedure);
           setExecuteDialogOpen(true);
         }
       }
     },
-    [procedures, selectedProcedureId, isDirty, setSelectedProcedureId]
+    [procedures, selectedProcedureId, isDirty, handleSelectProcedure]
   );
 
   // Keyboard shortcuts
@@ -450,7 +475,7 @@ function SqlEditorPage() {
       await deleteProcedureMutation.mutateAsync(id);
       toast.success('Procedure deleted successfully');
       if (selectedProcedureId === id) {
-        setSelectedProcedureId(null);
+        setSelectedProcedureId(null as any);
       }
     } catch {
       toast.error('Failed to delete procedure');
@@ -544,7 +569,7 @@ function SqlEditorPage() {
 
     // If a new procedure was created, set it as the selected procedure
     if (createdProcedure) {
-      setSelectedProcedureId(createdProcedure.id);
+      handleSelectProcedure(createdProcedure.id);
       storeState.setLastProcedureId(createdProcedure.id);
     }
   };
@@ -607,7 +632,7 @@ function SqlEditorPage() {
       }
 
       // Switch context and open execute dialog
-      setSelectedProcedureId(targetProcedureId);
+      handleSelectProcedure(targetProcedureId);
       const targetProcedure = procedures?.find(
         (p) => p.id === targetProcedureId
       );
@@ -691,7 +716,7 @@ function SqlEditorPage() {
             procedures={procedures}
             isLoading={isLoading}
             selectedProcedureId={selectedProcedureId}
-            onSelectProcedure={setSelectedProcedureId}
+            onSelectProcedure={handleSelectProcedure}
             onCreateProcedure={handleCreateProcedure}
             onDeleteProcedure={handleDeleteProcedure}
           />
@@ -722,6 +747,7 @@ function SqlEditorPage() {
                 onMoveToDraft={() => setMoveToDraftDialog(true)}
                 onValidate={handleValidate}
                 onPublish={handlePublish}
+                onShowHistory={handleShowHistory}
                 height="100%"
                 isDirty={isDirty}
                 readOnly={selectedProcedure?.status === 'published'}
@@ -971,6 +997,18 @@ function SqlEditorPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Version History Dialog */}
+      <VersionHistoryDialog
+        open={versionHistoryDialog}
+        onOpenChange={setVersionHistoryDialog}
+        workspaceSlug={slug}
+        procedure={selectedProcedure || null}
+        onSuccess={() => {
+          // Refresh the procedure data after rollback
+          refetch();
+        }}
+      />
     </div>
   );
 }

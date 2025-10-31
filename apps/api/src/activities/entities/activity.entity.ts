@@ -45,6 +45,9 @@ export enum ActivityType {
   SQL_PROCEDURE_PUBLISH_FAILED = 'sql_procedure_publish_failed',
   SQL_PROCEDURE_EXECUTED = 'sql_procedure_executed',
   SQL_PROCEDURE_EXECUTION_FAILED = 'sql_procedure_execution_failed',
+  // Version management events
+  SQL_PROCEDURE_VERSION_CREATED = 'sql_procedure_version_created',
+  SQL_PROCEDURE_VERSION_ROLLED_BACK = 'sql_procedure_version_rolled_back',
 }
 
 @Entity('activities')

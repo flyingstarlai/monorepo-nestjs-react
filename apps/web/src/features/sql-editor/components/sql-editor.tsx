@@ -18,6 +18,7 @@ import {
   Terminal,
   ShieldCheck,
   Lock,
+  History,
 } from 'lucide-react';
 import { useValidateSql } from '../hooks/use-sql-editor';
 import { useSqlEditorStore } from '../stores/sql-editor.store';
@@ -32,6 +33,7 @@ interface SqlEditorComponentProps {
   onExecute?: () => void;
   onMoveToDraft?: () => void;
   onValidate?: () => void;
+  onShowHistory?: () => void;
   readOnly?: boolean;
   height?: string;
 
@@ -49,6 +51,7 @@ export function SqlEditorComponent({
   onExecute,
   onMoveToDraft,
   onValidate,
+  onShowHistory,
   readOnly = false,
   height = '400px',
   isDirty = false,
@@ -568,6 +571,29 @@ export function SqlEditorComponent({
             <span className="text-xs text-muted-foreground">
               Ln {caretPosition.line}, Col {caretPosition.column}
             </span>
+
+            {/* History button */}
+            {procedure && onShowHistory && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onShowHistory}
+                    className="pl-2 pr-3 h-8 rounded-full border-muted-foreground/20 text-foreground bg-white/80 hover:bg-primary/5 hover:border-primary/30 shadow-sm hover:shadow transition-all duration-200"
+                  >
+                    <History className="h-4 w-4 mr-1.5 text-primary" />
+                    <span className="text-xs font-medium">History</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-sm">View version history</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Compare and rollback to previous versions
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
 
           <div className="flex items-center gap-2">

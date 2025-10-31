@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StoredProcedure } from './entities/stored-procedure.entity';
+import { StoredProcedureVersion } from './entities/stored-procedure-version.entity';
 import { Workspace } from '../workspaces/entities/workspace.entity';
 import { WorkspaceMember } from '../workspaces/entities/workspace-member.entity';
 import { SqlEditorController } from './controllers/sql-editor.controller';
@@ -17,12 +18,13 @@ import { MssqlErrorParserService } from './validators/mssql-error-parser.service
 import { ProcedureNameRewriterService } from './validators/procedure-name-rewriter.service';
 import { MssqlClientService } from './clients/mssql-client.service';
 import { PublisherService } from './publishers/publisher.service';
+import { VersionService } from './services/version.service';
 
 const FEATURE_SQL_EDITOR = process.env.FEATURE_SQL_EDITOR === 'true';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([StoredProcedure, Workspace, WorkspaceMember]),
+    TypeOrmModule.forFeature([StoredProcedure, StoredProcedureVersion, Workspace, WorkspaceMember]),
     ActivitiesModule,
     WorkspacesModule,
   ],
@@ -33,6 +35,7 @@ const FEATURE_SQL_EDITOR = process.env.FEATURE_SQL_EDITOR === 'true';
     ExecutionService,
     ValidationService,
     MssqlConnectionRegistry,
+    VersionService,
     // New pipeline components
     SyntaxCompileValidatorService,
     BestPracticesValidatorService,
@@ -47,6 +50,7 @@ const FEATURE_SQL_EDITOR = process.env.FEATURE_SQL_EDITOR === 'true';
     ExecutionService,
     ValidationService,
     MssqlConnectionRegistry,
+    VersionService,
     // New pipeline components
     SyntaxCompileValidatorService,
     BestPracticesValidatorService,

@@ -5,6 +5,9 @@ import {
   StoredProcedure,
   StoredProcedureStatus,
 } from '../entities/stored-procedure.entity';
+import {
+  StoredProcedureVersionSource,
+} from '../entities/stored-procedure-version.entity';
 import { MssqlConnectionRegistry } from './mssql-connection-registry.service';
 import { ActivitiesService } from '../../activities/activities.service';
 import { ActivityType } from '../../activities/entities/activity.entity';
@@ -13,6 +16,7 @@ import {
   PublishContext,
 } from '../interfaces/publishing.interfaces';
 import { PublisherService } from '../publishers/publisher.service';
+import { VersionService } from './version.service';
 
 @Injectable()
 export class PublishService {
@@ -23,7 +27,8 @@ export class PublishService {
     private readonly storedProcedureRepository: Repository<StoredProcedure>,
     private readonly mssqlConnectionRegistry: MssqlConnectionRegistry,
     private readonly activitiesService: ActivitiesService,
-    private readonly publisher: PublisherService
+    private readonly publisher: PublisherService,
+    private readonly versionService: VersionService
   ) {}
 
   async publishProcedure(
@@ -107,6 +112,16 @@ export class PublishService {
       if (!updatedProcedure) {
         throw new NotFoundException('Stored procedure not found after update');
       }
+
+      // Create version snapshot for the published content
+      await this.versionService.createVersion(
+        procedureId,
+        workspaceId,
+        procedure.name,
+        procedure.sqlDraft,
+        StoredProcedureVersionSource.PUBLISHED,
+        userId
+      );
 
       // Record publish activity
       await this.activitiesService.record(
