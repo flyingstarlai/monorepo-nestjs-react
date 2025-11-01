@@ -108,6 +108,12 @@ export class ProcedureExecutionResponseDto {
 
   @ApiPropertyOptional({ description: 'Number of rows returned' })
   rowCount?: number;
+
+  @ApiPropertyOptional({ description: 'PRINT/INFO messages captured during execution' })
+  consoleMessages?: string[];
+
+  @ApiPropertyOptional({ description: 'Executed procedure name' })
+  procedureName?: string;
 }
 
 export class ValidationResultDto {

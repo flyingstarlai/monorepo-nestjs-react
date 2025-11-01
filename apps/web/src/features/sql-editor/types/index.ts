@@ -59,6 +59,8 @@ export interface ExecutionResult {
   error?: string;
   executionTime: number;
   rowCount?: number;
+  consoleMessages?: string[];
+  procedureName?: string;
 }
 
 export interface StoredProcedureVersion {

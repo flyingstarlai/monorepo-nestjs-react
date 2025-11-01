@@ -155,7 +155,7 @@ export function ExecuteProcedureDialog({
         data: {
           parameters:
             Object.keys(parametersObj).length > 0 ? parametersObj : undefined,
-          timeout: timeout * 1000, // Convert to milliseconds
+          timeout,
         },
       });
 

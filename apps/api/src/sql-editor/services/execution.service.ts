@@ -26,6 +26,8 @@ export interface ProcedureExecutionResult {
   error?: string;
   executionTime?: number; // in milliseconds
   rowCount?: number;
+  consoleMessages?: string[]; // PRINT statements from procedure
+  procedureName?: string; // Name of executed procedure
 }
 
 @Injectable()
@@ -96,6 +98,7 @@ export class ExecutionService {
       );
 
       const executionTime = Date.now() - startTime;
+      const consoleMessages = result.consoleMessages || [];
 
       // Record successful execution activity (without result data)
       await this.activitiesService.record(
@@ -121,6 +124,8 @@ export class ExecutionService {
         columns: result.columns,
         executionTime,
         rowCount: result.rowCount,
+        consoleMessages,
+        procedureName: procedure.name,
       };
     } catch (error) {
       const executionTime = Date.now() - startTime;
@@ -162,6 +167,7 @@ export class ExecutionService {
     data: any[];
     columns: Array<{ name: string; type: string }>;
     rowCount: number;
+    consoleMessages: string[];
   }> {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
@@ -188,6 +194,7 @@ export class ExecutionService {
     data: any[];
     columns: Array<{ name: string; type: string }>;
     rowCount: number;
+    consoleMessages: string[];
   }> {
     try {
       // Build parameterized EXEC statement
@@ -196,46 +203,85 @@ export class ExecutionService {
         parameters
       );
 
-      // Execute the procedure
-      const result = await connection.query(execSql, paramValues);
+      // Execute the procedure and capture PRINT statements
+      const consoleMessages: string[] = [];
 
-      // Process results
+      const driver: any = (connection as any).driver;
+      let result: any;
+
+      // Prefer native mssql Request to capture PRINT/INFO messages
+      if (driver && driver.mssql && driver.master) {
+        const sql = driver.mssql;
+        const pool = driver.master;
+        const request = new sql.Request(pool);
+
+        // Capture informational messages (PRINT / low-severity RAISERROR)
+        request.on('info', (msg: any) => {
+          const text = String((msg && (msg.message ?? msg.text)) || '');
+          if (text) consoleMessages.push(text);
+        });
+
+        try {
+          result = await request.query(`SET NOCOUNT ON; ${execSql}`);
+        } catch (e) {
+          // Fallback to TypeORM query if direct request fails
+          result = await connection.query(execSql, paramValues);
+        }
+      } else {
+        // Fallback when driver internals are unavailable (no PRINT capture)
+        result = await connection.query(execSql, paramValues);
+      }
+
+      // Process results across possible driver shapes (mssql Request vs TypeORM query)
       let data: any[] = [];
       let columns: Array<{ name: string; type: string }> = [];
       let rowCount = 0;
 
-      if (Array.isArray(result) && result.length > 0) {
-        // Handle result set with metadata
-        if (
-          result[0] &&
-          typeof result[0] === 'object' &&
-          !Array.isArray(result[0])
-        ) {
-          // Single result set
-          data = this.limitResultRows(result);
+      // Case 1: mssql Request response object
+      if (result && typeof result === 'object' && !Array.isArray(result)) {
+        const primary = Array.isArray(result.recordset)
+          ? result.recordset
+          : Array.isArray(result.recordsets) && result.recordsets.length > 0
+            ? result.recordsets[0]
+            : undefined;
+        if (Array.isArray(primary)) {
+          data = this.limitResultRows(primary);
           rowCount = data.length;
-
           if (data.length > 0) {
             columns = Object.keys(data[0]).map((key) => ({
               name: key,
-              type: this.inferColumnType(data[0][key]),
-            }));
-          }
-        } else if (Array.isArray(result[0])) {
-          // Multiple result sets or different format
-          data = this.limitResultRows(result[0]);
-          rowCount = data.length;
-
-          if (data.length > 0) {
-            columns = Object.keys(data[0]).map((key) => ({
-              name: key,
-              type: this.inferColumnType(data[0][key]),
+              type: this.inferColumnType((data[0] as any)[key]),
             }));
           }
         }
       }
 
-      return { data, columns, rowCount };
+      // Case 2: TypeORM connection.query array response
+      if (data.length === 0 && Array.isArray(result) && result.length > 0) {
+        if (result[0] && typeof result[0] === 'object' && !Array.isArray(result[0])) {
+          // Single result set
+          data = this.limitResultRows(result);
+          rowCount = data.length;
+          if (data.length > 0) {
+            columns = Object.keys(data[0]).map((key) => ({
+              name: key,
+              type: this.inferColumnType((data[0] as any)[key]),
+            }));
+          }
+        } else if (Array.isArray(result[0])) {
+          // Multiple result sets
+          data = this.limitResultRows(result[0]);
+          rowCount = data.length;
+          if (data.length > 0) {
+            columns = Object.keys(data[0]).map((key) => ({
+              name: key,
+              type: this.inferColumnType((data[0] as any)[key]),
+            }));
+          }
+        }
+      }
+
+      return { data, columns, rowCount, consoleMessages };
     } catch (error) {
       this.logger.error(
         `Internal execution error for procedure ${procedureName}:`,

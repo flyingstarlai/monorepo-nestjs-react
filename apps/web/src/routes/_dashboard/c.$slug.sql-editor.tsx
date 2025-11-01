@@ -507,8 +507,9 @@ function SqlEditorPage() {
       setExecutedProcedureId(executingProcedure.id);
     }
 
-    // Set active tab to results
-    storeState.setActiveBottomTab('results');
+    // Decide which tab to show based on presence of console messages
+    const hasConsole = Array.isArray(result.consoleMessages) && result.consoleMessages.length > 0;
+    storeState.setActiveBottomTab(hasConsole ? 'console' : 'results');
 
     // Store execution results and columns
     const results = Array.isArray(result.data)
@@ -520,10 +521,12 @@ function SqlEditorPage() {
       results.filter((row: any) => row != null && typeof row === 'object')
     );
 
-    // Store execution metadata
+    // Store execution metadata (including console)
     setExecutionMetadata({
       executionTime: result.executionTime,
       rowCount: result.rowCount || results.length,
+      consoleMessages: result.consoleMessages || [],
+      procedureName: result.procedureName,
     });
 
     // Store column information if available
@@ -544,7 +547,19 @@ function SqlEditorPage() {
       }
     }
 
-    // Add execution message
+    // Append PRINT/INFO output lines first
+    if (hasConsole) {
+      setConsoleMessages((prev) => [
+        ...prev,
+        ...result.consoleMessages!.map((msg) => ({
+          timestamp: new Date(),
+          type: 'info' as const,
+          message: msg,
+        })),
+      ]);
+    }
+
+    // Add execution summary message
     setConsoleMessages((prev) => [
       ...prev,
       {
