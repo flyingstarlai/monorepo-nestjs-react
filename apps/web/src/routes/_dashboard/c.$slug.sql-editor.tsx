@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 
 import { ProcedureList } from '@/features/sql-editor/components/procedure-list';
-import { ProcedureDialog } from '@/features/sql-editor/components/procedure-dialog';
+import { ProcedureDialogWithTemplates } from '@/features/sql-editor/components/procedure-dialog-with-templates';
 import { ExecuteProcedureDialog } from '@/features/sql-editor/components/execute-dialog';
 import { PublishDialog } from '@/features/sql-editor/components/publish-dialog';
 import { SqlEditorComponent } from '@/features/sql-editor/components/sql-editor';
@@ -893,7 +893,7 @@ function SqlEditorPage() {
       </div>
 
       {/* Create Procedure Dialog */}
-      <ProcedureDialog
+      <ProcedureDialogWithTemplates
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         workspaceSlug={slug}
@@ -901,7 +901,7 @@ function SqlEditorPage() {
       />
 
       {/* Edit Procedure Dialog */}
-      <ProcedureDialog
+      <ProcedureDialogWithTemplates
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         workspaceSlug={slug}
