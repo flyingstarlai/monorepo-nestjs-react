@@ -18,12 +18,19 @@ import { Route as DashboardAccountIndexRouteImport } from './routes/_dashboard.a
 import { Route as DashboardCSlugRouteImport } from './routes/_dashboard/c.$slug'
 import { Route as DashboardAdminWorkspacesRouteImport } from './routes/_dashboard/admin.workspaces'
 import { Route as DashboardAdminUsersRouteImport } from './routes/_dashboard/admin.users'
+import { Route as DashboardAdminTemplatesRouteImport } from './routes/_dashboard/admin.templates'
 import { Route as DashboardAccountSecurityRouteImport } from './routes/_dashboard.account.security'
 import { Route as DashboardAccountProfileRouteImport } from './routes/_dashboard.account.profile'
 import { Route as DashboardCSlugIndexRouteImport } from './routes/_dashboard/c.$slug.index'
+import { Route as DashboardAdminTemplatesIndexRouteImport } from './routes/_dashboard/admin.templates.index'
 import { Route as DashboardCSlugSqlEditorRouteImport } from './routes/_dashboard/c.$slug.sql-editor'
 import { Route as DashboardCSlugSettingsRouteImport } from './routes/_dashboard/c.$slug.settings'
 import { Route as DashboardCSlugMembersRouteImport } from './routes/_dashboard/c.$slug.members'
+import { Route as DashboardAdminTemplatesNewRouteImport } from './routes/_dashboard/admin.templates.new'
+import { Route as DashboardAdminTemplatesIdRouteImport } from './routes/_dashboard/admin.templates.$id'
+import { Route as DashboardAdminTemplatesIdIndexRouteImport } from './routes/_dashboard/admin.templates.$id.index'
+import { Route as DashboardAdminTemplatesIdPreviewRouteImport } from './routes/_dashboard/admin.templates.$id.preview'
+import { Route as DashboardAdminTemplatesIdEditRouteImport } from './routes/_dashboard/admin.templates.$id.edit'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -70,6 +77,11 @@ const DashboardAdminUsersRoute = DashboardAdminUsersRouteImport.update({
   path: '/admin/users',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAdminTemplatesRoute = DashboardAdminTemplatesRouteImport.update({
+  id: '/admin/templates',
+  path: '/admin/templates',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardAccountSecurityRoute =
   DashboardAccountSecurityRouteImport.update({
     id: '/account/security',
@@ -86,6 +98,12 @@ const DashboardCSlugIndexRoute = DashboardCSlugIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardCSlugRoute,
 } as any)
+const DashboardAdminTemplatesIndexRoute =
+  DashboardAdminTemplatesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardAdminTemplatesRoute,
+  } as any)
 const DashboardCSlugSqlEditorRoute = DashboardCSlugSqlEditorRouteImport.update({
   id: '/sql-editor',
   path: '/sql-editor',
@@ -101,6 +119,36 @@ const DashboardCSlugMembersRoute = DashboardCSlugMembersRouteImport.update({
   path: '/members',
   getParentRoute: () => DashboardCSlugRoute,
 } as any)
+const DashboardAdminTemplatesNewRoute =
+  DashboardAdminTemplatesNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => DashboardAdminTemplatesRoute,
+  } as any)
+const DashboardAdminTemplatesIdRoute =
+  DashboardAdminTemplatesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => DashboardAdminTemplatesRoute,
+  } as any)
+const DashboardAdminTemplatesIdIndexRoute =
+  DashboardAdminTemplatesIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardAdminTemplatesIdRoute,
+  } as any)
+const DashboardAdminTemplatesIdPreviewRoute =
+  DashboardAdminTemplatesIdPreviewRouteImport.update({
+    id: '/preview',
+    path: '/preview',
+    getParentRoute: () => DashboardAdminTemplatesIdRoute,
+  } as any)
+const DashboardAdminTemplatesIdEditRoute =
+  DashboardAdminTemplatesIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => DashboardAdminTemplatesIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -108,15 +156,22 @@ export interface FileRoutesByFullPath {
   '/profile': typeof DashboardProfileRoute
   '/account/profile': typeof DashboardAccountProfileRoute
   '/account/security': typeof DashboardAccountSecurityRoute
+  '/admin/templates': typeof DashboardAdminTemplatesRouteWithChildren
   '/admin/users': typeof DashboardAdminUsersRoute
   '/admin/workspaces': typeof DashboardAdminWorkspacesRoute
   '/c/$slug': typeof DashboardCSlugRouteWithChildren
   '/account': typeof DashboardAccountIndexRoute
   '/admin': typeof DashboardAdminIndexRoute
+  '/admin/templates/$id': typeof DashboardAdminTemplatesIdRouteWithChildren
+  '/admin/templates/new': typeof DashboardAdminTemplatesNewRoute
   '/c/$slug/members': typeof DashboardCSlugMembersRoute
   '/c/$slug/settings': typeof DashboardCSlugSettingsRoute
   '/c/$slug/sql-editor': typeof DashboardCSlugSqlEditorRoute
+  '/admin/templates/': typeof DashboardAdminTemplatesIndexRoute
   '/c/$slug/': typeof DashboardCSlugIndexRoute
+  '/admin/templates/$id/edit': typeof DashboardAdminTemplatesIdEditRoute
+  '/admin/templates/$id/preview': typeof DashboardAdminTemplatesIdPreviewRoute
+  '/admin/templates/$id/': typeof DashboardAdminTemplatesIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -128,10 +183,15 @@ export interface FileRoutesByTo {
   '/admin/workspaces': typeof DashboardAdminWorkspacesRoute
   '/account': typeof DashboardAccountIndexRoute
   '/admin': typeof DashboardAdminIndexRoute
+  '/admin/templates/new': typeof DashboardAdminTemplatesNewRoute
   '/c/$slug/members': typeof DashboardCSlugMembersRoute
   '/c/$slug/settings': typeof DashboardCSlugSettingsRoute
   '/c/$slug/sql-editor': typeof DashboardCSlugSqlEditorRoute
+  '/admin/templates': typeof DashboardAdminTemplatesIndexRoute
   '/c/$slug': typeof DashboardCSlugIndexRoute
+  '/admin/templates/$id/edit': typeof DashboardAdminTemplatesIdEditRoute
+  '/admin/templates/$id/preview': typeof DashboardAdminTemplatesIdPreviewRoute
+  '/admin/templates/$id': typeof DashboardAdminTemplatesIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -141,15 +201,22 @@ export interface FileRoutesById {
   '/_dashboard/profile': typeof DashboardProfileRoute
   '/_dashboard/account/profile': typeof DashboardAccountProfileRoute
   '/_dashboard/account/security': typeof DashboardAccountSecurityRoute
+  '/_dashboard/admin/templates': typeof DashboardAdminTemplatesRouteWithChildren
   '/_dashboard/admin/users': typeof DashboardAdminUsersRoute
   '/_dashboard/admin/workspaces': typeof DashboardAdminWorkspacesRoute
   '/_dashboard/c/$slug': typeof DashboardCSlugRouteWithChildren
   '/_dashboard/account/': typeof DashboardAccountIndexRoute
   '/_dashboard/admin/': typeof DashboardAdminIndexRoute
+  '/_dashboard/admin/templates/$id': typeof DashboardAdminTemplatesIdRouteWithChildren
+  '/_dashboard/admin/templates/new': typeof DashboardAdminTemplatesNewRoute
   '/_dashboard/c/$slug/members': typeof DashboardCSlugMembersRoute
   '/_dashboard/c/$slug/settings': typeof DashboardCSlugSettingsRoute
   '/_dashboard/c/$slug/sql-editor': typeof DashboardCSlugSqlEditorRoute
+  '/_dashboard/admin/templates/': typeof DashboardAdminTemplatesIndexRoute
   '/_dashboard/c/$slug/': typeof DashboardCSlugIndexRoute
+  '/_dashboard/admin/templates/$id/edit': typeof DashboardAdminTemplatesIdEditRoute
+  '/_dashboard/admin/templates/$id/preview': typeof DashboardAdminTemplatesIdPreviewRoute
+  '/_dashboard/admin/templates/$id/': typeof DashboardAdminTemplatesIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -159,15 +226,22 @@ export interface FileRouteTypes {
     | '/profile'
     | '/account/profile'
     | '/account/security'
+    | '/admin/templates'
     | '/admin/users'
     | '/admin/workspaces'
     | '/c/$slug'
     | '/account'
     | '/admin'
+    | '/admin/templates/$id'
+    | '/admin/templates/new'
     | '/c/$slug/members'
     | '/c/$slug/settings'
     | '/c/$slug/sql-editor'
+    | '/admin/templates/'
     | '/c/$slug/'
+    | '/admin/templates/$id/edit'
+    | '/admin/templates/$id/preview'
+    | '/admin/templates/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -179,10 +253,15 @@ export interface FileRouteTypes {
     | '/admin/workspaces'
     | '/account'
     | '/admin'
+    | '/admin/templates/new'
     | '/c/$slug/members'
     | '/c/$slug/settings'
     | '/c/$slug/sql-editor'
+    | '/admin/templates'
     | '/c/$slug'
+    | '/admin/templates/$id/edit'
+    | '/admin/templates/$id/preview'
+    | '/admin/templates/$id'
   id:
     | '__root__'
     | '/'
@@ -191,15 +270,22 @@ export interface FileRouteTypes {
     | '/_dashboard/profile'
     | '/_dashboard/account/profile'
     | '/_dashboard/account/security'
+    | '/_dashboard/admin/templates'
     | '/_dashboard/admin/users'
     | '/_dashboard/admin/workspaces'
     | '/_dashboard/c/$slug'
     | '/_dashboard/account/'
     | '/_dashboard/admin/'
+    | '/_dashboard/admin/templates/$id'
+    | '/_dashboard/admin/templates/new'
     | '/_dashboard/c/$slug/members'
     | '/_dashboard/c/$slug/settings'
     | '/_dashboard/c/$slug/sql-editor'
+    | '/_dashboard/admin/templates/'
     | '/_dashboard/c/$slug/'
+    | '/_dashboard/admin/templates/$id/edit'
+    | '/_dashboard/admin/templates/$id/preview'
+    | '/_dashboard/admin/templates/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -273,6 +359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAdminUsersRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/admin/templates': {
+      id: '/_dashboard/admin/templates'
+      path: '/admin/templates'
+      fullPath: '/admin/templates'
+      preLoaderRoute: typeof DashboardAdminTemplatesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/account/security': {
       id: '/_dashboard/account/security'
       path: '/account/security'
@@ -293,6 +386,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/c/$slug/'
       preLoaderRoute: typeof DashboardCSlugIndexRouteImport
       parentRoute: typeof DashboardCSlugRoute
+    }
+    '/_dashboard/admin/templates/': {
+      id: '/_dashboard/admin/templates/'
+      path: '/'
+      fullPath: '/admin/templates/'
+      preLoaderRoute: typeof DashboardAdminTemplatesIndexRouteImport
+      parentRoute: typeof DashboardAdminTemplatesRoute
     }
     '/_dashboard/c/$slug/sql-editor': {
       id: '/_dashboard/c/$slug/sql-editor'
@@ -315,8 +415,80 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardCSlugMembersRouteImport
       parentRoute: typeof DashboardCSlugRoute
     }
+    '/_dashboard/admin/templates/new': {
+      id: '/_dashboard/admin/templates/new'
+      path: '/new'
+      fullPath: '/admin/templates/new'
+      preLoaderRoute: typeof DashboardAdminTemplatesNewRouteImport
+      parentRoute: typeof DashboardAdminTemplatesRoute
+    }
+    '/_dashboard/admin/templates/$id': {
+      id: '/_dashboard/admin/templates/$id'
+      path: '/$id'
+      fullPath: '/admin/templates/$id'
+      preLoaderRoute: typeof DashboardAdminTemplatesIdRouteImport
+      parentRoute: typeof DashboardAdminTemplatesRoute
+    }
+    '/_dashboard/admin/templates/$id/': {
+      id: '/_dashboard/admin/templates/$id/'
+      path: '/'
+      fullPath: '/admin/templates/$id/'
+      preLoaderRoute: typeof DashboardAdminTemplatesIdIndexRouteImport
+      parentRoute: typeof DashboardAdminTemplatesIdRoute
+    }
+    '/_dashboard/admin/templates/$id/preview': {
+      id: '/_dashboard/admin/templates/$id/preview'
+      path: '/preview'
+      fullPath: '/admin/templates/$id/preview'
+      preLoaderRoute: typeof DashboardAdminTemplatesIdPreviewRouteImport
+      parentRoute: typeof DashboardAdminTemplatesIdRoute
+    }
+    '/_dashboard/admin/templates/$id/edit': {
+      id: '/_dashboard/admin/templates/$id/edit'
+      path: '/edit'
+      fullPath: '/admin/templates/$id/edit'
+      preLoaderRoute: typeof DashboardAdminTemplatesIdEditRouteImport
+      parentRoute: typeof DashboardAdminTemplatesIdRoute
+    }
   }
 }
+
+interface DashboardAdminTemplatesIdRouteChildren {
+  DashboardAdminTemplatesIdEditRoute: typeof DashboardAdminTemplatesIdEditRoute
+  DashboardAdminTemplatesIdPreviewRoute: typeof DashboardAdminTemplatesIdPreviewRoute
+  DashboardAdminTemplatesIdIndexRoute: typeof DashboardAdminTemplatesIdIndexRoute
+}
+
+const DashboardAdminTemplatesIdRouteChildren: DashboardAdminTemplatesIdRouteChildren =
+  {
+    DashboardAdminTemplatesIdEditRoute: DashboardAdminTemplatesIdEditRoute,
+    DashboardAdminTemplatesIdPreviewRoute:
+      DashboardAdminTemplatesIdPreviewRoute,
+    DashboardAdminTemplatesIdIndexRoute: DashboardAdminTemplatesIdIndexRoute,
+  }
+
+const DashboardAdminTemplatesIdRouteWithChildren =
+  DashboardAdminTemplatesIdRoute._addFileChildren(
+    DashboardAdminTemplatesIdRouteChildren,
+  )
+
+interface DashboardAdminTemplatesRouteChildren {
+  DashboardAdminTemplatesIdRoute: typeof DashboardAdminTemplatesIdRouteWithChildren
+  DashboardAdminTemplatesNewRoute: typeof DashboardAdminTemplatesNewRoute
+  DashboardAdminTemplatesIndexRoute: typeof DashboardAdminTemplatesIndexRoute
+}
+
+const DashboardAdminTemplatesRouteChildren: DashboardAdminTemplatesRouteChildren =
+  {
+    DashboardAdminTemplatesIdRoute: DashboardAdminTemplatesIdRouteWithChildren,
+    DashboardAdminTemplatesNewRoute: DashboardAdminTemplatesNewRoute,
+    DashboardAdminTemplatesIndexRoute: DashboardAdminTemplatesIndexRoute,
+  }
+
+const DashboardAdminTemplatesRouteWithChildren =
+  DashboardAdminTemplatesRoute._addFileChildren(
+    DashboardAdminTemplatesRouteChildren,
+  )
 
 interface DashboardCSlugRouteChildren {
   DashboardCSlugMembersRoute: typeof DashboardCSlugMembersRoute
@@ -340,6 +512,7 @@ interface DashboardRouteChildren {
   DashboardProfileRoute: typeof DashboardProfileRoute
   DashboardAccountProfileRoute: typeof DashboardAccountProfileRoute
   DashboardAccountSecurityRoute: typeof DashboardAccountSecurityRoute
+  DashboardAdminTemplatesRoute: typeof DashboardAdminTemplatesRouteWithChildren
   DashboardAdminUsersRoute: typeof DashboardAdminUsersRoute
   DashboardAdminWorkspacesRoute: typeof DashboardAdminWorkspacesRoute
   DashboardCSlugRoute: typeof DashboardCSlugRouteWithChildren
@@ -351,6 +524,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardAccountProfileRoute: DashboardAccountProfileRoute,
   DashboardAccountSecurityRoute: DashboardAccountSecurityRoute,
+  DashboardAdminTemplatesRoute: DashboardAdminTemplatesRouteWithChildren,
   DashboardAdminUsersRoute: DashboardAdminUsersRoute,
   DashboardAdminWorkspacesRoute: DashboardAdminWorkspacesRoute,
   DashboardCSlugRoute: DashboardCSlugRouteWithChildren,
