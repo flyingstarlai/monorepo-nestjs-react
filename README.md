@@ -8,6 +8,7 @@ A modern dashboard application with user management, authentication, and admin f
 - **User Management**: Admin panel for creating users, managing roles, and enabling/disabling accounts
 - **Activities Feed**: Real-time activity tracking and recent events display
 - **SQL Editor**: Advanced SQL procedure editor with syntax highlighting, validation, and execution
+- **Procedure Templates**: Global reusable SQL templates with parameter substitution and validation (Admin only management)
 - **Procedure Versioning**: Complete version control system for stored procedures with history, diff comparison, and rollback capabilities
 - **Workspaces**: Multi-tenant workspace management with environment configuration
 - **Observability**: Prometheus metrics, structured logging, and Grafana dashboards
@@ -119,6 +120,7 @@ npm run db:reset
 - [API Documentation](apps/api/README.md)
 - [Web App Documentation](apps/web/README.md)
 - [SQL Editor Features](openspec/specs/sql-editor/spec.md)
+- [Procedure Templates](openspec/changes/2025-10-31-add-procedure-templates-manager/specs/sql-editor/spec.md)
 - [Procedure Versioning](openspec/changes/2025-10-31-add-procedure-versioning-compare-rollback/specs/sql-editor/spec.md)
 - [Workspaces](openspec/specs/workspaces/spec.md)
 

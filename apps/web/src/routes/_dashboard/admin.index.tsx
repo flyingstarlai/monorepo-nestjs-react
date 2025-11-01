@@ -6,6 +6,7 @@ import {
   UserCheck,
   Users,
   Activity,
+  FileText,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -149,6 +150,21 @@ function AdminDashboard() {
           <CardContent>
             <Button asChild className="w-full" variant="outline">
               <Link to="/admin/workspaces">Manage Workspaces</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card className="w-full cursor-pointer hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Procedure Templates
+            </CardTitle>
+            <CardDescription>Manage reusable SQL procedure templates</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full" variant="outline">
+              <Link to="/admin/templates">Manage Templates</Link>
             </Button>
           </CardContent>
         </Card>

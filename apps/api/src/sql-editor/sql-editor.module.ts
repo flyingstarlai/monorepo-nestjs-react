@@ -2,10 +2,14 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { StoredProcedure } from './entities/stored-procedure.entity';
 import { StoredProcedureVersion } from './entities/stored-procedure-version.entity';
+import { ProcedureTemplate } from './entities/procedure-template.entity';
 import { Workspace } from '../workspaces/entities/workspace.entity';
 import { WorkspaceMember } from '../workspaces/entities/workspace-member.entity';
+import { User } from '../users/entities/user.entity';
 import { SqlEditorController } from './controllers/sql-editor.controller';
+import { ProcedureTemplateController } from './controllers/procedure-template.controller';
 import { SqlEditorService } from './services/sql-editor.service';
+import { ProcedureTemplateService } from './services/procedure-template.service';
 import { PublishService } from './services/publish.service';
 import { ExecutionService } from './services/execution.service';
 import { ValidationService } from './services/validation.service';
@@ -24,13 +28,14 @@ const FEATURE_SQL_EDITOR = process.env.FEATURE_SQL_EDITOR === 'true';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([StoredProcedure, StoredProcedureVersion, Workspace, WorkspaceMember]),
+    TypeOrmModule.forFeature([StoredProcedure, StoredProcedureVersion, ProcedureTemplate, Workspace, WorkspaceMember, User]),
     ActivitiesModule,
     WorkspacesModule,
   ],
-  controllers: FEATURE_SQL_EDITOR ? [SqlEditorController] : [],
+  controllers: FEATURE_SQL_EDITOR ? [SqlEditorController, ProcedureTemplateController] : [],
   providers: [
     SqlEditorService,
+    ProcedureTemplateService,
     PublishService,
     ExecutionService,
     ValidationService,
@@ -46,6 +51,7 @@ const FEATURE_SQL_EDITOR = process.env.FEATURE_SQL_EDITOR === 'true';
   ],
   exports: [
     SqlEditorService,
+    ProcedureTemplateService,
     PublishService,
     ExecutionService,
     ValidationService,
@@ -54,6 +60,7 @@ const FEATURE_SQL_EDITOR = process.env.FEATURE_SQL_EDITOR === 'true';
     // New pipeline components
     SyntaxCompileValidatorService,
     BestPracticesValidatorService,
+    MssqlErrorParserService,
     MssqlErrorParserService,
     ProcedureNameRewriterService,
     MssqlClientService,

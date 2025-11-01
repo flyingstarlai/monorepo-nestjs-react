@@ -254,6 +254,7 @@ export class ExecutionService {
     const paramNames = Object.keys(parameters);
     const paramValues: any[] = [];
 
+    // Validate parameters
     if (paramNames.length === 0) {
       return {
         execSql: `EXEC [${procedureName}]`,
@@ -261,31 +262,75 @@ export class ExecutionService {
       };
     }
 
-    // Build parameter declarations and EXEC statement
+    // Log parameter details for debugging
+    this.logger.debug(`Building parameterized EXEC for ${procedureName}`, {
+      paramNames,
+      paramCount: paramNames.length,
+      sanitizedParams: this.sanitizeParameters(parameters)
+    });
+
+    // Build parameter declarations and assignments using original parameter names
     const declarations: string[] = [];
     const assignments: string[] = [];
 
-    paramNames.forEach((paramName, index) => {
+    paramNames.forEach((paramName) => {
       const paramValue = parameters[paramName];
-      const paramNameSafe = `@param_${index}`;
 
-      // Add parameter declaration (simplified - in production you'd want better type inference)
-      declarations.push(`${paramNameSafe} NVARCHAR(MAX)`);
+      // Validate parameter name
+      if (!paramName || typeof paramName !== 'string') {
+        throw new Error(`Invalid parameter name: ${paramName}`);
+      }
 
-      // Add parameter assignment
-      assignments.push(`${paramNameSafe} = @p${index}`);
+      // Validate parameter value
+      if (paramValue === undefined) {
+        this.logger.warn(`Parameter '${paramName}' is undefined for procedure ${procedureName}`);
+      }
 
-      // Add to values array for parameterized query
+      // Infer parameter type based on value
+      const paramType = this.inferParameterType(paramValue);
+      declarations.push(`@${paramName} ${paramType}`);
+
+      // Add parameter assignment - set the value directly
+      assignments.push(`@${paramName} = ${this.formatParameterValue(paramValue)}`);
+
+      // Add to values array
       paramValues.push(paramValue);
+
+      this.logger.debug(`Parameter: @${paramName} = ${paramValue} (${paramType})`);
     });
 
     const execSql = `
       DECLARE ${declarations.join(', ')};
-      SET ${assignments.join(', ')};
-      EXEC [${procedureName}] ${paramNames.map((_, i) => `@param_${i}`).join(', ')};
+      ${assignments.map(assignment => `SET ${assignment};`).join('\n      ')}
+      EXEC [${procedureName}] ${paramNames.map(name => `@${name}`).join(', ')};
     `;
 
+    this.logger.debug(`Generated SQL for ${procedureName}:`, execSql);
+    this.logger.debug(`Parameters:`, parameters);
+
     return { execSql, paramValues };
+  }
+
+  private inferParameterType(value: any): string {
+    if (value === null || value === undefined) return 'NVARCHAR(MAX)';
+    if (typeof value === 'number') {
+      return Number.isInteger(value) ? 'INT' : 'DECIMAL(18,4)';
+    }
+    if (typeof value === 'boolean') return 'BIT';
+    if (value instanceof Date) return 'DATETIME';
+    if (typeof value === 'string') {
+      // For longer strings, use NVARCHAR(MAX), for shorter ones, use appropriate length
+      return value.length > 100 ? 'NVARCHAR(MAX)' : `NVARCHAR(${Math.max(value.length, 50)})`;
+    }
+    return 'NVARCHAR(MAX)';
+  }
+
+  private formatParameterValue(value: any): string {
+    if (value === null || value === undefined) return 'NULL';
+    if (typeof value === 'string') return `'${value.replace(/'/g, "''")}'`;
+    if (typeof value === 'boolean') return value ? '1' : '0';
+    if (value instanceof Date) return `'${value.toISOString()}'`;
+    return String(value);
   }
 
   private limitResultRows(data: any[]): any[] {

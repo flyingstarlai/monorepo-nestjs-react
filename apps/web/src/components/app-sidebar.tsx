@@ -9,6 +9,7 @@ import {
   Shield,
   Activity,
   Database,
+  FileText,
 } from 'lucide-react';
 import React from 'react';
 
@@ -96,6 +97,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: 'Users',
       url: '/admin/users',
       icon: Users,
+    },
+    {
+      title: 'Templates',
+      url: '/admin/templates',
+      icon: FileText,
     },
   ];
 
